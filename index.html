@@ -229,37 +229,35 @@
     <!-- 👑 ヘッダー -->
     <header>
         <h1>だっち雀</h1>
-        <p>〜 家族の絆を牌で紡ぐ、だっちコイン管理アプリ 〜</p>
+        <p>〜 麻雀で勝って、だっちコインで欲しいものGet！ 〜</p>
     </header>
 
     <!-- 📢 ニューステロップ -->
     <div class="news-ticker-container">
         <div class="news-ticker">
-            <span>🀄 <strong>ニュース：</strong>昨夜の四人打ちにて、〇〇さんが見事な【役満】を達成！500Gが運営より授与されました！</span>
-            <span>🪙 <strong>コイン相場：</strong>現在1P＝1円換算で稼働中。無駄遣いに気をつけましょう！</span>
-            <span>🏆 <strong>ランキング：</strong>今月のトップ独走状態の〇〇さんを止めるのは誰だ！？</span>
-            <span>🛒 <strong>ストア入荷：</strong>新しい景品「おねだり高級アイス券」が追加されました！</span>
+            <span>🀄 <strong>ニュース：</strong>サイト作成中。各自、担当のページ作成に励むべし！</span>
+
         </div>
     </div>
 
     <!-- 🎴 メインメニュー -->
     <main>
         <!-- 本日のひとことバナー（開くたびに変わる運用を想定） -->
-        <div class="welcome-banner">
-            🐉 「麻雀の点数 1000点＝10P」本日も熱い戦いを！
-        </div>
+       <div class="welcome-banner" id="welcome-banner">
+    <!-- ここにJavaScriptでランダムな文字が入ります -->
+</div>
 
         <div class="menu-grid">
             
             <!-- 1. プロフィール -->
-            <a href="profile.html" class="menu-card">
+            <a href="#" class="menu-card">
                 <div class="card-icon">👲</div>
                 <div class="card-title">プロフィール</div>
                 <div class="card-desc">称号や個人設定</div>
             </a>
 
             <!-- 2. 娯楽室 -->
-            <a href="entertainment.html" class="menu-card">
+            <a href="#" class="menu-card">
                 <span class="badge">更新</span>
                 <div class="card-icon">🀄</div>
                 <div class="card-title">娯楽室</div>
@@ -267,21 +265,21 @@
             </a>
 
             <!-- 3. ランキング -->
-            <a href="ranking.html" class="menu-card">
+            <a href="#" class="menu-card">
                 <div class="card-icon">🏆</div>
                 <div class="card-title">ランキング</div>
                 <div class="card-desc">家族内の順位・役満履歴</div>
             </a>
 
             <!-- 4. 成績推移 -->
-            <a href="stats.html" class="menu-card">
+            <a href="#" class="menu-card">
                 <div class="card-icon">📈</div>
                 <div class="card-title">成績推移</div>
                 <div class="card-desc">戦績グラフとデータ分析</div>
             </a>
 
             <!-- 5. 銀行（だっちコイン管理） -->
-            <a href="bank.html" class="menu-card">
+            <a href="#" class="menu-card">
                 <span class="badge">¥</span>
                 <div class="card-icon">🏦</div>
                 <div class="card-title">だっち銀行</div>
@@ -289,21 +287,21 @@
             </a>
 
             <!-- 6. ストア -->
-            <a href="store.html" class="menu-card">
+            <a href="#" class="menu-card">
                 <div class="card-icon">🛒</div>
                 <div class="card-title">景品ストア</div>
                 <div class="card-desc">コインを景品と交換</div>
             </a>
 
             <!-- 7. 役一覧 -->
-            <a href="yaku.html" class="menu-card">
+            <a href="#" class="menu-card">
                 <div class="card-icon">📜</div>
                 <div class="card-title">麻雀役一覧</div>
                 <div class="card-desc">初心者も安心のルール</div>
             </a>
 
             <!-- 8. 点数一覧 -->
-            <a href="scores.html" class="menu-card">
+            <a href="#" class="menu-card">
                 <div class="card-icon">🔢</div>
                 <div class="card-title">点数計算表</div>
                 <div class="card-desc">符計算・翻数ごとの一覧</div>
@@ -318,6 +316,53 @@
     </footer>
 
 </div>
+<script>
+    // 📜 家族に贈る「麻雀の格言」リスト（日替わりで表示されます）
+    const messages = [
+        "<strong>【本日の格言】</strong>🐉勝ったのは運。負けた時は実力<br>ミスター麻雀と呼ばれた日本の麻雀プロ第1号小島武夫の格言",
+        "<strong>【本日の格言】</strong>🐉飛び対子は間を落とせ<br>２２・４４・６６のように、間が一つずつ空いた対子が３組あった場合、真ん中の対子から１枚落とすべし",
+        "<strong>【本日の格言】</strong>🐉副々求和、敗可立見<br>「毎局アガろう（和了しよう）とする者は、必ずすぐに負けに至る」という意味の中国の麻雀格言",
+        "<strong>【本日の格言】</strong>🐉牌勢沓遠、慎打軽投<br>「配牌が悪いときは途中で色気を出さず慎重に打て」という意味の中国の麻雀格言",
+        "<strong>【本日の格言】</strong>🐉どうせ死ぬなら…強く打って、死ねっ！<br>伝説の麻雀漫画「アカギ」の主人公、赤木しげる最初のセリフ。何とこの時の赤木はまだ中学生",
+        "<strong>【本日の格言】</strong>🐉あンた、背中が煤けてるぜ<br>伝説の麻雀漫画「哭きの竜」の主人公、竜のキメ台詞。意味は正直わからない",
+        "<strong>【本日の格言】</strong>🐉弱い人は、修正力がない。<br>裏プロ（ヤクザの代打ち）として無敗と言われた「雀鬼」、桜井章一の格言。",
+        "<strong>【本日の格言】</strong>🐉勝ち続けるわけにはいかないんですから、いかに上手に負けを拾うか。<br>『麻雀放浪記』を書いた阿佐田哲也（直木賞作家である色川武大の別名義）の格言。",
+        "<strong>【本日の格言】</strong>🐉親の連荘南家の責任<br>親の和了を阻止・妨害すべき立場である下家（南家）が、鳴きや適切な進行を怠って親にプレッシャーをかけず、連荘を許してしまうことを指す麻雀の古い格言",
+ "<strong>【本日の格言】</strong>🐉下りポンは見逃せ<br>下りポンとは上家からポンすること。ポンは自分の手牌の進行、他家の自摸を飛ばすというメリットがあるのだが、上家から鳴く場合は他家を飛ばせない。特に序盤、上家からポンするより自摸で手牌を進行させる方がよい",
+ "<strong>【本日の格言】</strong>🐉手を見ずに場を見よ<br>初心者は自分の手を考えるのに一杯一杯だけど、上手くなりたいなら自分の手より、他の３人を含めた全体を見ましょう、という意味。",
+ "<strong>【本日の格言】</strong>🐉金持ち喧嘩せず<br>トップ目は、リスクを冒した賭けに出ないで、降りて場をやりすごす方がいいという格言。",
+ "<strong>【本日の格言】</strong>🐉慌てる乞食はもらいが少ない<br>序盤からチー・ポンして急ぐことで、手を安くしてしまうこと。さらに鳴いていると防御も弱くなり、放銃しやすくなる。",
+ "<strong>【本日の格言】</strong>🐉運七技三<br>麻雀の勝ち負けは、運７割技３割で決まるということ。",
+ "<strong>【本日の格言】</strong>🐉ドラを切る馬鹿切らぬ馬鹿<br>ドラは持ってるだけで1飜の役と同じ価値。しかし、使えないドラをずっと持っていて聴牌や和了を逃すことももったいないことである。ドラの扱いに関しては難しいという格言。",
+ "<strong>【本日の格言】</strong>🐉好牌先打<br>中国の格言。好い牌は先に打て、と言う意味。不要な浮き牌や不要な搭子は、中寄りから捨てて、危険牌を後に残さない方が、守りの面で有利ということ。",
+ "<strong>【本日の格言】</strong>🐉平和に始まり、平和に終わる<br>麻雀の基本は平和形である、という格言",
+ "<strong>【本日の格言】</strong>🐉ドラ切り立直に側聴無し<br>ドラを２枚持っているならば待ちが悪くともドラを２枚とも使った待ちにするのがセオリーであるため、ドラを切って立直するような場合には、ドラそばの待ちはないということ。",
+ "<strong>【本日の格言】</strong>🐉二鳴き聴牌<br>二副露したら、聴牌していると思えという教え。 二副露めをした時に切られた牌が二副露めの傍の牌ならその近辺の待ちは薄く、二副露めの傍でない牌なら、その切られた牌の傍の待ちが危ない。",
+ "<strong>【本日の格言】</strong>🐉暗刻筋は危険<br>自分が3枚4枚と持っている牌は、他の人が持っておらず欲しい可能性が高い為、その筋で待たれている確率が上がるという格言。",
+ "<strong>【本日の格言】</strong>🐉序盤の裏筋、中盤以降の跨ぎ筋　<br>序盤に出ている牌の裏筋が危険で、中盤～終盤に出ている牌の跨ぎ筋が危険という意味。",
+ "<strong>【本日の格言】</strong>🐉伸ばすは外、かけるは内切り<br>６８９から手を伸ばす時は９切り、立直をかける時は６切りをせよということ。手を伸ばす時には５の自摸によって５６の両搭への変化を目指す。立直をかける場合には６切り７待ちの方が出和がりやすくなる。",
+ "<strong>【本日の格言】</strong>🐉二嵌（りゃんかん）の渡りを残せ<br>手作りにおいて間三軒（差が４つ）の２と６を持っている場合に、２を残せということ。これは４を自摸った時に２４６の二嵌形になるためである。特に４がドラの場合などによく使われる。",
+ "<strong>【本日の格言】</strong>🐉単騎は西で待て<br>単騎待ちをするならば数牌よりも字牌、字牌の中でも三元牌や場風牌・門風牌ではない客風がよい。",
+ "<strong>【本日の格言】</strong>🐉降りれば負ける。降りなければ、もっと負ける。<br>専守防衛では勝ちはないが、攻撃は最大の防御とばかり攻めていても麻雀には勝てない。降りて守ることができない人はトータルでは負けることになる。"
 
+    ];
+
+    // 📅 日付に基づいて、毎日固定のメッセージを選ぶ関数
+    function displayDailyMessage() {
+        const bannerElement = document.getElementById('welcome-banner');
+        if (!bannerElement) return; // バナー要素がない場合はスキップ
+        
+        const now = new Date();
+        // 年月日から一意の数字を作成 (例: 20260518)
+        const dateNum = now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate();
+        // 配列の総数で割った余りからインデックスを決定
+        const dailyIndex = dateNum % messages.length;
+        
+        bannerElement.innerHTML = messages[dailyIndex];
+    }
+
+    // 🌟 ページが読み込まれたら実行
+    document.addEventListener('DOMContentLoaded', displayDailyMessage);
+</script>
 </body>
 </html>
