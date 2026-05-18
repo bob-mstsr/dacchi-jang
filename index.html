@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>だっち雀 - 家族麻雀＆だっちコイン管理</title>
+    <!-- Google Fontsから中華風の雰囲気に合うフォントを読み込み -->
+    <link href="https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@500&family=Noto+Sans+JP:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f7f4eb;       /* 落ち着いた生成り色（麻雀牌のベース風） */
+            --main-red: #9e1b1b;       /* 深みのある高貴な赤 */
+            --accent-gold: #d4af37;   /* 上品なゴールド */
+            --dark-charcoal: #1a1a1a;  /* 全体を締める黒 */
+            --card-bg: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--dark-charcoal);
+            line-height: 1.6;
+            padding-bottom: 40px;
+        }
+
+        /* スマホ向けに最大幅を制限してアプリ感を演出 */
+        .app-container {
+            max-width: 500px;
+            margin: 0 auto;
+            background-color: #fffdf9;
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 👑 ヘッダー（中華風装飾） */
+        header {
+            background: linear-gradient(135deg, var(--dark-charcoal) 0%, var(--main-red) 100%);
+            color: white;
+            padding: 25px 20px;
+            text-align: center;
+            border-bottom: 4px solid var(--accent-gold);
+            position: relative;
+        }
+
+        /* 中華風の伝統的な飾り枠（雷紋風のニュアンス） */
+        header::before {
+            content: "";
+            position: absolute;
+            top: 5px; left: 5px; right: 5px; bottom: 5px;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            pointer-events: none;
+        }
+
+        header h1 {
+            font-family: 'Kiwi Maru', serif;
+            font-size: 2.2rem;
+            letter-spacing: 4px;
+            color: var(--accent-gold);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.6);
+            margin-bottom: 5px;
+        }
+
+        header p {
+            font-size: 0.85rem;
+            color: #ffebad;
+            letter-spacing: 1px;
+        }
+
+        /* 📢 ニューステロップ（無限ループアニメーション） */
+        .news-ticker-container {
+            background-color: var(--dark-charcoal);
+            border-bottom: 2px solid var(--accent-gold);
+            overflow: hidden;
+            position: relative;
+            padding: 6px 0;
+        }
+
+        .news-ticker {
+            display: inline-block;
+            white-space: nowrap;
+            padding-left: 100%;
+            animation: ticker 25s linear infinite;
+        }
+
+        .news-ticker span {
+            display: inline-block;
+            color: #ffffff;
+            font-size: 0.85rem;
+            margin-right: 50px;
+        }
+
+        .news-ticker span strong {
+            color: var(--accent-gold);
+        }
+
+        @keyframes ticker {
+            0% { transform: translate3d(0, 0, 0); }
+            100% { transform: translate3d(-100%, 0, 0); }
+        }
+
+        /* 🎴 メインコンテンツ（メニューグリッド） */
+        main {
+            padding: 20px;
+            flex: 1;
+        }
+
+        /* 思わず確認したくなる「本日のお知らせ」ミニバナー */
+        .welcome-banner {
+            background: #fff5f5;
+            border-left: 4px solid var(--main-red);
+            border-right: 4px solid var(--main-red);
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); /* スマホで綺麗に収まる2列 */
+            gap: 15px;
+        }
+
+        /* 🃏 カードスタイル */
+        .menu-card {
+            background-color: var(--card-bg);
+            border: 2px solid #e0dacf;
+            border-radius: 12px;
+            padding: 20px 15px;
+            text-align: center;
+            text-decoration: none;
+            color: var(--dark-charcoal);
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.04);
+        }
+
+        /* ホバー（タップ）時のエフェクト */
+        .menu-card:active, .menu-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--main-red);
+            box-shadow: 0 6px 12px rgba(158, 27, 27, 0.15);
+        }
+
+        /* カードごとの中華風アクセント（左上に小さな赤い三角形） */
+        .menu-card::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0;
+            width: 0; height: 0;
+            border-top: 12px solid var(--main-red);
+            border-right: 12px solid transparent;
+        }
+
+        /* アイコンの装飾 */
+        .card-icon {
+            font-size: 2.2rem;
+            margin-bottom: 8px;
+            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.1));
+        }
+
+        .card-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--dark-charcoal);
+            margin-bottom: 4px;
+        }
+
+        .menu-card:hover .card-title {
+            color: var(--main-red);
+        }
+
+        .card-desc {
+            font-size: 0.75rem;
+            color: #777;
+        }
+
+        /* 🔥 特殊なバッジ（確認したくなる仕掛け） */
+        .badge {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background-color: #e63946;
+            color: white;
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+            100% { transform: scale(1); }
+        }
+
+        /* 🧧 フッター */
+        footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 0.75rem;
+            color: #aaa;
+            border-top: 1px dashed #e0dacf;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+
+    <!-- 👑 ヘッダー -->
+    <header>
+        <h1>だっち雀</h1>
+        <p>〜 家族の絆を牌で紡ぐ、だっちコイン管理アプリ 〜</p>
+    </header>
+
+    <!-- 📢 ニューステロップ -->
+    <div class="news-ticker-container">
+        <div class="news-ticker">
+            <span>🀄 <strong>ニュース：</strong>昨夜の四人打ちにて、〇〇さんが見事な【役満】を達成！500Gが運営より授与されました！</span>
+            <span>🪙 <strong>コイン相場：</strong>現在1P＝1円換算で稼働中。無駄遣いに気をつけましょう！</span>
+            <span>🏆 <strong>ランキング：</strong>今月のトップ独走状態の〇〇さんを止めるのは誰だ！？</span>
+            <span>🛒 <strong>ストア入荷：</strong>新しい景品「おねだり高級アイス券」が追加されました！</span>
+        </div>
+    </div>
+
+    <!-- 🎴 メインメニュー -->
+    <main>
+        <!-- 本日のひとことバナー（開くたびに変わる運用を想定） -->
+        <div class="welcome-banner">
+            🐉 「麻雀の点数 1000点＝10P」本日も熱い戦いを！
+        </div>
+
+        <div class="menu-grid">
+            
+            <!-- 1. プロフィール -->
+            <a href="profile.html" class="menu-card">
+                <div class="card-icon">👲</div>
+                <div class="card-title">プロフィール</div>
+                <div class="card-desc">称号や個人設定</div>
+            </a>
+
+            <!-- 2. 娯楽室 -->
+            <a href="entertainment.html" class="menu-card">
+                <span class="badge">更新</span>
+                <div class="card-icon">🀄</div>
+                <div class="card-title">娯楽室</div>
+                <div class="card-desc">何を切る？クイズなど</div>
+            </a>
+
+            <!-- 3. ランキング -->
+            <a href="ranking.html" class="menu-card">
+                <div class="card-icon">🏆</div>
+                <div class="card-title">ランキング</div>
+                <div class="card-desc">家族内の順位・役満履歴</div>
+            </a>
+
+            <!-- 4. 成績推移 -->
+            <a href="stats.html" class="menu-card">
+                <div class="card-icon">📈</div>
+                <div class="card-title">成績推移</div>
+                <div class="card-desc">戦績グラフとデータ分析</div>
+            </a>
+
+            <!-- 5. 銀行（だっちコイン管理） -->
+            <a href="bank.html" class="menu-card">
+                <span class="badge">¥</span>
+                <div class="card-icon">🏦</div>
+                <div class="card-title">だっち銀行</div>
+                <div class="card-desc">コインの残高・送金</div>
+            </a>
+
+            <!-- 6. ストア -->
+            <a href="store.html" class="menu-card">
+                <div class="card-icon">🛒</div>
+                <div class="card-title">景品ストア</div>
+                <div class="card-desc">コインを景品と交換</div>
+            </a>
+
+            <!-- 7. 役一覧 -->
+            <a href="yaku.html" class="menu-card">
+                <div class="card-icon">📜</div>
+                <div class="card-title">麻雀役一覧</div>
+                <div class="card-desc">初心者も安心のルール</div>
+            </a>
+
+            <!-- 8. 点数一覧 -->
+            <a href="scores.html" class="menu-card">
+                <div class="card-icon">🔢</div>
+                <div class="card-title">点数計算表</div>
+                <div class="card-desc">符計算・翻数ごとの一覧</div>
+            </a>
+
+        </div>
+    </main>
+
+    <!-- 🧧 フッター -->
+    <footer>
+        &copy; 2026 だっち雀 運営委員会 All Rights Reserved.
+    </footer>
+
+</div>
+
+</body>
+</html>
