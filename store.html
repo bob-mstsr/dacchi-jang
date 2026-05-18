@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>だっちストア - だっち雀</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@500&family=Noto+Sans+JP:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f7f4eb;
+            --main-red: #9e1b1b;
+            --accent-gold: #d4af37;
+            --dark-charcoal: #1a1a1a;
+            --card-bg: #ffffff;
+            --soldout-gray: #757575;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--dark-charcoal);
+            padding-bottom: 40px;
+        }
+
+        .app-container {
+            max-width: 500px;
+            margin: 0 auto;
+            background-color: #fffdf9;
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--dark-charcoal) 0%, var(--main-red) 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-bottom: 4px solid var(--accent-gold);
+            position: relative;
+        }
+        header h1 {
+            font-family: 'Kiwi Maru', serif;
+            font-size: 1.8rem;
+            color: var(--accent-gold);
+        }
+        .back-btn {
+            position: absolute;
+            left: 15px; top: 22px;
+            color: var(--accent-gold);
+            text-decoration: none;
+            font-size: 0.9rem;
+            border: 1px solid var(--accent-gold);
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+
+        main { padding: 15px; }
+
+        h2 {
+            font-size: 1.1rem;
+            border-left: 4px solid var(--main-red);
+            padding-left: 8px;
+            margin: 20px 0 10px 0;
+        }
+
+        .user-selector-box {
+            background: #fff5f5;
+            border: 2px solid var(--main-red);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 20px;
+        }
+        .user-selector-box label {
+            display: block; font-size: 0.85rem; font-weight: bold; margin-bottom: 5px; color: var(--main-red);
+        }
+
+        /* 📋 カタログテーブル */
+        .store-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border: 1px solid #e0dacf;
+            margin-bottom: 20px;
+        }
+        .store-table th {
+            background: #f1eae0;
+            padding: 12px 8px;
+            font-size: 0.85rem;
+            text-align: center;
+        }
+        .store-table td {
+            padding: 12px 8px;
+            border-bottom: 1px solid #eee;
+            font-size: 0.9rem;
+            text-align: center;
+            vertical-align: middle;
+        }
+        .item-name { font-weight: bold; text-align: left !important; padding-left: 12px !important; }
+        .item-price { color: var(--main-red); font-weight: 700; }
+        
+        .buy-btn {
+            background: var(--main-red); color: white; border: none; padding: 6px 12px;
+            font-weight: bold; font-size: 0.8rem; border-radius: 4px; cursor: pointer;
+        }
+        .buy-btn:disabled { background: #ccc; cursor: not-allowed; }
+        
+        .badge-soldout {
+            background: #757575; color: white; padding: 3px 6px;
+            font-size: 0.75rem; border-radius: 4px; font-weight: bold; display: inline-block;
+        }
+
+        /* 🎟️ 発行された景品券（カード風） */
+        .ticket-list {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+        .ticket-card {
+            background: linear-gradient(135deg, #fffde6 0%, #fff9b3 100%);
+            border: 2px dashed var(--accent-gold);
+            border-radius: 8px;
+            padding: 15px;
+            position: relative;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .ticket-card.used {
+            background: #f5f5f5;
+            border-color: #ccc;
+            color: #999;
+            box-shadow: none;
+        }
+        .ticket-title { font-family: 'Kiwi Maru', serif; font-size: 1.1rem; font-weight: bold; margin-bottom: 5px; }
+        .ticket-card.used .ticket-title { color: #999; }
+        .ticket-meta { font-size: 0.75rem; color: #666; }
+        .ticket-card.used .ticket-meta { color: #999; }
+        
+        .used-stamp {
+            position: absolute; right: 15px; top: 10px;
+            border: 3px solid #c62828; color: #c62828; font-size: 0.8rem; font-weight: bold;
+            padding: 4px 8px; border-radius: 4px; transform: rotate(15deg);
+        }
+
+        /* 🔒 管理者セクション */
+        .admin-toggle-wrapper { margin-top: 40px; text-align: center; }
+        .admin-toggle-btn { background: none; border: 1px dashed #ccc; color: #999; font-size: 0.75rem; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+        .admin-section { background: #fff5f5; border: 2px solid var(--main-red); border-radius: 8px; padding: 15px; margin-top: 10px; }
+        .admin-section h3 { font-size: 1rem; color: var(--main-red); margin-bottom: 10px; text-align: center; }
+        .admin-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+        .admin-row { display: flex; justify-content: space-between; align-items: center; background: white; padding: 8px; border-radius: 6px; border: 1px solid #e0dacf; font-size: 0.85rem; }
+        .stock-input { width: 60px; padding: 4px; text-align: center; margin-right: 5px; }
+        .admin-action-btn { background: #333; color: white; border: none; padding: 4px 8px; font-size: 0.75rem; border-radius: 4px; cursor: pointer; }
+        .admin-action-btn.red { background: var(--main-red); }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header>
+        <a href="index.html" class="back-btn">◀ 戻る</a>
+        <h1>だっちストア</h1>
+    </header>
+
+    <main>
+        <!-- 👥 だれが買い物するか選択 -->
+        <div class="user-selector-box">
+            <label for="buyer-select">👲 お買い物する人を選んでください：</label>
+            <select id="buyer-select" onchange="updateBuyerInfo()">
+                <!-- JSで自動挿入 -->
+            </select>
+            <div id="buyer-balance-preview" style="font-size: 0.85rem; margin-top: 5px; font-weight: bold; color: #333;">
+                現在残高: --- P
+            </div>
+        </div>
+
+        <!-- 📋 ①カタログ掲示 ＆ ②交換処理 -->
+        <h2>景品一覧カタログ</h2>
+        <table class="store-table">
+            <thead>
+                <tr>
+                    <th style="text-align: left; padding-left: 12px;">景品名</th>
+                    <th>必要P</th>
+                    <th>在庫</th>
+                    <th>交換</th>
+                </tr>
+            </thead>
+            <tbody id="catalog-list">
+                <tr><td colspan="4" style="color:#999; padding:20px;">🛒 カタログを読み込み中...</td></tr>
+            </tbody>
+        </table>
+
+        <!-- 🎟️ ②景品券の表示エリア -->
+       <h2 id="ticket-title-owner">景品券のお財布</h2>
+        <div class="ticket-list" id="ticket-display">
+            <div style="color:#999; text-align:center; padding:20px; font-size:0.85rem;">🎫 お財布の中身を確認中...</div>
+        </div>
+
+        <!-- 🔒 管理者専用：在庫数調整 ＆ 使用済みマーキング -->
+        <div class="admin-toggle-wrapper">
+            <button class="admin-toggle-btn" onclick="toggleAdminPanel()">⚙️ 管理者専用ストア調整パネルを開く</button>
+        </div>
+
+        <div id="admin-panel" class="admin-section hidden">
+            <h3>⚙️ ストア在庫＆景品券管理</h3>
+            
+            <h4 style="font-size:0.85rem; margin: 10px 0 5px 0; border-bottom: 1px solid var(--main-red);">📦 カタログ在庫数の直接変更</h4>
+            <div class="admin-grid" id="admin-stock-list"></div>
+
+            <h4 style="font-size:0.85rem; margin: 15px 0 5px 0; border-bottom: 1px solid var(--main-red);">🎟️ 受理した券を「使用済み」にする</h4>
+            <div class="admin-grid" id="admin-ticket-list"></div>
+        </div>
+    </main>
+</div>
+
+<script>
+// ==========================================
+// 💡 【重要】デプロイしたGASのウェブアプリURLをここに貼り付け
+// ==========================================
+const GAS_URL = "ここに取得したGASのウェブアプリURLを貼り付けてください";
+
+let globalMembers = [];
+let globalCatalog = [];
+let globalTickets = [];
+
+document.addEventListener('DOMContentLoaded', () => {
+    fetchStoreData();
+});
+
+// 🌐 サーバーから現在の全データを取得
+function fetchStoreData() {
+    if (GAS_URL.includes("ここに取得したGAS")) {
+        console.log("GAS未設定のため疑似データ表示");
+        renderDummyStore();
+        return;
+    }
+
+    fetch(GAS_URL)
+        .then(res => res.json())
+        .then(data => {
+            globalMembers = data.members;
+            globalCatalog = data.catalog;
+            globalTickets = data.tickets;
+
+            populateBuyerSelect();
+            renderCatalog();
+            renderTickets();
+            renderAdminPanel();
+        })
+        .catch(err => {
+            console.error("データ取得エラー:", err);
+            alert("ストアデータの取得に失敗しました。");
+        });
+}
+
+// 購入者セレクトボックスの生成
+function populateBuyerSelect() {
+    const select = document.getElementById('buyer-select');
+    const currentSelected = select.value;
+    select.innerHTML = '';
+    globalMembers.forEach(m => {
+        select.insertAdjacentHTML('beforeend', `<option value="${m.id}" ${m.id === currentSelected ? 'selected' : ''}>${m.name}</option>`);
+    });
+    updateBuyerInfo();
+}
+
+// 選択された購入者の現在の残高プレビュー更新 ＆ お財布の再描画
+function updateBuyerInfo() {
+    const select = document.getElementById('buyer-select');
+    if (!select.value) return;
+    const member = globalMembers.find(m => m.id === select.value);
+    if (member) {
+        document.getElementById('buyer-balance-preview').innerText = `現在残高: ${member.balance.toLocaleString()} P`;
+        
+        // 📋 お財布の見出しを選択されたメンバーの名前に変更
+        document.getElementById('ticket-title-owner').innerText = `🎒 ${member.name}さんのお財布（保有景品券）`;
+        
+        // 選択ユーザーが変わったのでお財布の中身も再描画する
+        renderTickets();
+    }
+}
+
+// 🎟️ 【個別お財布化】選択されたメンバーの景品券だけをレンダリング
+function renderTickets() {
+    const container = document.getElementById('ticket-display');
+    container.innerHTML = '';
+
+    const select = document.getElementById('buyer-select');
+    const buyerId = select.value;
+    const buyer = globalMembers.find(m => m.id === buyerId);
+    
+    if (!buyer) return;
+
+    // 📋 修正点：すべての券から「このメンバーの名前」が含まれる券だけを絞り込む
+    // ※GAS側で「〇〇の【景品券】」という名前で発行されるため、nameにメンバー名が含まれるかで判定します
+    const myTickets = globalTickets.filter(t => t.name.startsWith(buyer.name));
+
+    // 未使用の券を上に、使用済みの券を下に並べる
+    const sortedTickets = [...myTickets].sort((a, b) => (a.status === "使用済み" ? 1 : -1));
+
+    if (sortedTickets.length === 0) {
+        container.innerHTML = `<div style="color:#999; text-align:center; padding:20px; font-size:0.85rem;">現在、持っている景品券はありません</div>`;
+        return;
+    }
+
+    sortedTickets.forEach(t => {
+        const isUsed = t.status === "使用済み";
+        
+        // 📋 画面表示は見やすいように「お父さんの【高級アイス券】」からメンバー名を省いて「🎫 高級アイス券」とすっきり表示させます
+        const cleanTicketName = t.name.replace(`${buyer.name}の`, '');
+
+        container.insertAdjacentHTML('beforeend', `
+            <div class="ticket-card ${isUsed ? 'used' : ''}">
+                <div class="ticket-title">${cleanTicketName}</div>
+                <div class="ticket-meta">価値: ${t.price} P | 券ID: ${t.id}</div>
+                ${isUsed ? '<div class="used-stamp">使用済み</div>' : ''}
+            </div>
+        `);
+    });
+}
+// 🔒 管理者パネルのレンダリング
+function renderAdminPanel() {
+    // 1. 在庫数変更フォーム
+    const stockList = document.getElementById('admin-stock-list');
+    stockList.innerHTML = '';
+    globalCatalog.forEach(item => {
+        stockList.insertAdjacentHTML('beforeend', `
+            <div class="admin-row">
+                <span>${item.name}</span>
+                <div>
+                    <input type="number" class="stock-input" id="stock-edit-${item.id}" value="${item.stock}">
+                    <button class="admin-action-btn" onclick="updateStock('${item.id}')">在庫更新</button>
+                </div>
+            </div>
+        `);
+    });
+
+    // 2. 券の使用済み化ボタン一覧
+    const ticketList = document.getElementById('admin-ticket-list');
+    ticketList.innerHTML = '';
+    const activeTickets = globalTickets.filter(t => t.status === "未使用");
+
+    if (activeTickets.length === 0) {
+        ticketList.innerHTML = '<div style="font-size:0.8rem; color:#999; padding:5px;">現在、未使用の券はありません。</div>';
+        return;
+    }
+
+    activeTickets.forEach(t => {
+        ticketList.insertAdjacentHTML('beforeend', `
+            <div class="admin-row">
+                <span>${t.name}</span>
+                <button class="admin-action-btn red" onclick="markTicketAsUsed('${t.id}')">使用済みにする</button>
+            </div>
+        `);
+    });
+}
+
+// 🛒 ②景品交換アクション (購入ボタン)
+function buyItem(itemId) {
+    if (GAS_URL.includes("ここに取得したGAS")) { alert("GASのURLを設定してください。"); return; }
+    
+    const buyerId = document.getElementById('buyer-select').value;
+    const buyer = globalMembers.find(m => m.id === buyerId);
+    const item = globalCatalog.find(i => i.id === itemId);
+
+    if (!buyer || !item) return;
+    if (buyer.balance < item.price) { alert("だっちコインが足りません！"); return; }
+
+    if (!confirm(`${buyer.name}さん、${item.name}（${item.price}P）を交換しますか？\n残高から自動で引き落とされ、景品券が発行されます。`)) return;
+
+    const payload = { mode: "buy_item", memberId: buyerId, itemId: itemId };
+
+    fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) })
+        .then(res => res.json())
+        .then(resData => {
+            if (resData.status === "success") {
+                alert("交換が完了しました！景品券が発行され、だっち銀行の通帳へ自動記載されました。");
+                fetchStoreData(); // 画面を再読み込み
+            } else { alert("エラー: " + resData.message); }
+        })
+        .catch(err => { alert("通信エラーが発生しました。"); });
+}
+
+// 🎟️ 管理者操作：券を「使用済み」にする
+function markTicketAsUsed(ticketId) {
+    if (GAS_URL.includes("ここに取得したGAS")) { alert("URL未設定のため実行できません"); return; }
+    if (!confirm("この景品券を【使用済み】にマーキングします。よろしいですか？")) return;
+
+    const payload = { mode: "use_ticket", ticketId: ticketId };
+    fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) })
+        .then(res => res.json())
+        .then(resData => { if (resData.status === "success") { fetchStoreData(); } })
+        .catch(err => { alert("通信エラー"); });
+}
+
+// 📦 管理者操作：在庫数の更新
+function updateStock(itemId) {
+    if (GAS_URL.includes("ここに取得したGAS")) { alert("URL未設定のため実行できません"); return; }
+    const newStock = document.getElementById(`stock-edit-${itemId}`).value;
+
+    const payload = { mode: "update_stock", itemId: itemId, newStock: parseInt(newStock) || 0 };
+    fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) })
+        .then(res => res.json())
+        .then(resData => { if (resData.status === "success") { alert("在庫数を更新しました"); fetchStoreData(); } })
+        .catch(err => { alert("通信エラー"); });
+}
+
+function toggleAdminPanel() {
+    document.getElementById('admin-panel').classList.toggle('hidden');
+}
+
+// ⚠️ 疑似プレビュー表示
+function renderDummyStore() {
+    globalMembers = [
+        { id: "p1", name: "お父さん", balance: 1500 },
+        { id: "p2", name: "お母さん", balance: 100 }
+    ];
+    globalCatalog = [
+        { id: "item1", name: "高級アイス券", price: 300, stock: 4, type: "catalog" },
+        { id: "item2", name: "おねだり外食券", price: 2000, stock: 0, type: "catalog" }
+    ];
+    globalTickets = [
+        { id: "t_dummy1", name: "お父さんの【高級アイス券】", price: 300, stock: 1, type: "ticket", status: "未使用" }
+    ];
+    populateBuyerSelect(); renderCatalog(); renderTickets(); renderAdminPanel();
+}
+</script>
+</body>
+</html>

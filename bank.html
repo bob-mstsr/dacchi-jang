@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>だっち銀行 - だっち雀</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@500&family=Noto+Sans+JP:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f7f4eb;
+            --main-red: #9e1b1b;
+            --accent-gold: #d4af37;
+            --dark-charcoal: #1a1a1a;
+            --card-bg: #ffffff;
+            --green-profit: #2e7d32;
+            --red-loss: #c62828;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--dark-charcoal);
+            line-height: 1.5;
+            padding-bottom: 40px;
+        }
+
+        .app-container {
+            max-width: 500px;
+            margin: 0 auto;
+            background-color: #fffdf9;
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        /* 👑 ヘッダー */
+        header {
+            background: linear-gradient(135deg, var(--dark-charcoal) 0%, var(--main-red) 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-bottom: 4px solid var(--accent-gold);
+            position: relative;
+        }
+        header h1 {
+            font-family: 'Kiwi Maru', serif;
+            font-size: 1.8rem;
+            color: var(--accent-gold);
+        }
+        .back-btn {
+            position: absolute;
+            left: 15px; top: 22px;
+            color: var(--accent-gold);
+            text-decoration: none;
+            font-size: 0.9rem;
+            border: 1px solid var(--accent-gold);
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+
+        main { padding: 15px; }
+
+        h2 {
+            font-size: 1.1rem;
+            border-left: 4px solid var(--main-red);
+            padding-left: 8px;
+            margin: 20px 0 10px 0;
+            color: var(--dark-charcoal);
+        }
+
+        /* 💰 口座残高一覧（タップできるボタン仕様に変更） */
+        .accounts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 5px;
+        }
+        .account-card {
+            background: var(--card-bg);
+            border: 2px solid #e0dacf;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        /* 💡 選択されている個人の通帳カードをハイライト */
+        .account-card.active-user {
+            border-color: var(--main-red);
+            background-color: #fff5f5;
+            box-shadow: 0 4px 8px rgba(158, 27, 27, 0.15);
+            transform: translateY(-2px);
+        }
+        .account-name { font-weight: bold; font-size: 1rem; color: var(--dark-charcoal); }
+        .account-balance {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--main-red);
+            margin-top: 5px;
+        }
+        .account-balance span { font-size: 0.8rem; color: #666; margin-left: 2px; }
+
+        /* 🔍 通帳持ち主切り替えセレクトボックス（カードタップでも連動） */
+        .filter-wrapper {
+            margin: 10px 0;
+        }
+        .view-selector {
+            width: 100%;
+            padding: 10px;
+            font-size: 1rem;
+            font-weight: bold;
+            border: 2px solid var(--accent-gold);
+            background-color: #fff;
+            border-radius: 6px;
+            color: var(--dark-charcoal);
+        }
+
+        /* 📜 取引履歴（通帳風） */
+        .log-container {
+            background: #ffffff;
+            border: 1px solid #e0dacf;
+            border-radius: 8px;
+            max-height: 350px;
+            overflow-y: auto;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .log-item {
+            padding: 12px 10px;
+            border-bottom: 1px solid #eee;
+            font-size: 0.8rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .log-item:last-child { border-bottom: none; }
+        .log-meta { color: #777; margin-bottom: 2px; }
+        .log-detail { font-weight: bold; font-size: 0.85rem; color: #333; }
+        .log-amt { font-size: 1rem; font-weight: 700; }
+        .amt-plus { color: var(--green-profit); }
+        .amt-minus { color: var(--red-loss); }
+        
+        /* 🏷️ バッジ */
+        .type-badge {
+            font-size: 0.65rem;
+            padding: 1px 4px;
+            border-radius: 3px;
+            margin-left: 5px;
+            font-weight: bold;
+        }
+        .badge-ya { background: #e8f5e9; color: var(--green-profit); }
+        .badge-yb { background: #e3f2fd; color: #1565c0; }
+        .badge-ha { background: #ffebee; color: var(--red-loss); }
+        .badge-hb { background: #fff3e0; color: #ef6c00; }
+
+        /* 🔒 管理者用隠しエリア */
+        .admin-toggle-wrapper { margin-top: 40px; text-align: center; }
+        .admin-toggle-btn { background: none; border: 1px dashed #ccc; color: #999; font-size: 0.75rem; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+        .admin-section { background: #fff5f5; border: 2px solid var(--main-red); border-radius: 8px; padding: 15px; margin-top: 10px; }
+        .admin-section h3 { font-size: 1rem; color: var(--main-red); margin-bottom: 10px; text-align: center; }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-size: 0.8rem; font-weight: bold; margin-bottom: 4px; }
+        select, input[type="text"], input[type="number"] { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px; font-size: 0.95rem; }
+        .admin-btn { width: 100%; background: var(--main-red); color: white; border: none; padding: 10px; font-size: 0.95rem; font-weight: bold; border-radius: 6px; cursor: pointer; }
+        .admin-btn:disabled { background: #ccc; cursor: not-allowed; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header>
+        <a href="index.html" class="back-btn">◀ 戻る</a>
+        <h1>だっち銀行</h1>
+    </header>
+
+    <main>
+        <!-- 💰 ①残高確認 -->
+        <h2>現在の口座残高 <span style="font-size:0.75rem; color:#888; font-weight:normal;">(タップで通帳切替)</span></h2>
+        <div class="accounts-grid" id="accounts-display">
+            <div style="grid-column: span 2; text-align:center; padding:20px; color:#999;">🀄 データを読み込み中...</div>
+        </div>
+
+        <!-- 🔍 通帳の持ち主切り替えメニュー -->
+        <div class="filter-wrapper">
+            <select id="view-user-selector" class="view-selector" onchange="onUserFilterChange()">
+                <option value="all">📖 全員の統合タイムラインを表示</option>
+                <!-- JSで家族メンバーの選択肢を自動生成 -->
+            </select>
+        </div>
+
+        <!-- 📜 取引履歴 -->
+        <h2 id="log-title">だっち通帳（全員）</h2>
+        <div class="log-container" id="logs-display">
+            <div style="padding:20px; color:#999; text-align:center;">📖 履歴を取得中...</div>
+        </div>
+
+        <!-- 🔒 管理者用隠しメニュー -->
+        <div class="admin-toggle-wrapper">
+            <button class="admin-toggle-btn" onclick="toggleAdminPanel()">⚙️ 管理者専用裏メニューを開く</button>
+        </div>
+
+        <div id="admin-panel" class="admin-section hidden">
+            <h3>🐉 運営・管理者手続きパネル</h3>
+            <div class="form-group">
+                <label>対象メンバー</label>
+                <select id="admin-member"></select>
+            </div>
+            <div class="form-group">
+                <label>執行する手続き</label>
+                <select id="admin-action" onchange="onActionChange()">
+                    <option value="yakuman3">🎉 三人打ち 役満祝儀 (+500G)</option>
+                    <option value="yakuman4">🎉 四人打ち 役満祝儀 (+700G)</option>
+                    <option value="tokusei">📜 徳政令を実行（借金をゼロに戻す）</option>
+                    <option value="sub_manual">🛒 ストア景品引換の代行 (引落b)</option>
+                    <option value="add_manual">🎁 その他 運営からの特別支給 (預金b)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>金額 (P)</label>
+                <input type="number" id="admin-amount" placeholder="0" value="0">
+            </div>
+            <div class="form-group">
+                <label>備考・理由（通帳に記載されます）</label>
+                <input type="text" id="admin-memo" placeholder="例：おねだりアイス券、借金チャラなど">
+            </div>
+            <button class="admin-btn" id="submit-btn" onclick="executeAdminAction()">手続きを執行する</button>
+        </div>
+    </main>
+</div>
+
+<script>
+// ==========================================
+// 💡 【重要】デプロイしたGASのウェブアプリURLをここに貼り付け
+// ==========================================
+const GAS_URL = "ここに取得したGASのウェブアプリURLを貼り付けてください";
+
+let globalMembers = []; 
+let globalLogs = [];
+let currentFilterUser = "all"; // 現在誰の通帳を表示しているか ("all" または メンバー名)
+
+document.addEventListener('DOMContentLoaded', () => {
+    fetchDataFromServer();
+    onActionChange(); 
+});
+
+// 🌐 サーバーからデータ取得
+function fetchDataFromServer() {
+    if (GAS_URL.includes("ここに取得したGAS")) {
+        console.log("GASのURLが未設定です。疑似データ表示。");
+        renderDummyData();
+        return;
+    }
+
+    fetch(GAS_URL)
+        .then(response => response.json())
+        .then(data => {
+            globalMembers = data.members;
+            globalLogs = data.logs;
+            
+            updateFilterSelectorOptions();
+            render();
+            populateAdminSelect();
+        })
+        .catch(error => {
+            console.error("データ取得エラー:", error);
+            alert("データ取得に失敗しました。URLを確認してください。");
+        });
+}
+
+// 切り替えセレクトボックスの選択肢を動的に生成
+function updateFilterSelectorOptions() {
+    const selector = document.getElementById('view-user-selector');
+    // 初期化（「全員」だけ残す）
+    selector.innerHTML = '<option value="all">📖 全員の統合タイムラインを表示</option>';
+    
+    globalMembers.forEach(m => {
+        selector.insertAdjacentHTML('beforeend', `<option value="${m.name}">📒 ${m.name} の専用通帳</option>`);
+    });
+    selector.value = currentFilterUser;
+}
+
+function populateAdminSelect() {
+    const select = document.getElementById('admin-member');
+    select.innerHTML = '';
+    globalMembers.forEach(m => {
+        select.insertAdjacentHTML('beforeend', `<option value="${m.id}">${m.name}</option>`);
+    });
+}
+
+// 🎴 ユーザーがセレクトボックスを切り替えた時
+function onUserFilterChange() {
+    currentFilterUser = document.getElementById('view-user-selector').value;
+    render();
+}
+
+// 🎴 上部の残高カードを直接タップした時
+function selectUserFilter(name) {
+    // すでに選択されている人をもう一度タップしたら全員表示に戻す
+    currentFilterUser = (currentFilterUser === name) ? "all" : name;
+    document.getElementById('view-user-selector').value = currentFilterUser;
+    render();
+}
+
+function onActionChange() {
+    const action = document.getElementById('admin-action').value;
+    const amtInput = document.getElementById('admin-amount');
+    const memoInput = document.getElementById('admin-memo');
+
+    if (action === "yakuman3") { amtInput.value = 500; amtInput.disabled = true; memoInput.value = "三麻 役満祝儀！"; }
+    else if (action === "yakuman4") { amtInput.value = 700; amtInput.disabled = true; memoInput.value = "四麻 役満祝儀！"; }
+    else if (action === "tokusei") { amtInput.value = 0; amtInput.disabled = true; memoInput.value = "徳政令（借金免除）"; }
+    else { amtInput.value = ""; amtInput.disabled = false; memoInput.value = ""; }
+}
+
+function toggleAdminPanel() {
+    document.getElementById('admin-panel').classList.toggle('hidden');
+}
+
+// 👑 管理者コマンドの執行
+function executeAdminAction() {
+    if (GAS_URL.includes("ここに取得したGAS")) { alert("GASのURLを設定してください。"); return; }
+
+    const memberId = document.getElementById('admin-member').value;
+    const action = document.getElementById('admin-action').value;
+    let amount = parseInt(document.getElementById('admin-amount').value) || 0;
+    let memo = document.getElementById('admin-memo').value || "運営手続き";
+
+    const targetMember = globalMembers.find(m => m.id === memberId);
+    let logType = "預金b";
+    let isTokusei = false;
+
+    if (action === "tokusei") {
+        if (!targetMember || targetMember.balance >= 0) {
+            alert(`${targetMember ? targetMember.name : '対象'}さんは借金していません。`); return;
+        }
+        isTokusei = true;
+    } else if (action === "sub_manual") {
+        if (amount <= 0) { alert("正しい金額を入力してください"); return; }
+        amount = -amount;
+        logType = "引落b";
+    }
+
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true; btn.innerText = "通信中...";
+
+    const payload = { memberId: memberId, amount: amount, detail: memo, type: logType, isTokusei: isTokusei };
+
+    fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) })
+    .then(res => res.json())
+    .then(resData => {
+        if (resData.status === "success") {
+            alert("手続きが正常にスプレッドシートに反映されました！");
+            fetchDataFromServer();
+        } else { alert("エラー: " + resData.message); }
+    })
+    .catch(err => { alert("通信に失敗しました。"); })
+    .finally(() => { btn.disabled = false; btn.innerText = "手続きを執行する"; });
+}
+
+// 🎨 画面のレンダリング（フィルターロジック搭載）
+function render() {
+    // 1. 残高表示の更新（選択されているユーザーには 'active-user' クラスをつける）
+    const accountsDisplay = document.getElementById('accounts-display');
+    accountsDisplay.innerHTML = '';
+    
+    globalMembers.forEach(m => {
+        const isActive = (currentFilterUser === m.name) ? 'active-user' : '';
+        accountsDisplay.insertAdjacentHTML('beforeend', `
+            <div class="account-card ${isActive}" onclick="selectUserFilter('${m.name}')">
+                <div class="account-name">👲 ${m.name}</div>
+                <div class="account-balance">${m.balance.toLocaleString()}<span>P</span></div>
+            </div>
+        `);
+    });
+
+    // 2. タイトルの変更
+    const logTitle = document.getElementById('log-title');
+    if (currentFilterUser === "all") {
+        logTitle.innerHTML = "だっち通帳（全員の履歴）";
+    } else {
+        logTitle.innerHTML = `📒 だっち通帳（${currentFilterUser} 専用）`;
+    }
+
+    // 3. 履歴表示の更新（選択されたユーザーのみに filter する）
+    const logsDisplay = document.getElementById('logs-display');
+    logsDisplay.innerHTML = '';
+
+    const filteredLogs = globalLogs.filter(l => {
+        if (currentFilterUser === "all") return true; // 全員ならすべてパス
+        return l.name === currentFilterUser;          // 個人用なら名前が一致するものだけ
+    });
+
+    if (filteredLogs.length === 0) {
+        logsDisplay.innerHTML = `<div style="padding:20px; color:#999; text-align:center;">${currentFilterUser === "all" ? "履歴はまだありません" : currentFilterUser + "さんの専用履歴はまだありません"}</div>`;
+        return;
+    }
+
+filteredLogs.forEach(l => {
+        const isPlus = l.amount >= 0;
+        
+        // 📋 修正点：aやbを判別せず、文字を「収入」「支出」に完全統一する
+        let badgeClass = "badge-ya"; // 収入用の緑バッジ
+        let displayText = "収入";
+
+        if (!isPlus) {
+            badgeClass = "badge-ha"; // 支出用の赤バッジ
+            displayText = "支出";
+        }
+
+        logsDisplay.insertAdjacentHTML('beforeend', `
+            <div class="log-item">
+                <div>
+                    <div class="log-meta">${l.date} ${currentFilterUser === "all" ? '| ' + l.name : ''}<span class="type-badge ${badgeClass}">${displayText}</span></div>
+                    <div class="log-detail">${l.detail}</div>
+                </div>
+                <div class="log-amt ${isPlus ? 'amt-plus' : 'amt-minus'}">${isPlus ? '+' : ''}${l.amount} P</div>
+            </div>
+        `);
+    });
+}
+
+// ⚠️ URL未設定時のダミーデータ
+function renderDummyData() {
+    globalMembers = [
+        { id: "p1", name: "お父さん", balance: 1500 },
+        { id: "p2", name: "お母さん", balance: -250 },
+        { id: "p3", name: "自分", balance: 3200 },
+        { id: "p4", name: "妹", balance: 800 }
+    ];
+    globalLogs = [
+        { date: "5/18 12:00", name: "自分", detail: "三麻 1位 (スコア:+45)", amount: 685, type: "収入" },
+        { date: "5/18 11:15", name: "お父さん", detail: "🛒 ストア景品引換: 高級アイス券", amount: -300, type: "支出" },
+        { date: "5/18 10:30", name: "お母さん", detail: "四麻 4位 (スコア:-30)", amount: -450, type: "支出" },
+        { date: "5/17 21:00", name: "自分", detail: "🎉 四麻 役満祝儀！", amount: 700, type: "収入" }
+    ];
+    updateFilterSelectorOptions();
+    render();
+    populateAdminSelect();
+}
+</script>
+</body>
+</html>
