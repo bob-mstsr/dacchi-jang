@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>だっち雀 AI相談所</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@500&family=Noto+Sans+JP:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f7f4eb;
+            --main-red: #9e1b1b;
+            --accent-gold: #d4af37;
+            --dark-charcoal: #1a1a1a;
+            --card-bg: #ffffff;
+            --ai-blue: #1a73e8;
+            --ai-purple: #9c27b0;
+            --ai-green: #2e7d32;
+            --ai-orange: #e65100;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--dark-charcoal);
+            line-height: 1.5;
+            padding-bottom: 40px;
+        }
+
+        .app-container {
+            max-width: 500px;
+            margin: 0 auto;
+            background-color: #fffdf9;
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        /* 👑 ヘッダー */
+        header {
+            background: linear-gradient(135deg, var(--dark-charcoal) 0%, var(--main-red) 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-bottom: 4px solid var(--accent-gold);
+            position: relative;
+        }
+        header h1 {
+            font-family: 'Kiwi Maru', serif;
+            font-size: 1.6rem;
+            color: var(--accent-gold);
+        }
+        .back-btn {
+            position: absolute;
+            left: 15px; top: 22px;
+            color: var(--accent-gold);
+            text-decoration: none;
+            font-size: 0.9rem;
+            border: 1px solid var(--accent-gold);
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+
+        main { padding: 15px; }
+
+        .intro-box {
+            background: #ffffff;
+            border: 1px solid #e0dacf;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 20px;
+            font-size: 0.85rem;
+            color: #555;
+            text-align: center;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        h2 {
+            font-size: 1.1rem;
+            border-left: 4px solid var(--main-red);
+            padding-left: 8px;
+            margin: 20px 0 12px 0;
+            color: var(--dark-charcoal);
+        }
+
+        /* 🤖 AIカードグリッド */
+        .ai-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .ai-card {
+            display: flex;
+            align-items: center;
+            background: #ffffff;
+            border: 2px solid #e0dacf;
+            border-radius: 10px;
+            padding: 15px;
+            text-decoration: none;
+            color: var(--dark-charcoal);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+        }
+
+        .ai-card:active {
+            transform: scale(0.98);
+        }
+
+        /* 個別カードの装飾カラー */
+        .card-rule { border-color: var(--ai-blue); background: linear-gradient(135deg, #fff 80%, #f0f6ff 100%); }
+        .card-rule .card-icon { background: #e8f0fe; color: var(--ai-blue); }
+        .card-rule .card-title { color: var(--ai-blue); }
+
+        .card-discard { border-color: var(--ai-purple); background: linear-gradient(135deg, #fff 80%, #faf0f6 100%); }
+        .card-discard .card-icon { background: #fbe7fe; color: var(--ai-purple); }
+        .card-discard .card-title { color: var(--ai-purple); }
+
+        .card-reading { border-color: var(--ai-green); background: linear-gradient(135deg, #fff 80%, #f0f7f0 100%); }
+        .card-reading .card-icon { background: #e6f4ea; color: var(--ai-green); }
+        .card-reading .card-title { color: var(--ai-green); }
+
+        .card-score { border-color: var(--ai-orange); background: linear-gradient(135deg, #fff 80%, #fff7f0 100%); }
+        .card-score .card-icon { background: #feefe3; color: var(--ai-orange); }
+        .card-score .card-title { color: var(--ai-orange); }
+
+        /* カード内部要素 */
+        .card-icon {
+            font-size: 1.8rem;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+
+        .card-info {
+            flex-grow: 1;
+        }
+
+        .card-title {
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 2px;
+        }
+
+        .card-desc {
+            font-size: 0.78rem;
+            color: #666;
+            line-height: 1.4;
+        }
+
+        .card-arrow {
+            font-size: 0.9rem;
+            color: #999;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header>
+        <a href="index.html" class="back-btn">◀ 戻る</a>
+        <h1>だっち雀 AI相談所</h1>
+    </header>
+
+    <main>
+        <div class="intro-box">
+            🤖 <strong>NotebookLM連携ポータル</strong><br>
+            相談したい内容に合わせて、専門のAIを呼び出せます。<br>
+            （カメラで手牌の写真を送って相談するのもおすすめです！）
+        </div>
+
+        <h2>目的別にAIを選ぶ</h2>
+
+        <div class="ai-grid">
+            
+            <a href="https://notebooklm.google.com/notebook/ここに【基本ルール】のNotebookURLを貼る" target="_blank" class="ai-card card-rule">
+                <div class="card-icon">📜</div>
+                <div class="card-info">
+                    <div class="card-title">ルール・基本事項の相談</div>
+                    <div class="card-desc">だっち雀の独自ルール、役の種類、銀行や株システムの仕組みについて教えてくれます。</div>
+                </div>
+                <div class="card-arrow">▶</div>
+            </a>
+
+            <a href="https://notebooklm.google.com/notebook/ここに【何を切る】のNotebookURLを貼る" target="_blank" class="ai-card card-discard">
+                <div class="card-icon">🀄</div>
+                <div class="card-info">
+                    <div class="card-title">「何を切る？」の相談</div>
+                    <div class="card-desc">手牌の写真やテキストを送って、何を切るのが一番効率が良いか、どう手を進めるべきかアドバイスします。</div>
+                </div>
+                <div class="card-arrow">▶</div>
+            </a>
+
+            <a href="https://notebooklm.google.com/notebook/526e2ed1-e503-4443-82c3-34636f233543/preview" target="_blank" rel="noopener noreferrer" class="ai-card card-rule">
+                <div class="card-icon">🔍</div>
+                <div class="card-info">
+                    <div class="card-title">相手の「待ち」を読む相談</div>
+                    <div class="card-desc">相手の捨て牌やリーチ状況から、何が危ないか、どこで待っていそうかを一緒に推測します。</div>
+                </div>
+                <div class="card-arrow">▶</div>
+            </a>
+
+            <a href="https://notebooklm.google.com/notebook/ここに【点数計算】のNotebookURLを貼る" target="_blank" class="ai-card card-score">
+                <div class="card-icon">🧮</div>
+                <div class="card-info">
+                    <div class="card-title">点数・符計算の相談</div>
+                    <div class="card-desc">「今のあがりって何点？」となった時に、アガリ形や条件を伝えるだけで正確な点数や祝儀を計算します。</div>
+                </div>
+                <div class="card-arrow">▶</div>
+            </a>
+
+        </div>
+    </main>
+</div>
+
+</body>
+</html>

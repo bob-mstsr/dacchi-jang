@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>娯楽室：だっち雀ソリティア</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@500&family=Noto+Sans+JP:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f7f4eb;
+            --main-red: #9e1b1b;
+            --accent-gold: #d4af37;
+            --dark-charcoal: #1a1a1a;
+            --tile-bg: #ffffff;
+            --tile-selected: #ffe082;
+            --tile-hint: #c8e6c9;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--dark-charcoal);
+            line-height: 1.5;
+            padding-bottom: 30px;
+            user-select: none;
+        }
+
+        /* 📱 アプリ全体のコンテナ */
+        .app-container {
+            max-width: 500px;
+            margin: 0 auto;
+            background-color: #fffdf9;
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden; /* 横スクロールバーの発生を絶対防止 */
+        }
+
+        /* 👑 ヘッダー */
+        header {
+            background: linear-gradient(135deg, var(--dark-charcoal) 0%, var(--main-red) 100%);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            border-bottom: 4px solid var(--accent-gold);
+            position: relative;
+        }
+        header h1 {
+            font-family: 'Kiwi Maru', serif;
+            font-size: 1.4rem;
+            color: var(--accent-gold);
+        }
+        .back-btn {
+            position: absolute;
+            left: 15px; top: 18px;
+            color: var(--accent-gold);
+            text-decoration: none;
+            font-size: 0.85rem;
+            border: 1px solid var(--accent-gold);
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+
+        /* 📊 コントロールパネル */
+        .control-panel {
+            padding: 12px;
+            background: #fff;
+            border-bottom: 1px solid #e0dacf;
+        }
+
+        .config-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        select {
+            padding: 6px 10px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            border: 2px solid var(--main-red);
+            border-radius: 6px;
+            background: white;
+            font-weight: bold;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            text-align: center;
+            background: #fdfbf7;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #e5dfd3;
+        }
+        .stat-box { font-size: 0.8rem; color: #666; }
+        .stat-box span { display: block; font-size: 1.1rem; font-weight: bold; color: var(--dark-charcoal); }
+        .stat-box span.timer { color: var(--main-red); font-family: monospace; }
+
+        /* 🎮 操作ボタン */
+        .btn-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            padding: 10px 12px;
+        }
+        .game-btn {
+            background: white;
+            border: 1px solid #b5af9f;
+            padding: 8px 4px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.1s;
+        }
+        .game-btn:active { transform: scale(0.95); background: #eee; }
+        .btn-restart { background: var(--main-red); color: white; border-color: var(--main-red); }
+        .btn-restart:hover { background: #801414; }
+
+        /* 🎴 盤面コンテナ */
+        .board-container {
+            padding: 15px 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 320px;
+            width: 100%;
+        }
+        
+        /* 💡 どんな大画面でも480px内に確実に10列を収める設定 */
+        #game-board {
+            display: grid;
+            gap: 4px;
+            width: 100%;
+            max-width: 480px; 
+            margin: 0 auto;
+            justify-content: center;
+        }
+
+        /* 🀄 麻雀牌デザイン */
+        .tile {
+            background: var(--tile-bg);
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            aspect-ratio: 3 / 4; /* 縦横比を3:4に絶対ロック */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 5vw; /* スマホ時の文字サイズ自動微調整 */
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 3px 0 #bbb, 0 4px 4px rgba(0,0,0,0.15);
+            position: relative;
+            transition: all 0.1s ease;
+            width: 100%;
+        }
+        
+        /* 💻 パソコンや大画面で開いたときに牌の文字サイズを固定 */
+        @media screen and (min-width: 500px) {
+            .tile { 
+                font-size: 20px; 
+            }
+        }
+        
+        .tile:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 0 #bbb, 0 1px 2px rgba(0,0,0,0.15);
+        }
+        .tile.selected {
+            background-color: var(--tile-selected);
+            border-color: var(--accent-gold);
+            transform: translateY(2px);
+            box-shadow: 0 1px 0 var(--accent-gold), 0 1px 4px rgba(212,175,55,0.4);
+        }
+        .tile.hint {
+            background-color: var(--tile-hint);
+            animation: pulse 1s infinite alternate;
+        }
+        .tile.hidden {
+            visibility: hidden;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        @keyframes pulse {
+            from { box-shadow: 0 3px 0 #bbb, 0 0 4px var(--tile-hint); }
+            to { box-shadow: 0 3px 0 #bbb, 0 0 12px var(--tile-hint); }
+        }
+
+        /* 🏆 歴代最速ランキングボード */
+        .ranking-container {
+            margin: 15px 12px;
+            padding: 12px;
+            background: #f1ede2;
+            border-radius: 10px;
+            border: 1px solid #b5af9f;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .ranking-title {
+            font-family: 'Kiwi Maru', serif;
+            font-size: 0.95rem;
+            font-weight: bold;
+            color: var(--main-red);
+            text-align: center;
+            margin-bottom: 8px;
+            border-bottom: 1px dashed #b5af9f;
+            padding-bottom: 4px;
+        }
+        .ranking-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .ranking-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            padding: 4px 8px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 4px;
+        }
+        .ranking-item.rank-1 { background: linear-gradient(90deg, #fff3cd 0%, rgba(255,255,255,0.6) 100%); border-left: 4px solid var(--accent-gold); font-weight: bold; }
+        .ranking-item.rank-2 { border-left: 4px solid #9e9e9e; }
+        .ranking-item.rank-3 { border-left: 4px solid #cd7f32; }
+        
+        .rank-num { font-weight: bold; margin-right: 5px; }
+        .rank-name { flex-grow: 1; padding-left: 8px; color: #333; }
+        .rank-time { font-family: monospace; font-size: 0.95rem; font-weight: bold; color: var(--dark-charcoal); }
+
+        /* 🚨 メッセージ表示 */
+        .status-msg {
+            text-align: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+            color: var(--main-red);
+            margin: 5px 0;
+            min-height: 24px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header>
+        <a href="index.html" class="back-btn">◀ 娯楽室</a>
+        <h1>だっち雀ソリティア</h1>
+    </header>
+
+    <div class="control-panel">
+        <div class="config-row">
+            <div>
+                <label style="font-size:0.85rem; font-weight:bold;">難易度: </label>
+                <select id="difficulty-select">
+                    <option value="easy">初級 (24枚 - 6列)</option>
+                    <option value="medium" selected>中級 (48枚 - 8列)</option>
+                    <option value="hard">上級 (80枚 - 10列)</option>
+                </select>
+            </div>
+            <div id="status-text" class="status-msg"></div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-box">残り牌数<span id="tiles-left">0</span></div>
+            <div class="stat-box">経過時間<span id="game-timer" class="timer">00:00</span></div>
+            <div class="stat-box">可能ペア<span id="possible-pairs">0</span></div>
+        </div>
+    </div>
+
+    <div class="btn-row">
+        <button class="game-btn" id="btn-undo">元に戻す (<span id="undo-count">3</span>)</button>
+        <button class="game-btn" id="btn-hint">ヒント</button>
+        <button class="game-btn" id="btn-shuffle">混ぜる (<span id="shuffle-count">2</span>)</button>
+        <button class="game-btn btn-restart" id="btn-reset">新ゲーム</button>
+    </div>
+
+    <div class="board-container">
+        <div id="game-board"></div>
+    </div>
+
+    <div class="ranking-container">
+        <div class="ranking-title">🏆 歴代最速ランキング（トップ3）</div>
+        <ul class="ranking-list" id="ranking-list-board">
+            </ul>
+    </div>
+</div>
+
+<script>
+    // 🀄 上級の20種類（計80枚）に完全対応するように麻雀牌の文字種類を拡張！
+    const ALL_TILE_TYPES = [
+        '🀇','🀏','🀙','🀡','🀐','🀘', 
+        '🀀','🀁','🀂','🀃','🀄','🀅','🀆', 
+        '🀈','🀎','🀚','🀠','🀑','🀗','🀛','🀜'
+    ];
+
+    const CONFIGS = {
+        easy:   { totalTiles: 24, uniqueTypes: 6,  cols: 6 },
+        medium: { totalTiles: 48, uniqueTypes: 12, cols: 8 },
+        hard:   { totalTiles: 80, uniqueTypes: 20, cols: 10 }
+    };
+
+    let currentConfig = CONFIGS.medium;
+    let boardState = []; 
+    let selectedIndex = null;
+    
+    let undoStack = [];
+    let remainingUndos = 3;
+    let remainingShuffles = 2;
+    
+    let timerId = null;
+    let startTime = null;
+    let elapsedSeconds = 0;
+    let isGameActive = false;
+
+    const board = document.getElementById('game-board');
+    const tilesLeftText = document.getElementById('tiles-left');
+    const timerText = document.getElementById('game-timer');
+    const possiblePairsText = document.getElementById('possible-pairs');
+    const undoCountText = document.getElementById('undo-count');
+    const shuffleCountText = document.getElementById('shuffle-count');
+    const statusText = document.getElementById('status-text');
+    const rankingListBoard = document.getElementById('ranking-list-board');
+    const diffSelect = document.getElementById('difficulty-select');
+
+    window.onload = () => {
+        initGame();
+        diffSelect.addEventListener('change', (e) => {
+            currentConfig = CONFIGS[e.target.value];
+            initGame();
+        });
+        document.getElementById('btn-reset').addEventListener('click', initGame);
+        document.getElementById('btn-undo').addEventListener('click', handleUndo);
+        document.getElementById('btn-hint').addEventListener('click', showHint);
+        document.getElementById('btn-shuffle').addEventListener('click', handleShuffle);
+    };
+
+    function initGame() {
+        selectedIndex = null;
+        undoStack = [];
+        remainingUndos = 3;
+        remainingShuffles = 2;
+        elapsedSeconds = 0;
+        isGameActive = true;
+        statusText.innerText = "";
+        
+        undoCountText.innerText = remainingUndos;
+        shuffleCountText.innerText = remainingShuffles;
+        timerText.innerText = "00:00";
+        if(timerId) clearInterval(timerId);
+        
+        renderRankingBoard();
+
+        const tilesPool = [];
+        const typesToUse = ALL_TILE_TYPES.slice(0, currentConfig.uniqueTypes);
+        const pairsPerType = currentConfig.totalTiles / currentConfig.uniqueTypes / 2; 
+        
+        for(let i=0; i < currentConfig.uniqueTypes; i++) {
+            for(let j=0; j < pairsPerType * 2; j++) {
+                tilesPool.push(typesToUse[i]);
+            }
+        }
+
+        for (let i = tilesPool.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [tilesPool[i], tilesPool[j]] = [tilesPool[j], tilesPool[i]];
+        }
+
+        boardState = tilesPool.map((type, idx) => ({
+            id: idx,
+            type: type,
+            hidden: false
+        }));
+
+        startTime = Date.now();
+        timerId = setInterval(updateTimer, 1000);
+
+        renderBoard();
+    }
+
+    function renderBoard() {
+        board.innerHTML = "";
+        board.style.gridTemplateColumns = `repeat(${currentConfig.cols}, 1fr)`;
+
+        boardState.forEach((tile, index) => {
+            const tileEl = document.createElement('div');
+            tileEl.classList.add('tile');
+            tileEl.innerText = tile.type;
+            
+            if (tile.hidden) {
+                tileEl.classList.add('hidden');
+            } else {
+                tileEl.addEventListener('click', () => handleTileClick(index));
+            }
+            
+            board.appendChild(tileEl);
+        });
+
+        updateStats();
+    }
+
+    function isLocked(index) {
+        const cols = currentConfig.cols;
+        const col = index % cols;
+
+        let leftBlocked = false;
+        if (col > 0) {
+            const leftTile = boardState[index - 1];
+            if (leftTile && !leftTile.hidden) leftBlocked = true;
+        }
+
+        let rightBlocked = false;
+        if (col < cols - 1) {
+            const rightTile = boardState[index + 1];
+            if (rightTile && !rightTile.hidden) rightBlocked = true;
+        }
+
+        return leftBlocked && rightBlocked;
+    }
+
+    function handleTileClick(index) {
+        if (!isGameActive || boardState[index].hidden) return;
+
+        if (isLocked(index)) {
+            alert("❌ その牌は左右両方を挟まれているため動かせません！");
+            return;
+        }
+
+        document.querySelectorAll('.tile').forEach(el => el.classList.remove('hint'));
+        const tileElements = board.children;
+
+        if (selectedIndex === null) {
+            selectedIndex = index;
+            tileElements[index].classList.add('selected');
+        } else if (selectedIndex === index) {
+            tileElements[index].classList.remove('selected');
+            selectedIndex = null;
+        } else {
+            const firstTile = boardState[selectedIndex];
+            const secondTile = boardState[index];
+
+            if (firstTile.type === secondTile.type) {
+                undoStack.push([selectedIndex, index]);
+                
+                firstTile.hidden = true;
+                secondTile.hidden = true;
+                
+                tileElements[selectedIndex].classList.remove('selected');
+                selectedIndex = null;
+                
+                renderBoard();
+                checkGameStatus();
+            } else {
+                tileElements[selectedIndex].classList.remove('selected');
+                selectedIndex = index;
+                tileElements[index].classList.add('selected');
+            }
+        }
+    }
+
+    function updateStats() {
+        const left = boardState.filter(t => !t.hidden).length;
+        tilesLeftText.innerText = left;
+
+        const validPairs = findAvailablePairs();
+        possiblePairsText.innerText = validPairs.length;
+
+        if (left > 0 && validPairs.length === 0 && isGameActive) {
+            statusText.innerText = "⚠️ 手詰めです！混ぜてください";
+        }
+    }
+
+    function findAvailablePairs() {
+        const freeTiles = [];
+        boardState.forEach((tile, idx) => {
+            if (!tile.hidden && !isLocked(idx)) {
+                freeTiles.push(idx);
+            }
+        });
+
+        const pairs = [];
+        for (let i = 0; i < freeTiles.length; i++) {
+            for (let j = i + 1; j < freeTiles.length; j++) {
+                const idx1 = freeTiles[i];
+                const idx2 = freeTiles[j];
+                if (boardState[idx1].type === boardState[idx2].type) {
+                    pairs.push([idx1, idx2]);
+                }
+            }
+        }
+        return pairs;
+    }
+
+    function handleUndo() {
+        if (undoStack.length === 0) return alert("戻せる履歴がありません");
+        if (remainingUndos <= 0) return alert("元に戻せる上限回数(3回)を超えています！");
+
+        const lastPair = undoStack.pop();
+        boardState[lastPair[0]].hidden = false;
+        boardState[lastPair[1]].hidden = false;
+        
+        if(selectedIndex !== null) {
+            board.children[selectedIndex].classList.remove('selected');
+            selectedIndex = null;
+        }
+
+        remainingUndos--;
+        undoCountText.innerText = remainingUndos;
+        statusText.innerText = "";
+        renderBoard();
+    }
+
+    function showHint() {
+        const pairs = findAvailablePairs();
+        if (pairs.length === 0) return alert("消せるペアがありません。シャッフルしてください！");
+
+        const [idx1, idx2] = pairs[0];
+        const tileElements = board.children;
+        tileElements[idx1].classList.add('hint');
+        tileElements[idx2].classList.add('hint');
+    }
+
+    function handleShuffle() {
+        if (remainingShuffles <= 0) return alert("シャッフル上限回数(2回)を超えています！");
+        
+        const activeIndexes = [];
+        const activeTypes = [];
+        boardState.forEach((tile, idx) => {
+            if (!tile.hidden) {
+                activeIndexes.push(idx);
+                activeTypes.push(tile.type);
+            }
+        });
+
+        if (activeIndexes.length === 0) return;
+
+        for (let i = activeTypes.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [activeTypes[i], activeTypes[j]] = [activeTypes[j], activeTypes[i]];
+        }
+
+        activeIndexes.forEach((boardIdx, i) => {
+            boardState[boardIdx].type = activeTypes[i];
+        });
+
+        if(selectedIndex !== null) {
+            board.children[selectedIndex].classList.remove('selected');
+            selectedIndex = null;
+        }
+
+        remainingShuffles--;
+        shuffleCountText.innerText = remainingShuffles;
+        statusText.innerText = "";
+        renderBoard();
+    }
+
+    function updateTimer() {
+        if (!isGameActive) return;
+        elapsedSeconds++;
+        timerText.innerText = formatTime(elapsedSeconds);
+    }
+
+    function formatTime(seconds) {
+        const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+        const secs = (seconds % 60).toString().padStart(2, '0');
+        return `${mins}:${secs}`;
+    }
+
+    function checkGameStatus() {
+        const left = boardState.filter(t => !t.hidden).length;
+        if (left === 0) {
+            isGameActive = false;
+            clearInterval(timerId);
+            statusText.innerText = "🎉 クリア！！ おめでとう！";
+            statusText.style.color = "#2e7d32";
+            
+            checkAndSaveRanking(elapsedSeconds);
+        }
+    }
+
+    function getStorageKey() {
+        return `dacchijong_shanghai_rank_system_${diffSelect.value}`;
+    }
+
+    function loadRankingData() {
+        const key = getStorageKey();
+        const data = localStorage.getItem(key);
+        if (data) {
+            return JSON.parse(data);
+        }
+        return [
+            { name: "ーーー", time: 9999 },
+            { name: "ーーー", time: 9999 },
+            { name: "ーーー", time: 9999 }
+        ];
+    }
+
+    function renderRankingBoard() {
+        const ranks = loadRankingData();
+        rankingListBoard.innerHTML = "";
+
+        ranks.forEach((item, index) => {
+            const li = document.createElement('li');
+            li.classList.add('ranking-item', `rank-${index + 1}`);
+            
+            const timeDisplay = item.time === 9999 ? "--:--" : formatTime(item.time);
+            
+            li.innerHTML = `
+                <span class="rank-num">${index + 1}位</span>
+                <span class="rank-name">${item.name}</span>
+                <span class="rank-time">${timeDisplay}</span>
+            `;
+            rankingListBoard.appendChild(li);
+        });
+    }
+
+    function checkAndSaveRanking(finalScore) {
+        const ranks = loadRankingData();
+        
+        if (finalScore < ranks[2].time) {
+            setTimeout(() => {
+                let userName = prompt(`👑 おめでとうございます！歴代トップ3にランクインしました！\n【タイム: ${formatTime(finalScore)}】\n\nランキングに載せるお名前を入力してください:`);
+                
+                if (!userName || userName.trim() === "") {
+                    userName = "名無しプレイヤー";
+                } else {
+                    userName = userName.trim().substring(0, 10);
+                }
+
+                ranks.push({ name: userName, time: finalScore });
+                ranks.sort((a, b) => a.time - b.time);
+                const newTop3 = ranks.slice(0, 3);
+                
+                localStorage.setItem(getStorageKey(), JSON.stringify(newTop3));
+                renderRankingBoard();
+                alert(`殿堂入りしました！\n現在の難易度のランキングが更新されました。`);
+            }, 500);
+        } else {
+            setTimeout(() => {
+                alert(`🎉 クリア！ タイムは ${formatTime(finalScore)} でした！\n次のランクインを目指してがんばろう！`);
+            }, 500);
+        }
+    }
+</script>
+</body>
+</html>
