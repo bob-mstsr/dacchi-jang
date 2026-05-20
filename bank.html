@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>だっち銀行 - だっち雀</title>
+    <title>だっち銀行 & 株取引 - だっち雀</title>
     <link href="https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@500&family=Noto+Sans+JP:wght@500;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -14,6 +14,7 @@
             --card-bg: #ffffff;
             --green-profit: #2e7d32;
             --red-loss: #c62828;
+            --stock-blue: #0288d1;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -68,7 +69,7 @@
             color: var(--dark-charcoal);
         }
 
-        /* 💰 口座残高一覧（タップできるボタン仕様に変更） */
+        /* 💰 口座残高一覧 */
         .accounts-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -85,7 +86,6 @@
             cursor: pointer;
             transition: all 0.2s ease;
         }
-        /* 💡 選択されている個人の通帳カードをハイライト */
         .account-card.active-user {
             border-color: var(--main-red);
             background-color: #fff5f5;
@@ -101,37 +101,125 @@
         }
         .account-balance span { font-size: 0.8rem; color: #666; margin-left: 2px; }
 
-        /* 🔍 通帳持ち主切り替えセレクトボックス（カードタップでも連動） */
-        .filter-wrapper {
-            margin: 10px 0;
+        /* 📈 パラダイスだっち株 取引エリア */
+        .stock-section {
+            background: #f0f7ff;
+            border: 2px solid var(--stock-blue);
+            border-radius: 12px;
+            padding: 15px;
+            margin: 15px 0;
+            box-shadow: 0 4px 6px rgba(2, 136, 209, 0.05);
         }
-        .view-selector {
-            width: 100%;
-            padding: 10px;
-            font-size: 1rem;
-            font-weight: bold;
-            border: 2px solid var(--accent-gold);
-            background-color: #fff;
-            border-radius: 6px;
-            color: var(--dark-charcoal);
-        }
-
-        /* 📜 取引履歴（通帳風） */
-        .log-container {
-            background: #ffffff;
-            border: 1px solid #e0dacf;
-            border-radius: 8px;
-            max-height: 350px;
-            overflow-y: auto;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
-        }
-        .log-item {
-            padding: 12px 10px;
-            border-bottom: 1px solid #eee;
-            font-size: 0.8rem;
+        .stock-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border-bottom: 1px dashed var(--stock-blue);
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+        }
+        .stock-title {
+            font-size: 1.05rem;
+            font-weight: bold;
+            color: var(--stock-blue);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .stock-market-info {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr);
+            gap: 10px;
+            background: #ffffff;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #b3e5fc;
+            margin-bottom: 12px;
+        }
+        .info-box { text-align: center; }
+        .info-label { font-size: 0.7rem; color: #555; }
+        .info-val { font-size: 1.2rem; font-weight: bold; color: var(--dark-charcoal); }
+        .info-val.price { color: #e65100; }
+        
+        .user-stock-status {
+            background: #e1f5fe;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            margin-bottom: 12px;
+            border-left: 4px solid var(--stock-blue);
+        }
+
+        /* 売買コントローラー */
+        .trade-control {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            background: #ffffff;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid #b3e5fc;
+        }
+        .qty-btn {
+            background: #e1f5fe;
+            border: 1px solid var(--stock-blue);
+            color: var(--stock-blue);
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .qty-btn:disabled { background: #eee; border-color: #ccc; color: #aaa; cursor: not-allowed; }
+        .trade-qty { font-size: 1.2rem; font-weight: bold; min-width: 60px; text-align: center; }
+
+        .trade-actions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 5px;
+        }
+        .action-btn {
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 0.95rem;
+            cursor: pointer;
+            color: white;
+            transition: opacity 0.2s;
+        }
+        .action-btn:disabled { background: #ccc !important; cursor: not-allowed; opacity: 0.6; }
+        .btn-buy { background-color: var(--green-profit); }
+        .btn-sell { background-color: var(--red-loss); }
+        .trade-preview {
+            text-align: center;
+            font-size: 0.72rem;
+            color: #666;
+            margin-top: 6px;
+        }
+
+        /* 🔍 通帳持ち主切り替え */
+        .filter-wrapper { margin: 15px 0 10px 0; }
+        .view-selector {
+            width: 100%; padding: 10px; font-size: 1rem; font-weight: bold;
+            border: 2px solid var(--accent-gold); background-color: #fff;
+            border-radius: 6px; color: var(--dark-charcoal);
+        }
+
+        /* 📜 取引履歴 */
+        .log-container {
+            background: #ffffff; border: 1px solid #e0dacf; border-radius: 8px;
+            max-height: 250px; overflow-y: auto; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .log-item {
+            padding: 12px 10px; border-bottom: 1px solid #eee; font-size: 0.8rem;
+            display: flex; justify-content: space-between; align-items: center;
         }
         .log-item:last-child { border-bottom: none; }
         .log-meta { color: #777; margin-bottom: 2px; }
@@ -140,20 +228,12 @@
         .amt-plus { color: var(--green-profit); }
         .amt-minus { color: var(--red-loss); }
         
-        /* 🏷️ バッジ */
-        .type-badge {
-            font-size: 0.65rem;
-            padding: 1px 4px;
-            border-radius: 3px;
-            margin-left: 5px;
-            font-weight: bold;
-        }
+        .type-badge { font-size: 0.65rem; padding: 1px 4px; border-radius: 3px; margin-left: 5px; font-weight: bold; }
         .badge-ya { background: #e8f5e9; color: var(--green-profit); }
-        .badge-yb { background: #e3f2fd; color: #1565c0; }
         .badge-ha { background: #ffebee; color: var(--red-loss); }
-        .badge-hb { background: #fff3e0; color: #ef6c00; }
+        .badge-stock { background: #e3f2fd; color: var(--stock-blue); }
 
-        /* 🔒 管理者用隠しエリア */
+        /* 🔒 管理者裏メニュー */
         .admin-toggle-wrapper { margin-top: 40px; text-align: center; }
         .admin-toggle-btn { background: none; border: 1px dashed #ccc; color: #999; font-size: 0.75rem; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
         .admin-section { background: #fff5f5; border: 2px solid var(--main-red); border-radius: 8px; padding: 15px; margin-top: 10px; }
@@ -175,27 +255,73 @@
     </header>
 
     <main>
-        <!-- 💰 ①残高確認 -->
         <h2>現在の口座残高 <span style="font-size:0.75rem; color:#888; font-weight:normal;">(タップで通帳切替)</span></h2>
         <div class="accounts-grid" id="accounts-display">
             <div style="grid-column: span 2; text-align:center; padding:20px; color:#999;">🀄 データを読み込み中...</div>
         </div>
 
-        <!-- 🔍 通帳の持ち主切り替えメニュー -->
         <div class="filter-wrapper">
             <select id="view-user-selector" class="view-selector" onchange="onUserFilterChange()">
                 <option value="all">📖 全員の統合タイムラインを表示</option>
-                <!-- JSで家族メンバーの選択肢を自動生成 -->
             </select>
         </div>
 
-        <!-- 📜 取引履歴 -->
+        <div id="stock-trade-area" class="stock-section hidden">
+            <div class="stock-header">
+                <div class="stock-title">📈 パラダイスだっち株取引所</div>
+                <span style="font-size:0.7rem; color:#666; background:#fff; padding:2px 6px; border-radius:4px; border:1px solid #b3e5fc;">1株単位売買</span>
+            </div>
+            
+            <div class="stock-market-info">
+                <div class="info-box">
+                    <div class="info-label">現在の株価 (1株)</div>
+                    <div class="info-val price" id="market-stock-price">--- P</div>
+                </div>
+            </div>
+
+            <div class="user-stock-status">
+                🙋‍♂️ <strong id="stock-user-name">メンバー</strong> さんの保有状況:<br>
+                <span style="display:inline-block; margin-top:4px;">
+                    保有株数: <strong id="user-stock-count" style="color:var(--stock-blue); font-size:1.05rem;">0</strong> / 10 株 (最大)<br>
+                    現在の時価総額: <strong id="user-stock-value">0</strong> P
+                </span>
+            </div>
+
+            <div class="trade-control">
+                <button class="qty-btn" onclick="changeTradeQty(-1)">−</button>
+                <div class="trade-qty"><span id="trade-qty-val">1</span> 株</div>
+                <button class="qty-btn" onclick="changeTradeQty(1)">+</button>
+            </div>
+
+            <div class="trade-actions">
+                <button class="action-btn btn-buy" id="btn-stock-buy" onclick="executeStockTrade('buy')">🟢 株を購入</button>
+                <button class="action-btn btn-sell" id="btn-stock-sell" onclick="executeStockTrade('sell')">🔴 株を売却</button>
+            </div>
+            <div class="trade-preview" id="trade-preview-text">
+                必要ポイント: --- P / 売却受取(手数料2%引): --- P
+            </div>
+        </div>
+
         <h2 id="log-title">だっち通帳（全員）</h2>
         <div class="log-container" id="logs-display">
             <div style="padding:20px; color:#999; text-align:center;">📖 履歴を取得中...</div>
         </div>
 
-        <!-- 🔒 管理者用隠しメニュー -->
+        <div class="stock-section" style="background: #ffffff; border-color: var(--accent-gold); margin-top: 25px; margin-bottom: 15px;">
+            <div class="stock-title" style="color: var(--dark-charcoal); margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <span>📊 パラダイスだっち株 チャート（直近10日）</span>
+                <span style="font-size: 0.7rem; background: #e3f2fd; color: var(--stock-blue); padding: 2px 6px; border-radius: 4px; font-weight: bold;" id="latest-badge">現在: ---P</span>
+            </div>
+            <div class="canvas-container" style="width: 100%; background: #faf8f5; border: 1px solid #e0dacf; border-radius: 8px; padding: 12px 8px 8px 12px;">
+                <canvas id="stock-chart-canvas" style="width: 100%; height: 160px; display: block;"></canvas>
+            </div>
+            <div class="chart-footer" style="display: flex; justify-content: space-between; font-size: 0.72rem; color: #666; margin-top: 8px; padding: 0 4px;">
+                <span>⬅ 10日前</span>
+                <span id="chart-min-max-text" style="font-weight: bold; color: #444;">最高: --- P / 最安: --- P</span>
+                <span>最新 (今) ➡</span>
+            </div>
+        </div>
+
         <div class="admin-toggle-wrapper">
             <button class="admin-toggle-btn" onclick="toggleAdminPanel()">⚙️ 管理者専用裏メニューを開く</button>
         </div>
@@ -230,14 +356,14 @@
 </div>
 
 <script>
-// ==========================================
-// 💡 【重要】デプロイしたGASのウェブアプリURLをここに貼り付け
-// ==========================================
 const GAS_URL = "ここに取得したGASのウェブアプリURLを貼り付けてください";
 
+// グローバルデータ
 let globalMembers = []; 
 let globalLogs = [];
-let currentFilterUser = "all"; // 現在誰の通帳を表示しているか ("all" または メンバー名)
+let globalStockMarket = { price: 100 }; // 株価(基準100P)、全体在庫枠は撤廃
+let currentFilterUser = "all"; 
+let currentTradeQty = 1; 
 
 document.addEventListener('DOMContentLoaded', () => {
     fetchDataFromServer();
@@ -247,7 +373,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // 🌐 サーバーからデータ取得
 function fetchDataFromServer() {
     if (GAS_URL.includes("ここに取得したGAS")) {
-        console.log("GASのURLが未設定です。疑似データ表示。");
+        console.log("GASのURLが未設定です。株システム対応の疑似データ表示。");
         renderDummyData();
         return;
     }
@@ -257,6 +383,9 @@ function fetchDataFromServer() {
         .then(data => {
             globalMembers = data.members;
             globalLogs = data.logs;
+            if (data.stockMarket) {
+                globalStockMarket = data.stockMarket;
+            }
             
             updateFilterSelectorOptions();
             render();
@@ -268,12 +397,9 @@ function fetchDataFromServer() {
         });
 }
 
-// 切り替えセレクトボックスの選択肢を動的に生成
 function updateFilterSelectorOptions() {
     const selector = document.getElementById('view-user-selector');
-    // 初期化（「全員」だけ残す）
     selector.innerHTML = '<option value="all">📖 全員の統合タイムラインを表示</option>';
-    
     globalMembers.forEach(m => {
         selector.insertAdjacentHTML('beforeend', `<option value="${m.name}">📒 ${m.name} の専用通帳</option>`);
     });
@@ -288,17 +414,16 @@ function populateAdminSelect() {
     });
 }
 
-// 🎴 ユーザーがセレクトボックスを切り替えた時
 function onUserFilterChange() {
     currentFilterUser = document.getElementById('view-user-selector').value;
+    currentTradeQty = 1; 
     render();
 }
 
-// 🎴 上部の残高カードを直接タップした時
 function selectUserFilter(name) {
-    // すでに選択されている人をもう一度タップしたら全員表示に戻す
     currentFilterUser = (currentFilterUser === name) ? "all" : name;
     document.getElementById('view-user-selector').value = currentFilterUser;
+    currentTradeQty = 1;
     render();
 }
 
@@ -317,6 +442,69 @@ function toggleAdminPanel() {
     document.getElementById('admin-panel').classList.toggle('hidden');
 }
 
+function changeTradeQty(delta) {
+    let newQty = currentTradeQty + delta;
+    if (newQty < 1) newQty = 1;
+    if (newQty > 10) newQty = 10; 
+    currentTradeQty = newQty;
+    document.getElementById('trade-qty-val').innerText = currentTradeQty;
+    updateTradePreview();
+}
+
+function updateTradePreview() {
+    const price = globalStockMarket.price;
+    const totalBuyCost = price * currentTradeQty;
+    const totalSellReturn = Math.floor((price * currentTradeQty) * 0.98);
+
+    document.getElementById('trade-preview-text').innerText = 
+        `購入時必要: ${totalBuyCost.toLocaleString()} P / 売却受取(2%減): ${totalSellReturn.toLocaleString()} P`;
+}
+
+// 🟢🔴 株の売買処理をサーバー(GAS)に送信
+function executeStockTrade(action) {
+    if (GAS_URL.includes("ここに取得したGAS")) { 
+        alert("疑似データモードです。売買シミュレーションを実行します。");
+        simulateStockTradeData(action);
+        return; 
+    }
+
+    const activeMember = globalMembers.find(m => m.name === currentFilterUser);
+    if (!activeMember) return;
+
+    if (action === 'buy') {
+        if (activeMember.balance < (globalStockMarket.price * currentTradeQty)) { alert("銀行残高Pが足りません！"); return; }
+        if ((activeMember.stock_count + currentTradeQty) > 10) { alert("1人最大10株までの保有制限を超えています！"); return; }
+    } else if (action === 'sell') {
+        if (activeMember.stock_count < currentTradeQty) { alert("指定された株数を持っていません！"); return; }
+    }
+
+    if (!confirm(`${activeMember.name}さん、この条件で ${currentTradeQty}株 ${action === 'buy' ? '購入' : '売却'} しますか？`)) return;
+
+    const buyBtn = document.getElementById('btn-stock-buy');
+    const sellBtn = document.getElementById('btn-stock-sell');
+    buyBtn.disabled = true; sellBtn.disabled = true;
+
+    const payload = {
+        mode: "trade_stock",
+        memberId: activeMember.id,
+        action: action,
+        qty: currentTradeQty
+    };
+
+    fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) })
+    .then(res => res.json())
+    .then(resData => {
+        if (resData.status === "success") {
+            alert(`株の${action === 'buy' ? '購入' : '売却'}手続きが完了しました！`);
+            currentTradeQty = 1;
+            document.getElementById('trade-qty-val').innerText = currentTradeQty;
+            fetchDataFromServer();
+        } else { alert("エラー: " + resData.message); }
+    })
+    .catch(err => { alert("通信に失敗しました。"); })
+    .finally(() => { buyBtn.disabled = false; sellBtn.disabled = false; });
+}
+
 // 👑 管理者コマンドの執行
 function executeAdminAction() {
     if (GAS_URL.includes("ここに取得したGAS")) { alert("GASのURLを設定してください。"); return; }
@@ -326,31 +514,19 @@ function executeAdminAction() {
     let amount = parseInt(document.getElementById('admin-amount').value) || 0;
     let memo = document.getElementById('admin-memo').value || "運営手続き";
 
-    const targetMember = globalMembers.find(m => m.id === memberId);
-    let logType = "預金b";
-    let isTokusei = false;
-
-    if (action === "tokusei") {
-        if (!targetMember || targetMember.balance >= 0) {
-            alert(`${targetMember ? targetMember.name : '対象'}さんは借金していません。`); return;
-        }
-        isTokusei = true;
-    } else if (action === "sub_manual") {
-        if (amount <= 0) { alert("正しい金額を入力してください"); return; }
-        amount = -amount;
-        logType = "引落b";
-    }
-
     const btn = document.getElementById('submit-btn');
     btn.disabled = true; btn.innerText = "通信中...";
 
-    const payload = { memberId: memberId, amount: amount, detail: memo, type: logType, isTokusei: isTokusei };
+    let payload = { memberId: memberId, amount: amount, detail: memo, type: "預金b", isTokusei: false };
+
+    if (action === "tokusei") { payload.isTokusei = true; }
+    else if (action === "sub_manual") { amount = -amount; payload.amount = amount; payload.type = "引落b"; }
 
     fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) })
     .then(res => res.json())
     .then(resData => {
         if (resData.status === "success") {
-            alert("手続きが正常にスプレッドシートに反映されました！");
+            alert("管理者手続きが反映されました！");
             fetchDataFromServer();
         } else { alert("エラー: " + resData.message); }
     })
@@ -358,9 +534,106 @@ function executeAdminAction() {
     .finally(() => { btn.disabled = false; btn.innerText = "手続きを執行する"; });
 }
 
-// 🎨 画面のレンダリング（フィルターロジック搭載）
+// 🎨 株価チャートをCanvasに美しく描画する
+function drawProfessionalChart(historyData) {
+    const canvas = document.getElementById('stock-chart-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
+
+    const width = rect.width;
+    const height = rect.height;
+
+    const MAX_PRICE = 300;
+    const MIN_PRICE = 30;
+
+    const paddingLeft = 35;
+    const paddingTop = 10;
+    const paddingBottom = 10;
+    const graphWidth = width - paddingLeft;
+    const graphHeight = height - paddingTop - paddingBottom;
+
+    const getY = (price) => {
+        const ratio = (price - MIN_PRICE) / (MAX_PRICE - MIN_PRICE);
+        return paddingTop + graphHeight * (1 - ratio);
+    };
+
+    const gridLines = [30, 100, 200, 300]; 
+    ctx.strokeStyle = '#e5e0d8';           
+    ctx.lineWidth = 1;
+    ctx.font = '10px "Noto Sans JP"';
+    ctx.fillStyle = '#888888';              
+    ctx.textBaseline = 'middle';
+
+    gridLines.forEach(price => {
+        const y = getY(price);
+        ctx.beginPath();
+        ctx.moveTo(paddingLeft, y);
+        ctx.lineTo(width, y);
+        ctx.stroke();
+
+        let suffix = (price === 300) ? 'P(上)' : (price === 30) ? 'P(下)' : 'P';
+        ctx.fillText(price + suffix, 2, y);
+    });
+
+    if (!historyData || historyData.length === 0) return;
+
+    const points = [];
+    const stepX = graphWidth / (historyData.length - 1);
+
+    historyData.forEach((price, index) => {
+        const x = paddingLeft + (index * stepX);
+        const y = getY(price);
+        points.push({ x: x, y: y });
+    });
+
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, getY(MIN_PRICE)); 
+    points.forEach(p => ctx.lineTo(p.x, p.y));
+    ctx.lineTo(points[points.length - 1].x, getY(MIN_PRICE)); 
+    ctx.closePath();
+
+    const gradient = ctx.createLinearGradient(0, paddingTop, 0, height - paddingBottom);
+    gradient.addColorStop(0, 'rgba(2, 136, 209, 0.35)'); 
+    gradient.addColorStop(1, 'rgba(2, 136, 209, 0.00)'); 
+    ctx.fillStyle = gradient;
+    ctx.fill();
+
+    ctx.beginPath();
+    points.forEach((p, index) => {
+        if (index === 0) ctx.moveTo(p.x, p.y);
+        else ctx.lineTo(p.x, p.y);
+    });
+    ctx.strokeStyle = '#0288d1'; 
+    ctx.lineWidth = 2.5;         
+    ctx.stroke();
+
+    const lastPoint = points[points.length - 1];
+    const latestPrice = historyData[historyData.length - 1];
+
+    ctx.beginPath();
+    ctx.arc(lastPoint.x, lastPoint.y, 6, 0, 2 * Math.PI);
+    ctx.fillStyle = 'rgba(2, 136, 209, 0.3)';
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(lastPoint.x, lastPoint.y, 3.5, 0, 2 * Math.PI);
+    ctx.fillStyle = '#0288d1';
+    ctx.fill();
+
+    const maxVal = Math.max(...historyData);
+    const minVal = Math.min(...historyData);
+    document.getElementById('chart-min-max-text').innerText = `最高: ${maxVal} P / 最安: ${minVal} P`;
+    document.getElementById('latest-badge').innerText = `現在: ${latestPrice} P`;
+}
+
+// 🎨 画面の総レンダリング
 function render() {
-    // 1. 残高表示の更新（選択されているユーザーには 'active-user' クラスをつける）
     const accountsDisplay = document.getElementById('accounts-display');
     accountsDisplay.innerHTML = '';
     
@@ -370,73 +643,155 @@ function render() {
             <div class="account-card ${isActive}" onclick="selectUserFilter('${m.name}')">
                 <div class="account-name">👲 ${m.name}</div>
                 <div class="account-balance">${m.balance.toLocaleString()}<span>P</span></div>
+                <div style="font-size:0.68rem; color:#666; margin-top:3px;">📈 ${m.stock_count || 0} 株保有</div>
             </div>
         `);
     });
 
-    // 2. タイトルの変更
-    const logTitle = document.getElementById('log-title');
+    const stockArea = document.getElementById('stock-trade-area');
     if (currentFilterUser === "all") {
-        logTitle.innerHTML = "だっち通帳（全員の履歴）";
+        stockArea.classList.add('hidden');
     } else {
-        logTitle.innerHTML = `📒 だっち通帳（${currentFilterUser} 専用）`;
+        stockArea.classList.remove('hidden');
+        document.getElementById('market-stock-price').innerText = `${globalStockMarket.price} P`;
+        
+        const activeUser = globalMembers.find(m => m.name === currentFilterUser);
+        if (activeUser) {
+            document.getElementById('stock-user-name').innerText = activeUser.name;
+            const sCount = activeUser.stock_count || 0;
+            document.getElementById('user-stock-count').innerText = sCount;
+            document.getElementById('user-stock-value').innerText = (sCount * globalStockMarket.price).toLocaleString();
+            
+            const buyBtn = document.getElementById('btn-stock-buy');
+            const sellBtn = document.getElementById('btn-stock-sell');
+            
+            const cost = globalStockMarket.price * currentTradeQty;
+            if (activeUser.balance < cost || (sCount + currentTradeQty) > 10) {
+                buyBtn.disabled = true;
+            } else {
+                buyBtn.disabled = false;
+            }
+            
+            if (sCount < currentTradeQty) {
+                sellBtn.disabled = true;
+            } else {
+                sellBtn.disabled = false;
+            }
+        }
+        updateTradePreview();
     }
 
-    // 3. 履歴表示の更新（選択されたユーザーのみに filter する）
+    const logTitle = document.getElementById('log-title');
+    logTitle.innerHTML = (currentFilterUser === "all") ? "だっち通帳（全員の履歴）" : `📒 だっち通帳（${currentFilterUser} 専用）`;
+
     const logsDisplay = document.getElementById('logs-display');
     logsDisplay.innerHTML = '';
 
     const filteredLogs = globalLogs.filter(l => {
-        if (currentFilterUser === "all") return true; // 全員ならすべてパス
-        return l.name === currentFilterUser;          // 個人用なら名前が一致するものだけ
+        if (currentFilterUser === "all") return true;
+        return l.name === currentFilterUser;
     });
 
     if (filteredLogs.length === 0) {
-        logsDisplay.innerHTML = `<div style="padding:20px; color:#999; text-align:center;">${currentFilterUser === "all" ? "履歴はまだありません" : currentFilterUser + "さんの専用履歴はまだありません"}</div>`;
-        return;
+        logsDisplay.innerHTML = `<div style="padding:20px; color:#999; text-align:center;">履歴はまだありません</div>`;
+    } else {
+        filteredLogs.forEach(l => {
+            const isPlus = l.amount >= 0;
+            let badgeClass = isPlus ? "badge-ya" : "badge-ha";
+            let displayText = isPlus ? "収入" : "支出";
+
+            if (l.detail.includes("株") || l.detail.includes("配当")) {
+                badgeClass = "badge-stock";
+                displayText = "株式";
+            }
+
+            logsDisplay.insertAdjacentHTML('beforeend', `
+                <div class="log-item">
+                    <div>
+                        <div class="log-meta">${l.date} ${currentFilterUser === "all" ? '| ' + l.name : ''}<span class="type-badge ${badgeClass}">${displayText}</span></div>
+                        <div class="log-detail">${l.detail}</div>
+                    </div>
+                    <div class="log-amt ${isPlus ? 'amt-plus' : 'amt-minus'}">${isPlus ? '+' : ''}${l.amount} P</div>
+                </div>
+            `);
+        });
     }
 
-filteredLogs.forEach(l => {
-        const isPlus = l.amount >= 0;
-        
-        // 📋 修正点：aやbを判別せず、文字を「収入」「支出」に完全統一する
-        let badgeClass = "badge-ya"; // 収入用の緑バッジ
-        let displayText = "収入";
-
-        if (!isPlus) {
-            badgeClass = "badge-ha"; // 支出用の赤バッジ
-            displayText = "支出";
-        }
-
-        logsDisplay.insertAdjacentHTML('beforeend', `
-            <div class="log-item">
-                <div>
-                    <div class="log-meta">${l.date} ${currentFilterUser === "all" ? '| ' + l.name : ''}<span class="type-badge ${badgeClass}">${displayText}</span></div>
-                    <div class="log-detail">${l.detail}</div>
-                </div>
-                <div class="log-amt ${isPlus ? 'amt-plus' : 'amt-minus'}">${isPlus ? '+' : ''}${l.amount} P</div>
-            </div>
-        `);
-    });
+    const currentChartHistory = globalStockMarket.history || [
+        90, 85, 70, 55, 45, 60, 80, 110, 130, 120, 
+        105, 95, 120, 150, 195, 240, 220, 180, 210, globalStockMarket.price
+    ];
+    drawProfessionalChart(currentChartHistory);
 }
 
-// ⚠️ URL未設定時のダミーデータ
+// ⚠️ URL未設定用のダミーパータ更新（「弟」が加わった5人家族のシミュレータデータ）
 function renderDummyData() {
     globalMembers = [
-        { id: "p1", name: "お父さん", balance: 1500 },
-        { id: "p2", name: "お母さん", balance: -250 },
-        { id: "p3", name: "自分", balance: 3200 },
-        { id: "p4", name: "妹", balance: 800 }
+        { id: "p1", name: "お父さん", balance: 1500, stock_count: 3 },
+        { id: "p2", name: "お母さん", balance: 800, stock_count: 0 },
+        { id: "p3", name: "自分", balance: 3200, stock_count: 10 },
+        { id: "p4", name: "妹", balance: 120, stock_count: 1 },
+        { id: "p5", name: "弟", balance: 650, stock_count: 2 } // 👈 「弟」を追加しました！
     ];
     globalLogs = [
-        { date: "5/18 12:00", name: "自分", detail: "三麻 1位 (スコア:+45)", amount: 685, type: "収入" },
-        { date: "5/18 11:15", name: "お父さん", detail: "🛒 ストア景品引換: 高級アイス券", amount: -300, type: "支出" },
-        { date: "5/18 10:30", name: "お母さん", detail: "四麻 4位 (スコア:-30)", amount: -450, type: "支出" },
-        { date: "5/17 21:00", name: "自分", detail: "🎉 四麻 役満祝儀！", amount: 700, type: "収入" }
+        { date: "5/20 12:00", name: "市場", detail: "📈 株価変動ニュース: 現在125Pに突入！", amount: 0 },
+        { date: "5/20 10:30", name: "弟", detail: "📈 株式購入: 1株お試し買い！", amount: -125 },
+        { date: "5/19 00:00", name: "自分", detail: "📈 株式購入: 2株買い注文", amount: -200 },
+        { date: "5/18 00:00", name: "自分", detail: "🎁 だっち株 月曜配当金 (10株分満額)", amount: 100 },
+        { date: "5/18 11:15", name: "お父さん", detail: "🛒 ストア景品引換: 高級アイス券", amount: -300 },
+        { date: "5/17 21:00", name: "妹", detail: "🔴 株式売却: 1株売却(手数料2%引)", amount: 98 }
     ];
+    globalStockMarket = { 
+        price: 125, 
+        history: [90, 85, 70, 55, 45, 60, 80, 110, 130, 120, 105, 95, 120, 150, 195, 240, 220, 180, 210, 125]
+    }; 
     updateFilterSelectorOptions();
     render();
     populateAdminSelect();
+}
+
+// ⚠️ 疑似データモード売買シミュレーション
+function simulateStockTradeData(action) {
+    const user = globalMembers.find(m => m.name === currentFilterUser);
+    if (!user) return;
+
+    const currentPrice = globalStockMarket.price;
+    const totalCost = currentPrice * currentTradeQty;
+    const currentStocks = user.stock_count || 0;
+
+    if (action === 'buy') {
+        if (user.balance < totalCost) {
+            alert(`【シミュレータ】ポイントが足りません！\n必要: ${totalCost} P / 現在の残高: ${user.balance} P`);
+            return;
+        }
+        if (currentStocks + currentTradeQty > 10) {
+            alert(`【シミュレータ】上限エラー！\n現在の保有数 (${currentStocks}株) に 今回の購入数 (${currentTradeQty}株) を足すと、1人最大制限の10株を超えてしまいます。`);
+            return;
+        }
+
+        user.balance -= totalCost;
+        user.stock_count = currentStocks + currentTradeQty;
+        globalLogs.unshift({ date: "今", name: user.name, detail: `📈 株式購入: ${currentTradeQty}株`, amount: -totalCost });
+
+    } else {
+        if (currentStocks < currentTradeQty) {
+            alert(`【シミュレータ】売却エラー！\n指定された株数 (${currentTradeQty}株) を持っていません。\n現在の保有数: ${currentStocks}株`);
+            return;
+        }
+
+        const money = Math.floor(totalCost * 0.98); 
+        user.balance += money;
+        user.stock_count = currentStocks - currentTradeQty;
+        globalLogs.unshift({ date: "今", name: user.name, detail: `🔴 株式売却: ${currentTradeQty}株(手数料2%引)`, amount: money });
+    }
+
+    if (globalStockMarket.history && globalStockMarket.history.length > 0) {
+        globalStockMarket.history[globalStockMarket.history.length - 1] = globalStockMarket.price;
+    }
+
+    currentTradeQty = 1;
+    document.getElementById('trade-qty-val').innerText = currentTradeQty;
+    render();
 }
 </script>
 </body>
