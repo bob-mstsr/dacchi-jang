@@ -166,18 +166,15 @@
     </header>
 
     <main>
-        <!-- 👥 だれが買い物するか選択 -->
         <div class="user-selector-box">
             <label for="buyer-select">👲 お買い物する人を選んでください：</label>
             <select id="buyer-select" onchange="updateBuyerInfo()">
-                <!-- JSで自動挿入 -->
-            </select>
+                </select>
             <div id="buyer-balance-preview" style="font-size: 0.85rem; margin-top: 5px; font-weight: bold; color: #333;">
                 現在残高: --- P
             </div>
         </div>
 
-        <!-- 📋 ①カタログ掲示 ＆ ②交換処理 -->
         <h2>景品一覧カタログ</h2>
         <table class="store-table">
             <thead>
@@ -193,13 +190,11 @@
             </tbody>
         </table>
 
-        <!-- 🎟️ ②景品券の表示エリア -->
-       <h2 id="ticket-title-owner">景品券のお財布</h2>
+        <h2 id="ticket-title-owner">景品券のお財布</h2>
         <div class="ticket-list" id="ticket-display">
             <div style="color:#999; text-align:center; padding:20px; font-size:0.85rem;">🎫 お財布の中身を確認中...</div>
         </div>
 
-        <!-- 🔒 管理者専用：在庫数調整 ＆ 使用済みマーキング -->
         <div class="admin-toggle-wrapper">
             <button class="admin-toggle-btn" onclick="toggleAdminPanel()">⚙️ 管理者専用ストア調整パネルを開く</button>
         </div>
@@ -218,9 +213,9 @@
 
 <script>
 // ==========================================
-// 💡 【重要】デプロイしたGASのウェブアプリURLをここに貼り付け
+// 💡 【確定本番URL】誤作動防止のダミー判定を削除しました
 // ==========================================
-const GAS_URL = "ここに取得したGASのウェブアプリURLを貼り付けてください";
+const GAS_URL = "https://script.google.com/macros/s/AKfycbyY3Ykfs7nboF31msmQ0SstPbBZRgsgnhqfsNdTmLeYD11wvf3h4AXBwZyA2RgcE_QwZg/exec";
 
 let globalMembers = [];
 let globalCatalog = [];
@@ -230,30 +225,31 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchStoreData();
 });
 
-// 🌐 サーバーから現在の全データを取得
 function fetchStoreData() {
-    if (GAS_URL.includes("ここに取得したGAS")) {
-        console.log("GAS未設定のため疑似データ表示");
-        renderDummyStore();
-        return;
-    }
+    const callbackName = 'storeCallback_' + Date.now();
+    const script = document.createElement('script');
 
-    fetch(GAS_URL)
-        .then(res => res.json())
-        .then(data => {
-            globalMembers = data.members;
-            globalCatalog = data.catalog;
-            globalTickets = data.tickets;
+    window[callbackName] = function(data) {
+        globalMembers = data.members;
+        globalCatalog = data.catalog;
+        globalTickets = data.tickets;
+        populateBuyerSelect();
+        renderCatalog();
+        renderTickets();
+        renderAdminPanel();
+        delete window[callbackName];
+        document.body.removeChild(script);
+    };
 
-            populateBuyerSelect();
-            renderCatalog();
-            renderTickets();
-            renderAdminPanel();
-        })
-        .catch(err => {
-            console.error("データ取得エラー:", err);
-            alert("ストアデータの取得に失敗しました。");
-        });
+    script.onerror = function() {
+        alert("ストアデータの取得に失敗しました。インターネット接続やGASのデプロイ設定を確認してください。");
+        delete window[callbackName];
+        document.body.removeChild(script);
+    };
+
+    script.src = GAS_URL + '?callback=' + callbackName;
+    document.body.appendChild(script);
+}
 }
 
 // 購入者セレクトボックスの生成
@@ -274,16 +270,39 @@ function updateBuyerInfo() {
     const member = globalMembers.find(m => m.id === select.value);
     if (member) {
         document.getElementById('buyer-balance-preview').innerText = `現在残高: ${member.balance.toLocaleString()} P`;
-        
-        // 📋 お財布の見出しを選択されたメンバーの名前に変更
         document.getElementById('ticket-title-owner').innerText = `🎒 ${member.name}さんのお財布（保有景品券）`;
-        
-        // 選択ユーザーが変わったのでお財布の中身も再描画する
         renderTickets();
     }
 }
 
-// 🎟️ 【個別お財布化】選択されたメンバーの景品券だけをレンダリング
+// 📋 カタログリストのレンダリング（消えていた関数を完全に復活させました）
+function renderCatalog() {
+    const container = document.getElementById('catalog-list');
+    container.innerHTML = '';
+
+    if (globalCatalog.length === 0) {
+        container.innerHTML = '<tr><td colspan="4" style="color:#999; padding:20px;">登録されている景品がありません</td></tr>';
+        return;
+    }
+
+    globalCatalog.forEach(item => {
+        const isSoldOut = item.stock <= 0;
+        container.insertAdjacentHTML('beforeend', `
+            <tr>
+                <td class="item-name">${item.name}</td>
+                <td class="item-price">${item.price.toLocaleString()} P</td>
+                <td>${isSoldOut ? '<span class="badge-soldout">売切</span>' : item.stock + ' 個'}</td>
+                <td>
+                    <button class="buy-btn" ${isSoldOut ? 'disabled' : ''} onclick="buyItem('${item.id}')">
+                        ${isSoldOut ? '完売' : '交換'}
+                    </button>
+                </td>
+            </tr>
+        `);
+    });
+}
+
+// 🎟️ 【個別お財布化】選択されたメンバーの景品券をレンダリング
 function renderTickets() {
     const container = document.getElementById('ticket-display');
     container.innerHTML = '';
@@ -294,11 +313,7 @@ function renderTickets() {
     
     if (!buyer) return;
 
-    // 📋 修正点：すべての券から「このメンバーの名前」が含まれる券だけを絞り込む
-    // ※GAS側で「〇〇の【景品券】」という名前で発行されるため、nameにメンバー名が含まれるかで判定します
     const myTickets = globalTickets.filter(t => t.name.startsWith(buyer.name));
-
-    // 未使用の券を上に、使用済みの券を下に並べる
     const sortedTickets = [...myTickets].sort((a, b) => (a.status === "使用済み" ? 1 : -1));
 
     if (sortedTickets.length === 0) {
@@ -308,8 +323,6 @@ function renderTickets() {
 
     sortedTickets.forEach(t => {
         const isUsed = t.status === "使用済み";
-        
-        // 📋 画面表示は見やすいように「お父さんの【高級アイス券】」からメンバー名を省いて「🎫 高級アイス券」とすっきり表示させます
         const cleanTicketName = t.name.replace(`${buyer.name}の`, '');
 
         container.insertAdjacentHTML('beforeend', `
@@ -321,6 +334,7 @@ function renderTickets() {
         `);
     });
 }
+
 // 🔒 管理者パネルのレンダリング
 function renderAdminPanel() {
     // 1. 在庫数変更フォーム
@@ -358,10 +372,8 @@ function renderAdminPanel() {
     });
 }
 
-// 🛒 ②景品交換アクション (購入ボタン)
+// 🛒 景品交換アクション (購入ボタン)
 function buyItem(itemId) {
-    if (GAS_URL.includes("ここに取得したGAS")) { alert("GASのURLを設定してください。"); return; }
-    
     const buyerId = document.getElementById('buyer-select').value;
     const buyer = globalMembers.find(m => m.id === buyerId);
     const item = globalCatalog.find(i => i.id === itemId);
@@ -378,7 +390,7 @@ function buyItem(itemId) {
         .then(resData => {
             if (resData.status === "success") {
                 alert("交換が完了しました！景品券が発行され、だっち銀行の通帳へ自動記載されました。");
-                fetchStoreData(); // 画面を再読み込み
+                fetchStoreData();
             } else { alert("エラー: " + resData.message); }
         })
         .catch(err => { alert("通信エラーが発生しました。"); });
@@ -386,7 +398,6 @@ function buyItem(itemId) {
 
 // 🎟️ 管理者操作：券を「使用済み」にする
 function markTicketAsUsed(ticketId) {
-    if (GAS_URL.includes("ここに取得したGAS")) { alert("URL未設定のため実行できません"); return; }
     if (!confirm("この景品券を【使用済み】にマーキングします。よろしいですか？")) return;
 
     const payload = { mode: "use_ticket", ticketId: ticketId };
@@ -398,7 +409,6 @@ function markTicketAsUsed(ticketId) {
 
 // 📦 管理者操作：在庫数の更新
 function updateStock(itemId) {
-    if (GAS_URL.includes("ここに取得したGAS")) { alert("URL未設定のため実行できません"); return; }
     const newStock = document.getElementById(`stock-edit-${itemId}`).value;
 
     const payload = { mode: "update_stock", itemId: itemId, newStock: parseInt(newStock) || 0 };
@@ -410,22 +420,6 @@ function updateStock(itemId) {
 
 function toggleAdminPanel() {
     document.getElementById('admin-panel').classList.toggle('hidden');
-}
-
-// ⚠️ 疑似プレビュー表示
-function renderDummyStore() {
-    globalMembers = [
-        { id: "p1", name: "お父さん", balance: 1500 },
-        { id: "p2", name: "お母さん", balance: 100 }
-    ];
-    globalCatalog = [
-        { id: "item1", name: "高級アイス券", price: 300, stock: 4, type: "catalog" },
-        { id: "item2", name: "おねだり外食券", price: 2000, stock: 0, type: "catalog" }
-    ];
-    globalTickets = [
-        { id: "t_dummy1", name: "お父さんの【高級アイス券】", price: 300, stock: 1, type: "ticket", status: "未使用" }
-    ];
-    populateBuyerSelect(); renderCatalog(); renderTickets(); renderAdminPanel();
 }
 </script>
 </body>

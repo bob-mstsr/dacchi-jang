@@ -378,23 +378,31 @@ function fetchDataFromServer() {
         return;
     }
 
-    fetch(GAS_URL)
-        .then(response => response.json())
-        .then(data => {
-            globalMembers = data.members;
-            globalLogs = data.logs;
-            if (data.stockMarket) {
-                globalStockMarket = data.stockMarket;
-            }
-            
-            updateFilterSelectorOptions();
-            render();
-            populateAdminSelect();
-        })
-        .catch(error => {
-            console.error("データ取得エラー:", error);
-            alert("データ取得に失敗しました。URLを確認してください。");
-        });
+    const callbackName = 'bankCallback_' + Date.now();
+    const script = document.createElement('script');
+
+    window[callbackName] = function(data) {
+        globalMembers = data.members;
+        globalLogs = data.logs;
+        if (data.stockMarket) {
+            globalStockMarket = data.stockMarket;
+        }
+        updateFilterSelectorOptions();
+        render();
+        populateAdminSelect();
+        delete window[callbackName];
+        document.body.removeChild(script);
+    };
+
+    script.onerror = function() {
+        console.error("データ取得エラー");
+        alert("データ取得に失敗しました。URLを確認してください。");
+        delete window[callbackName];
+        document.body.removeChild(script);
+    };
+
+    script.src = GAS_URL + '?callback=' + callbackName;
+    document.body.appendChild(script);
 }
 
 function updateFilterSelectorOptions() {
