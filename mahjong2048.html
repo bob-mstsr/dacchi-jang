@@ -103,7 +103,7 @@
         }
         .game-btn:active { transform: scale(0.98); background: #801414; }
 
-        /* 🎴 2048ゲーム盤面エリア（スワイプ誤動作を完全に防止するスタイル） */
+        /* 🎴 2048ゲーム盤面エリア */
         .board-container {
             padding: 15px 12px;
             display: flex;
@@ -111,7 +111,7 @@
             align-items: center;
             width: 100%;
             position: relative;
-            touch-action: none; /* ブラウザ独自のスクロール・バウンスをCSSで禁止 */
+            touch-action: none;
         }
         
         .board-mat {
@@ -125,9 +125,10 @@
             grid-template-columns: repeat(4, 1fr);
             gap: 8px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3), inset 0 0 10px rgba(0,0,0,0.5);
-            touch-action: none; /* 盤面上でのスクロール挙動を完全にシャットアウト */
+            touch-action: none;
         }
 
+        /* 🀄 牌マスのベーススタイル（高さを最大限活かして配置） */
         .cell {
             background: var(--cell-empty);
             border-radius: 6px;
@@ -135,25 +136,51 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.4rem;
             font-weight: bold;
             color: var(--dark-charcoal);
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
             transition: transform 0.1s, background-color 0.1s;
+            overflow: hidden;
         }
 
-        /* 🀄 各レベルの牌・役満演出スタイル */
+        /* 本格麻雀牌デザイン（ソリティア基準のリアルな緑の彫り・立体影） */
         .tile-active {
             background: var(--tile-bg);
-            box-shadow: 0 3px 0 #bbb, 0 3px 5px rgba(0,0,0,0.2);
-            border: 1px solid #ccc;
+            box-shadow: 0 4px 0 #b8b2a5, 0 4px 6px rgba(0,0,0,0.2);
+            border: 1px solid #dcd6c8;
         }
-        .green   { background: #1b5e20; color: #7cff7c; border: 1px solid #7cff7c; box-shadow: 0 3px 0 #0e3a14; }
-        .white   { background: #ffffff; color: #1a1a1a; border: 1px solid #b0bec5; box-shadow: 0 3px 0 #cfd8dc; }
-        .red     { background: #b71c1c; color: #ffffff; border: 1px solid #ff5252; box-shadow: 0 3px 0 #5f0909; }
-        .gold    { background: linear-gradient(135deg, #f6e27a 0%, #b89724 100%); color: #3d2b00; border: 1px solid #fff; font-size: 1.1rem; box-shadow: 0 3px 0 #705807; }
-        .rainbow { background: linear-gradient(45deg, #ff3333, #ffaa00, #33cc33, #3333ff, #cc33cc); color: white; font-size: 1.1rem; text-shadow: 1px 1px 2px rgba(0,0,0,0.6); box-shadow: 0 3px 0 #555; }
-        .tenhou  { background: #ffffff; color: #000000; font-size: 1.1rem; box-shadow: 0 0 15px #fff, 0 0 30px #f6e27a; animation: pulse 1s infinite alternate; }
+        
+        /* 麻雀牌アイコン専用コンテナ（視認性極大） */
+        .cell .tile-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            line-height: 1;
+        }
+        /* 麻雀牌のUnicode記号を限界まで巨大化、索子特有の深緑色に指定 */
+        .cell .tile-icon {
+            font-size: 2.8rem; 
+            color: #0e6b38; 
+            margin-top: -4px;
+        }
+        /* 下部の補助テキスト（1s〜9s） */
+        .cell .tile-sub {
+            font-size: 0.75rem;
+            color: #555;
+            font-weight: 700;
+            margin-top: -5px;
+        }
+
+        /* 役満特殊演出スタイル */
+        .green   { background: #1b5e20; color: #7cff7c; border: 1px solid #7cff7c; box-shadow: 0 4px 0 #0e3a14; font-size: 1.1rem; padding: 4px; text-align: center; }
+        .white   { background: #ffffff; color: #1a1a1a; border: 1px solid #b0bec5; box-shadow: 0 4px 0 #cfd8dc; font-size: 1.1rem; padding: 4px; text-align: center; }
+        .red     { background: #b71c1c; color: #ffffff; border: 1px solid #ff5252; box-shadow: 0 4px 0 #5f0909; font-size: 1.1rem; padding: 4px; text-align: center; }
+        .gold    { background: linear-gradient(135deg, #f6e27a 0%, #b89724 100%); color: #3d2b00; border: 1px solid #fff; font-size: 1.05rem; box-shadow: 0 4px 0 #705807; padding: 2px; text-align: center; }
+        .rainbow { background: linear-gradient(45deg, #ff3333, #ffaa00, #33cc33, #3333ff, #cc33cc); color: white; font-size: 1.05rem; text-shadow: 1px 1px 2px rgba(0,0,0,0.6); box-shadow: 0 4px 0 #555; padding: 2px; text-align: center; }
+        .tenhou  { background: #ffffff; color: #000000; font-size: 1.2rem; box-shadow: 0 0 15px #fff, 0 0 30px #f6e27a; animation: pulse 1s infinite alternate; padding: 4px; text-align: center; }
 
         @keyframes pulse {
             from { transform: scale(1); box-shadow: 0 0 10px #fff, 0 0 20px #f6e27a; }
@@ -232,7 +259,7 @@
         .col-name.hidden-text { color: #999; font-style: italic; }
         
         .col-badge {
-            font-size: 0.75rem;
+            font-size: 0.85rem;
             font-weight: bold;
             text-align: center;
             padding: 2px 0;
@@ -280,7 +307,6 @@
         <button class="game-btn" onclick="initGame()">盤面をリセット</button>
     </div>
 
-    <!-- ゲーム盤面 -->
     <div class="board-container" id="board-area">
         <div class="board-mat" id="game-board"></div>
         
@@ -290,7 +316,6 @@
         </div>
     </div>
 
-    <!-- コントローラーボタン -->
     <div class="pad-container">
         <button class="pad-btn" onclick="move(0)">↑</button>
         <div class="pad-row">
@@ -300,7 +325,6 @@
         </div>
     </div>
 
-    <!-- 下部リポート：最高到達・図鑑 -->
     <div class="panel-container">
         <div class="panel-title">👑 現在の最高到達称号</div>
         <div class="max-score-box" id="max-achievement">1索子</div>
@@ -311,24 +335,25 @@
 </div>
 
 <script>
+    // 1s〜9sに本格麻雀牌アイコン（Unicodeコード）をマッピング
     const TILE_MASTER = {
-        1:  { name: "1索子", short: "1s", style: "tile-active" },
-        2:  { name: "2索子", short: "2s", style: "tile-active" },
-        3:  { name: "3索子", short: "3s", style: "tile-active" },
-        4:  { name: "4索子", short: "4s", style: "tile-active" },
-        5:  { name: "5索子", short: "5s", style: "tile-active" },
-        6:  { name: "6索子", short: "6s", style: "tile-active" },
-        7:  { name: "7索子", short: "7s", style: "tile-active" },
-        8:  { name: "8索子", short: "8s", style: "tile-active" },
-        9:  { name: "9索子", short: "9s", style: "tile-active" },
-        10: { name: "緑一色", short: "緑一色", style: "green" },
-        11: { name: "大三元", short: "大三元", style: "white" },
-        12: { name: "清老頭", short: "清老頭", style: "red" },
-        13: { name: "国士無双十三面", short: "十三面", style: "gold" },
-        14: { name: "四暗刻単騎", short: "四暗単", style: "gold" },
-        15: { name: "大四喜", short: "大四喜", style: "gold" },
-        16: { name: "純正九蓮宝燈", short: "純九蓮", style: "rainbow" },
-        17: { name: "天和", short: "天和", style: "tenhou" }
+        1:  { name: "1索子", short: "🀐", isTileIcon: true, sub: "1s", style: "tile-active" },
+        2:  { name: "2索子", short: "🀑", isTileIcon: true, sub: "2s", style: "tile-active" },
+        3:  { name: "3索子", short: "🀒", isTileIcon: true, sub: "3s", style: "tile-active" },
+        4:  { name: "4索子", short: "🀓", isTileIcon: true, sub: "4s", style: "tile-active" },
+        5:  { name: "5索子", short: "🀔", isTileIcon: true, sub: "5s", style: "tile-active" },
+        6:  { name: "6索子", short: "🀕", isTileIcon: true, sub: "6s", style: "tile-active" },
+        7:  { name: "7索子", short: "🀖", isTileIcon: true, sub: "7s", style: "tile-active" },
+        8:  { name: "8索子", short: "🀗", isTileIcon: true, sub: "8s", style: "tile-active" },
+        9:  { name: "9索子", short: "🀘", isTileIcon: true, sub: "9s", style: "tile-active" },
+        10: { name: "緑一色", short: "緑一色", isTileIcon: false, style: "green" },
+        11: { name: "大三元", short: "大三元", isTileIcon: false, style: "white" },
+        12: { name: "清老頭", short: "清老頭", isTileIcon: false, style: "red" },
+        13: { name: "国士無双十三面", short: "十三面", isTileIcon: false, style: "gold" },
+        14: { name: "四暗刻単騎", short: "四暗単", isTileIcon: false, style: "gold" },
+        15: { name: "大四喜", short: "大四喜", isTileIcon: false, style: "gold" },
+        16: { name: "純正九蓮宝燈", short: "純九蓮", isTileIcon: false, style: "rainbow" },
+        17: { name: "天和", short: "天和", isTileIcon: false, style: "tenhou" }
     };
 
     let board = Array(16).fill(0);
@@ -388,6 +413,10 @@
                 nameSpan.className = 'col-name';
                 badgeSpan.innerText = data.short;
                 badgeSpan.classList.add(data.style);
+                if (data.isTileIcon) {
+                    badgeSpan.style.color = "#0e6b38";
+                    badgeSpan.style.background = "#fff";
+                }
             } else {
                 nameSpan.innerText = "？？？";
                 nameSpan.className = 'col-name hidden-text';
@@ -426,8 +455,27 @@
 
             if (val > 0) {
                 const data = TILE_MASTER[val];
-                cell.innerText = data.short;
                 cell.classList.add('tile-active', data.style);
+                
+                if (data.isTileIcon) {
+                    // 麻雀牌アイコンと、下部サブテキストのコンテナ構成
+                    const container = document.createElement('div');
+                    container.className = 'tile-container';
+                    
+                    const iconSpan = document.createElement('span');
+                    iconSpan.className = 'tile-icon';
+                    iconSpan.innerText = data.short;
+                    
+                    const subSpan = document.createElement('span');
+                    subSpan.className = 'tile-sub';
+                    subSpan.innerText = data.sub;
+                    
+                    container.appendChild(iconSpan);
+                    container.appendChild(subSpan);
+                    cell.appendChild(container);
+                } else {
+                    cell.innerText = data.short;
+                }
             }
             boardMat.appendChild(cell);
         }
@@ -520,31 +568,29 @@
         if (e.key === 'ArrowLeft' || e.key === 'a') { move(3); e.preventDefault(); }
     });
 
-    // 📱 スマホ用スワイプ操作（スクロール誤作動を「完全に」抑え込むロジック）
+    // 📱 スマホ用スワイプ操作（画面全体のスクロール防止を完全強化）
     let startX = 0, startY = 0;
     const area = document.getElementById('board-area');
     
-    // touchstart時にデフォルト挙動（引っ張りリフレッシュなど）を阻止
     area.addEventListener('touchstart', (e) => {
         startX = e.changedTouches[0].screenX;
         startY = e.changedTouches[0].screenY;
     }, { passive: true });
 
-    // touchmove時に画面全体が動くのを完全にロック
     area.addEventListener('touchmove', (e) => {
         if (e.cancelable) {
-            e.preventDefault(); // ここで画面のスクロールを完全に殺します
+            e.preventDefault();
         }
-    }, { passive: false }); // passive: false にすることで preventDefault を有効化
+    }, { passive: false });
 
     area.addEventListener('touchend', (e) => {
         let dx = e.changedTouches[0].screenX - startX;
         let dy = e.changedTouches[0].screenY - startY;
         if (Math.abs(dx) > 30 || Math.abs(dy) > 30) {
             if (Math.abs(dx) > Math.abs(dy)) {
-                if (dx > 0) move(1); else move(3); // 右 / 左
+                if (dx > 0) move(1); else move(3);
             } else {
-                if (dy > 0) move(2); else move(0); // 下 / 上
+                if (dy > 0) move(2); else move(0);
             }
         }
     }, { passive: true });
