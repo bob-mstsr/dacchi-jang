@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>娯楽室：だっち雀 2048</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@500&family=Noto+Sans+JP:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f7f4eb;         /* 娯楽室共通：生成り色背景 */
+            --main-red: #9e1b1b;         /* 娯楽室共通：メインレッド */
+            --accent-gold: #d4af37;      /* 娯楽室共通：ゴールド */
+            --dark-charcoal: #1a1a1a;    /* 娯楽室共通：チャコール */
+            --tile-bg: #ffffff;          /* 牌のベース背景 */
+            
+            /* 麻雀2048専用盤面カラー（四川省・上海と美しく区別するエメラルド） */
+            --board-bg: #0f4c43;
+            --cell-empty: #1e6b5f;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--dark-charcoal);
+            line-height: 1.5;
+            padding-bottom: 30px;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .app-container {
+            max-width: 500px;
+            margin: 0 auto;
+            background-color: #fffdf9;
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--dark-charcoal) 0%, var(--main-red) 100%);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            border-bottom: 4px solid var(--accent-gold);
+            position: relative;
+        }
+        header h1 {
+            font-family: 'Kiwi Maru', serif;
+            font-size: 1.4rem;
+            color: var(--accent-gold);
+        }
+        .back-btn {
+            position: absolute;
+            left: 15px; top: 18px;
+            color: var(--accent-gold);
+            text-decoration: none;
+            font-size: 0.85rem;
+            border: 1px solid var(--accent-gold);
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+
+        .control-panel {
+            padding: 12px;
+            background: #fff;
+            border-bottom: 1px solid #e0dacf;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            text-align: center;
+            background: #fdfbf7;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #e5dfd3;
+        }
+        .stat-box { font-size: 0.8rem; color: #666; }
+        .stat-box span { display: block; font-size: 1.1rem; font-weight: bold; color: var(--dark-charcoal); }
+        .stat-box span.score-val { color: var(--main-red); }
+
+        .btn-row {
+            display: grid;
+            grid-template-columns: 1fr;
+            padding: 10px 12px 5px 12px;
+        }
+        .game-btn {
+            background: var(--main-red);
+            color: white;
+            border: 1px solid var(--main-red);
+            padding: 10px 4px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.1s;
+            text-align: center;
+        }
+        .game-btn:active { transform: scale(0.98); background: #801414; }
+
+        /* 🎴 2048ゲーム盤面エリア */
+        .board-container {
+            padding: 15px 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            position: relative;
+        }
+        
+        .board-mat {
+            background-color: var(--board-bg);
+            border: 4px solid var(--accent-gold);
+            border-radius: 12px;
+            padding: 10px;
+            width: 100%;
+            aspect-ratio: 1;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3), inset 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        .cell {
+            background: var(--cell-empty);
+            border-radius: 6px;
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: var(--dark-charcoal);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+            transition: transform 0.1s, background-color 0.1s;
+        }
+
+        /* 🀄 各レベルの牌・役満演出スタイル */
+        .tile-active {
+            background: var(--tile-bg);
+            box-shadow: 0 3px 0 #bbb, 0 3px 5px rgba(0,0,0,0.2);
+            border: 1px solid #ccc;
+        }
+        .green   { background: #1b5e20; color: #7cff7c; border: 1px solid #7cff7c; box-shadow: 0 3px 0 #0e3a14; }
+        .white   { background: #ffffff; color: #1a1a1a; border: 1px solid #b0bec5; box-shadow: 0 3px 0 #cfd8dc; }
+        .red     { background: #b71c1c; color: #ffffff; border: 1px solid #ff5252; box-shadow: 0 3px 0 #5f0909; }
+        .gold    { background: linear-gradient(135deg, #f6e27a 0%, #b89724 100%); color: #3d2b00; border: 1px solid #fff; font-size: 1.1rem; box-shadow: 0 3px 0 #705807; }
+        .rainbow { background: linear-gradient(45deg, #ff3333, #ffaa00, #33cc33, #3333ff, #cc33cc); color: white; font-size: 1.1rem; text-shadow: 1px 1px 2px rgba(0,0,0,0.6); box-shadow: 0 3px 0 #555; }
+        .tenhou  { background: #ffffff; color: #000000; font-size: 1.1rem; box-shadow: 0 0 15px #fff, 0 0 30px #f6e27a; animation: pulse 1s infinite alternate; }
+
+        @keyframes pulse {
+            from { transform: scale(1); box-shadow: 0 0 10px #fff, 0 0 20px #f6e27a; }
+            to { transform: scale(0.96); box-shadow: 0 0 18px #fff, 0 0 35px #ffeb3b; }
+        }
+
+        /* スマホ用簡易矢印キーパッド */
+        .pad-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 5px 0 15px 0;
+        }
+        .pad-row { display: flex; gap: 8px; }
+        .pad-btn {
+            width: 55px; height: 45px;
+            background: white;
+            border: 1px solid #b5af9f;
+            border-radius: 6px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            color: var(--dark-charcoal);
+            box-shadow: 0 2px 0 #b5af9f;
+        }
+        .pad-btn:active { transform: translateY(2px); box-shadow: none; background: #eee; }
+
+        /* 🏆 最高到達＆図鑑セクション */
+        .panel-container {
+            margin: 5px 12px 15px 12px;
+            padding: 12px;
+            background: #f1ede2;
+            border-radius: 10px;
+            border: 1px solid #b5af9f;
+        }
+        .panel-title {
+            font-family: 'Kiwi Maru', serif;
+            font-size: 0.95rem;
+            font-weight: bold;
+            color: var(--main-red);
+            text-align: center;
+            margin-bottom: 8px;
+            border-bottom: 1px dashed #b5af9f;
+            padding-bottom: 4px;
+        }
+
+        .max-score-box {
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: bold;
+            background: white;
+            padding: 6px;
+            border-radius: 6px;
+            border: 1px solid #e0dacf;
+            margin-bottom: 12px;
+            color: var(--dark-charcoal);
+        }
+
+        .collection-list {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .collection-item {
+            display: grid;
+            grid-template-columns: 28px 1fr 75px;
+            align-items: center;
+            font-size: 0.85rem;
+            padding: 5px 8px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 4px;
+        }
+        .col-lvl { font-weight: bold; color: var(--accent-gold); }
+        .col-name { color: #333; }
+        .col-name.hidden-text { color: #999; font-style: italic; }
+        
+        .col-badge {
+            font-size: 0.75rem;
+            font-weight: bold;
+            text-align: center;
+            padding: 2px 0;
+            border-radius: 3px;
+            background: #ccc;
+            color: #666;
+        }
+
+        /* オーバーレイ表示 */
+        .overlay {
+            position: absolute;
+            top: 15px; left: 12px; right: 12px; bottom: 15px;
+            background: rgba(0,0,0,0.85);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+            z-index: 10;
+        }
+        .overlay.active { opacity: 1; pointer-events: auto; }
+        .overlay-msg { color: var(--accent-gold); font-size: 1.8rem; font-family: 'Kiwi Maru', serif; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header>
+        <a href="index.html" class="back-btn">◀ 娯楽室</a>
+        <h1>だっち雀 2048</h1>
+    </header>
+
+    <div class="control-panel">
+        <div class="stats-grid">
+            <div class="stat-box">現在得点<span id="current-score" class="score-val">0</span></div>
+            <div class="stat-box">最高得点<span id="best-score">0</span></div>
+        </div>
+    </div>
+
+    <div class="btn-row">
+        <button class="game-btn" onclick="initGame()">盤面をリセット</button>
+    </div>
+
+    <div class="board-container" id="board-area">
+        <div class="board-mat" id="game-board"></div>
+        
+        <div class="overlay" id="game-overlay">
+            <div class="overlay-msg" id="overlay-text">GAME OVER</div>
+            <button class="game-btn" style="padding: 8px 20px;" onclick="initGame()">もう一度遊ぶ</button>
+        </div>
+    </div>
+
+    <div class="pad-container">
+        <button class="pad-btn" onclick="move(0)">↑</button>
+        <div class="pad-row">
+            <button class="pad-btn" onclick="move(3)">←</button>
+            <button class="pad-btn" onclick="move(2)">↓</button>
+            <button class="pad-btn" onclick="move(1)">→</button>
+        </div>
+    </div>
+
+    <div class="panel-container">
+        <div class="panel-title">👑 現在の最高到達称号</div>
+        <div class="max-score-box" id="max-achievement">1索子</div>
+
+        <div class="panel-title">🏆 役満図鑑（全17種）</div>
+        <div class="collection-list" id="collection-box"></div>
+    </div>
+</div>
+
+<script>
+    // image_0e5c7c.png に完全準拠した内部データマッピング
+    const TILE_MASTER = {
+        1:  { name: "1索子", short: "1s", style: "tile-active" },
+        2:  { name: "2索子", short: "2s", style: "tile-active" },
+        3:  { name: "3索子", short: "3s", style: "tile-active" },
+        4:  { name: "4索子", short: "4s", style: "tile-active" },
+        5:  { name: "5索子", short: "5s", style: "tile-active" },
+        6:  { name: "6索子", short: "6s", style: "tile-active" },
+        7:  { name: "7索子", short: "7s", style: "tile-active" },
+        8:  { name: "8索子", short: "8s", style: "tile-active" },
+        9:  { name: "9索子", short: "9s", style: "tile-active" },
+        10: { name: "緑一色", short: "緑一色", style: "green" },
+        11: { name: "大三元", short: "大三元", style: "white" },
+        12: { name: "清老頭", short: "清老頭", style: "red" },
+        13: { name: "国士無双十三面", short: "十三面", style: "gold" },
+        14: { name: "四暗刻単騎", short: "四暗単", style: "gold" },
+        15: { name: "大四喜", short: "大四喜", style: "gold" },
+        16: { name: "純正九蓮宝燈", short: "純九蓮", style: "rainbow" },
+        17: { name: "天和", short: "天和", style: "tenhou" }
+    };
+
+    let board = Array(16).fill(0);
+    let score = 0;
+    let bestScore = 0;
+    let unlockedLevels = {};
+
+    function loadStorage() {
+        // 図鑑データ読み込み
+        const savedProgress = localStorage.getItem('dacchijong_2048_unlocked_v2');
+        unlockedLevels = savedProgress ? JSON.parse(savedProgress) : { 1: true };
+
+        // ハイスコア読み込み
+        const savedBest = localStorage.getItem('dacchijong_2048_bestscore');
+        bestScore = savedBest ? parseInt(savedBest, 10) : 0;
+        document.getElementById('best-score').innerText = bestScore;
+    }
+
+    function saveProgress(level) {
+        if (!unlockedLevels[level]) {
+            unlockedLevels[level] = true;
+            localStorage.setItem('dacchijong_2048_unlocked_v2', JSON.stringify(unlockedLevels));
+        }
+        if (score > bestScore) {
+            bestScore = score;
+            localStorage.setItem('dacchijong_2048_bestscore', bestScore);
+            document.getElementById('best-score').innerText = bestScore;
+        }
+    }
+
+    function renderCollectionAndMax() {
+        // 1. 最高到達の称号更新
+        let maxLvl = 1;
+        for (let i = 1; i <= 17; i++) {
+            if (unlockedLevels[i]) maxLvl = i;
+        }
+        const maxData = TILE_MASTER[maxLvl];
+        const maxBox = document.getElementById('max-achievement');
+        maxBox.innerText = maxData.name;
+        maxBox.className = `max-score-box ${maxData.style}`;
+
+        // 2. 図鑑リストの描画（蛇足パネルを削除し、隠蔽ロジックをここに集約）
+        const box = document.getElementById('collection-box');
+        box.innerHTML = '';
+
+        for (let i = 1; i <= 17; i++) {
+            const data = TILE_MASTER[i];
+            const item = document.createElement('div');
+            item.className = 'collection-item';
+
+            const lvlSpan = document.createElement('span');
+            lvlSpan.className = 'col-lvl';
+            lvlSpan.innerText = i;
+
+            const nameSpan = document.createElement('span');
+            const badgeSpan = document.createElement('span');
+            badgeSpan.className = 'col-badge';
+
+            if (unlockedLevels[i]) {
+                nameSpan.innerText = data.name;
+                nameSpan.className = 'col-name';
+                badgeSpan.innerText = data.short;
+                badgeSpan.classList.add(data.style);
+            } else {
+                nameSpan.innerText = "？？？";
+                nameSpan.className = 'col-name hidden-text';
+                badgeSpan.innerText = "？？？";
+                badgeSpan.style.background = "#d6cfc2";
+                badgeSpan.style.color = "#a1998a";
+            }
+
+            item.appendChild(lvlSpan);
+            item.appendChild(nameSpan);
+            item.appendChild(badgeSpan);
+            box.appendChild(item);
+        }
+    }
+
+    function spawnTile() {
+        let empties = [];
+        for (let i = 0; i < 16; i++) {
+            if (board[i] === 0) empties.push(i);
+        }
+        if (empties.length > 0) {
+            let idx = empties[Math.floor(Math.random() * empties.length)];
+            board[idx] = Math.random() < 0.9 ? 1 : 2; // 90%で1s, 10%で2s
+            saveProgress(board[idx]);
+        }
+    }
+
+    function renderBoard() {
+        const boardMat = document.getElementById('game-board');
+        boardMat.innerHTML = '';
+
+        for (let i = 0; i < 16; i++) {
+            const val = board[i];
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+
+            if (val > 0) {
+                const data = TILE_MASTER[val];
+                cell.innerText = data.short;
+                cell.classList.add('tile-active', data.style);
+            }
+            boardMat.appendChild(cell);
+        }
+        document.getElementById('current-score').innerText = score;
+        renderCollectionAndMax();
+    }
+
+    function initGame() {
+        board = Array(16).fill(0);
+        score = 0;
+        document.getElementById('game-overlay').classList.remove('active');
+        loadStorage();
+        spawnTile();
+        spawnTile();
+        renderBoard();
+    }
+
+    function slideRow(row) {
+        let arr = row.filter(val => val !== 0);
+        for (let i = 0; i < arr.length - 1; i++) {
+            if (arr[i] === arr[i+1]) {
+                arr[i] += 1; 
+                score += arr[i] * 10;
+                saveProgress(arr[i]);
+                arr[i+1] = 0;
+            }
+        }
+        arr = arr.filter(val => val !== 0);
+        while (arr.length < 4) arr.push(0);
+        return arr;
+    }
+
+    function move(direction) {
+        let moved = false;
+        let oldBoard = [...board];
+
+        for (let i = 0; i < 4; i++) {
+            let row = [];
+            for (let j = 0; j < 4; j++) {
+                if (direction === 0) row.push(board[i + j * 4]);     // ↑
+                if (direction === 1) row.push(board[(i * 4) + (3 - j)]); // →
+                if (direction === 2) row.push(board[i + (3 - j) * 4]); // ↓
+                if (direction === 3) row.push(board[i * 4 + j]);     // ←
+            }
+
+            let res = slideRow(row);
+
+            for (let j = 0; j < 4; j++) {
+                if (direction === 0) board[i + j * 4] = res[j];
+                if (direction === 1) board[(i * 4) + (3 - j)] = res[j];
+                if (direction === 2) board[i + (3 - j) * 4] = res[j];
+                if (direction === 3) board[i * 4 + j] = res[j];
+            }
+        }
+
+        for (let i = 0; i < 16; i++) {
+            if (oldBoard[i] !== board[i]) moved = true;
+        }
+
+        if (moved) {
+            spawnTile();
+            renderBoard();
+            if (board.includes(17)) {
+                showOverlay("🎉 天和達成 💮");
+            } else if (checkGameOver()) {
+                showOverlay("GAME OVER");
+            }
+        }
+    }
+
+    function checkGameOver() {
+        if (board.includes(0)) return false;
+        for (let i = 0; i < 16; i++) {
+            if (i % 4 < 3 && board[i] === board[i + 1]) return false;
+            if (i < 12 && board[i] === board[i + 4]) return false;
+        }
+        return true;
+    }
+
+    function showOverlay(msg) {
+        document.getElementById('overlay-text').innerText = msg;
+        document.getElementById('game-overlay').classList.add('active');
+    }
+
+    // キーボードバインド
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowUp' || e.key === 'w') { move(0); e.preventDefault(); }
+        if (e.key === 'ArrowRight' || e.key === 'd') { move(1); e.preventDefault(); }
+        if (e.key === 'ArrowDown' || e.key === 's') { move(2); e.preventDefault(); }
+        if (e.key === 'ArrowLeft' || e.key === 'a') { move(3); e.preventDefault(); }
+    });
+
+    // スワイプ操作の実装
+    let startX = 0, startY = 0;
+    const area = document.getElementById('board-area');
+    area.addEventListener('touchstart', (e) => {
+        startX = e.changedTouches[0].screenX;
+        startY = e.changedTouches[0].screenY;
+    }, { passive: true });
+
+    area.addEventListener('touchend', (e) => {
+        let dx = e.changedTouches[0].screenX - startX;
+        let dy = e.changedTouches[0].screenY - startY;
+        if (Math.abs(dx) > 30 || Math.abs(dy) > 30) {
+            if (Math.abs(dx) > Math.abs(dy)) {
+                if (dx > 0) move(1); else move(3);
+            } else {
+                if (dy > 0) move(2); else move(0);
+            }
+        }
+    }, { passive: true });
+
+    window.onload = initGame;
+</script>
+</body>
+</html>
