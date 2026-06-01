@@ -418,7 +418,17 @@ function updateStock(itemId) {
 }
 
 function toggleAdminPanel() {
-    document.getElementById('admin-panel').classList.toggle('hidden');
+    const panel = document.getElementById('admin-panel');
+    if (panel.classList.contains('hidden')) {
+        const input = prompt("管理者パスワードを入力してください：");
+        if (input === "1040") {
+            panel.classList.remove('hidden');
+        } else {
+            alert("パスワードが違います");
+        }
+    } else {
+        panel.classList.add('hidden');
+    }
 }
 </script>
 </body>
