@@ -193,9 +193,9 @@
 
 
     ];
-    let selectedBaseIcon = "images/papa.png";
+    let selectedBaseIcon = "images/56s1.png";
     
-    const MY_NAME = "お父さん"; 
+let MY_NAME = "名無し";
 
     let currentRoomId = "";
     let currentRoomPassword = "";
@@ -236,35 +236,37 @@ function callGAS(params, callback) {
 
     // 初期スタンプデータ
     let sharedStamps = [
-        { icon: "images/papa.png", text: "おつかれ！", tag: "挨拶" },
-        { icon: "images/mama.png", text: "激怒！！！", tag: "感情" },
-        { icon: "images/tile01.png", text: "了解です", tag: "挨拶" },
-        { icon: "images/alert.png", text: "ご飯できた", tag: "連絡" }
+        { icon: "images/56s1.png", text: "おつかれ！", tag: "挨拶" },
+        { icon: "images/56s2.png", text: "激怒！！！", tag: "感情" },
+        { icon: "images/56s3.png", text: "了解です", tag: "挨拶" },
+        { icon: "images/56s4.png", text: "ご飯できた", tag: "連絡" }
     ];
 
-    window.onload = function() {
-        const savedStamps = localStorage.getItem('dacchijong_custom_images_stamps');
-        if (savedStamps) sharedStamps = JSON.parse(savedStamps);
+window.onload = function() {
+    MY_NAME = prompt("名前を入力してください") || "名無し";
 
-        renderMakerIcons();
-        renderSharedStamps();
-        loadRoomsFromGAS();
+    const savedStamps = localStorage.getItem('dacchijong_custom_images_stamps');
+    if (savedStamps) sharedStamps = JSON.parse(savedStamps);
 
-        setInterval(() => {
-            if (!currentRoomId) {
-                loadRoomsFromGAS();
-            } else {
-                listenNewMessages();
-            }
-        }, 3000);
+    renderMakerIcons();
+    renderSharedStamps();
+    loadRoomsFromGAS();
 
-        document.body.addEventListener('touchmove', function(e) {
-            if (!e.target.closest('#chat-box') && !e.target.closest('.panel-content') && !e.target.closest('#maker-icons')) {
-                e.preventDefault();
-            }
-        }, { passive: false });
-    };
+    setInterval(() => {
+        if (!currentRoomId) {
+            loadRoomsFromGAS();
+        } else {
+            listenNewMessages();
+        }
+    }, 3000);
 
+    document.body.addEventListener('touchmove', function(e) {
+        if (!e.target.closest('#chat-box') && !e.target.closest('.panel-content') && !e.target.closest('#maker-icons')) {
+            e.preventDefault();
+        }
+    }, { passive: false });
+};
+    
 function loadRoomsFromGAS() {
 
     callGAS(
