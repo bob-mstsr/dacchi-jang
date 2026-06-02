@@ -200,6 +200,38 @@
     let roomListCache = {};
     let localMessageCount = 0; 
 
+function callGAS(params, callback) {
+
+    const callbackName =
+        "jsonp_" +
+        Date.now() +
+        "_" +
+        Math.floor(Math.random() * 10000);
+
+    window[callbackName] = function(data) {
+
+        delete window[callbackName];
+
+        document.body.removeChild(script);
+
+        callback(data);
+    };
+
+    const query =
+        new URLSearchParams({
+            ...params,
+            callback: callbackName
+        }).toString();
+
+    const script =
+        document.createElement("script");
+
+    script.src =
+        GAS_API_URL + "?" + query;
+
+    document.body.appendChild(script);
+}
+
     // 初期スタンプデータ
     let sharedStamps = [
         { icon: "images/papa.png", text: "おつかれ！", tag: "挨拶" },
@@ -231,20 +263,24 @@
         }, { passive: false });
     };
 
-    function loadRoomsFromGAS() {
-        if (GAS_API_URL.includes("ここにデプロイ")) return;
-        fetch(GAS_API_URL, {
-            method: "POST",
-            body: JSON.stringify({ action: "fetch_rooms" })
-        })
-        .then(res => res.json())
-        .then(res => {
+function loadRoomsFromGAS() {
+
+    callGAS(
+        {
+            action: "fetch_rooms"
+        },
+        function(res) {
+
             if (res.success) {
-                roomListCache = res.rooms;
+
+                roomListCache =
+                    res.rooms;
+
                 renderRoomList();
             }
-        }).catch(err => console.log("通信エラー:", err));
-    }
+        }
+    );
+}
 
     function renderRoomList() {
         const container = document.getElementById('room-list-container');
@@ -326,38 +362,80 @@
         loadRoomsFromGAS();
     }
 
-    function listenNewMessages() {
-        if (!currentRoomId || GAS_API_URL.includes("ここにデプロイ")) return;
+function listenNewMessages() {
 
-        fetch(GAS_API_URL, {
-            method: "POST",
-            body: JSON.stringify({ action: "load_messages", roomId: currentRoomId })
-        })
-        .then(res => res.json())
-        .then(res => {
-            if (res.success && res.messages.length > localMessageCount) {
-                for (let i = localMessageCount; i < res.messages.length; i++) {
-                    const m = res.messages[i];
-                    appendBubbleToTimeline(m.sender, m.content, m.sender !== MY_NAME, m.isStamp);
+    if (!currentRoomId) return;
+
+    callGAS(
+        {
+            action: "load_messages",
+            roomId: currentRoomId
+        },
+        function(res) {
+
+            if (
+                res.success &&
+                res.messages.length >
+                localMessageCount
+            ) {
+
+                for (
+                    let i = localMessageCount;
+                    i < res.messages.length;
+                    i++
+                ) {
+
+               
+     const m =
+                        res.messages[i];
+
+                    appendBubbleToTimeline(
+                        m.sender,
+                        m.content,
+                        m.sender !== MY_NAME,
+                        m.isStamp
+                    );
                 }
-                localMessageCount = res.messages.length; 
-            }
-        });
-    }
 
-    function postToGAS(rId, rPw, sender, content, isStamp, tag) {
-        if (GAS_API_URL.includes("ここにデプロイ")) {
-            appendBubbleToTimeline(sender, content, false, isStamp);
-            return;
+                localMessageCount =
+                    res.messages.length;
+            }
         }
-        fetch(GAS_API_URL, {
-            method: "POST",
-            body: JSON.stringify({
-                action: "send", roomId: rId, password: rPw,
-                sender: sender, content: content, isStamp: isStamp, tag: tag
-            })
-        }).then(() => listenNewMessages());
-    }
+    );
+}
+
+function postToGAS(
+    rId,
+    rPw,
+    sender,
+    content,
+    isStamp,
+    tag
+) {
+
+    callGAS(
+        {
+            action: "send",
+            roomId: rId,
+            password: rPw,
+            sender: sender,
+            content: content,
+            isStamp: isStamp,
+            tag: tag
+        },
+        function(res) {
+
+            if (res.success) {
+
+                listenNewMessages();
+
+            } else {
+
+                alert("送信失敗");
+            }
+        }
+    );
+}
 
     function sendTextMessage() {
         const input = document.getElementById('text-msg');
