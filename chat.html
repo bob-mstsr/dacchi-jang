@@ -271,10 +271,13 @@ function loadRoomsFromGAS() {
         },
         function(res) {
 
+            console.log("取得結果", res);
+
             if (res.success) {
 
-                roomListCache =
-                    res.rooms;
+                roomListCache = res.rooms;
+
+                console.log("roomListCache", roomListCache);
 
                 renderRoomList();
             }
