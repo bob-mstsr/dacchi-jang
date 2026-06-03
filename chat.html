@@ -22,7 +22,6 @@
             display: flex; flex-direction: column; box-shadow: 0 0 20px rgba(0,0,0,0.1); position: relative;
         }
 
-        /* ヘッダー固定 */
         header {
             background: linear-gradient(135deg, var(--dark-charcoal) 0%, var(--main-red) 100%);
             color: white; padding: 12px; text-align: center; border-bottom: 4px solid var(--accent-gold);
@@ -36,7 +35,6 @@
             font-weight: bold; line-height: 1; display: inline-block;
         }
 
-        /* 部屋選択画面 */
         .room-selector-screen {
             position: absolute; top: 50px; left: 0; right: 0; bottom: 0; background: var(--bg-color);
             z-index: 20; display: flex; flex-direction: column; padding: 15px; overflow-y: auto;
@@ -62,7 +60,6 @@
         .room-status { font-size: 0.7rem; color: #777; margin-top: 2px; }
         .lock-badge { font-size: 0.75rem; color: #b71c1c; font-weight: bold; }
 
-        /* トークタイムライン */
         .chat-timeline {
             flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px;
             -webkit-overflow-scrolling: touch;
@@ -74,103 +71,64 @@
         .msg-bubble { background: white; padding: 8px 14px; border-radius: 12px; font-size: 0.95rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); word-break: break-all; }
         .self .msg-bubble { background: #8cd68c; color: #052e05; }
 
-        /* ========================================
-           スタンプ表示（吹き出し対応版）
-        ======================================== */
+        /* ========== スタンプ外枠 ========== */
         .stamp-bubble {
             background: #fff;
             border: 2px solid var(--accent-gold);
             border-radius: 8px;
             box-shadow: 0 3px 5px rgba(0,0,0,0.15);
-            position: relative;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            padding: 6px;
+            padding: 5px;
+            gap: 3px;
         }
-
-        /* 上下配置：縦並び */
         .stamp-bubble.pos-top,
-        .stamp-bubble.pos-bottom {
-            flex-direction: column;
-            width: 105px;
-            min-height: 120px;
-        }
-
-        /* 左右配置：横並び */
+        .stamp-bubble.pos-bottom { flex-direction: column; width: 110px; }
         .stamp-bubble.pos-left,
-        .stamp-bubble.pos-right {
-            flex-direction: row;
-            width: 140px;
-            min-height: 80px;
-        }
+        .stamp-bubble.pos-right  { flex-direction: row;    width: 150px; min-height: 80px; }
 
-        .stamp-bubble .st-img-wrapper {
-            display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0;
-        }
-        .stamp-bubble.pos-top .st-img-wrapper,
+        .st-img-wrapper { display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .stamp-bubble.pos-top    .st-img-wrapper,
         .stamp-bubble.pos-bottom .st-img-wrapper { width: 65px; height: 65px; }
-        .stamp-bubble.pos-left .st-img-wrapper,
-        .stamp-bubble.pos-right .st-img-wrapper { width: 50px; height: 50px; }
+        .stamp-bubble.pos-left   .st-img-wrapper,
+        .stamp-bubble.pos-right  .st-img-wrapper { width: 55px; height: 55px; }
+        .st-img-wrapper img { width: 100%; height: 100%; object-fit: contain; }
 
-        .stamp-bubble img { width: 100%; height: 100%; object-fit: contain; }
-
-        /* 吹き出しコンテナ */
-        .st-balloon-wrap {
+        /* 吹き出し本体：SVGキャンバス */
+        .st-balloon {
             position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            flex-shrink: 0;
         }
+        .stamp-bubble.pos-top    .st-balloon,
+        .stamp-bubble.pos-bottom .st-balloon { width: 90px; height: 48px; }
+        .stamp-bubble.pos-left   .st-balloon,
+        .stamp-bubble.pos-right  .st-balloon { width: 58px; height: 64px; }
 
-        /* 上下配置時の吹き出しサイズ */
-        .stamp-bubble.pos-top .st-balloon-wrap,
-        .stamp-bubble.pos-bottom .st-balloon-wrap {
-            width: 90px;
-            min-height: 36px;
-            margin: 3px 0;
-        }
+        .st-balloon svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
 
-        /* 左右配置時の吹き出しサイズ */
-        .stamp-bubble.pos-left .st-balloon-wrap,
-        .stamp-bubble.pos-right .st-balloon-wrap {
-            width: 52px;
-            min-height: 60px;
-            margin: 0 3px;
-        }
-
-        /* 吹き出しSVG背景 */
-        .st-balloon-svg {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-        }
-
-        /* 吹き出し内テキスト */
+        /* テキストは吹き出し内に絶対配置 */
         .st-balloon-text {
-            position: relative;
-            z-index: 1;
-            font-size: 0.65rem;
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.62rem;
             font-weight: bold;
             color: var(--main-red);
             text-align: center;
-            padding: 4px 5px;
-            word-break: break-all;
             line-height: 1.3;
+            word-break: break-all;
+            width: 78%;
+            z-index: 2;
         }
-
-        /* 左右配置は縦書き */
-        .stamp-bubble.pos-left .st-balloon-text,
+        .stamp-bubble.pos-left  .st-balloon-text,
         .stamp-bubble.pos-right .st-balloon-text {
             writing-mode: vertical-rl;
-            text-orientation: mixed;
-            padding: 5px 4px;
-            font-size: 0.6rem;
+            width: auto;
+            height: 78%;
         }
 
-        /* ========================================
-           スタンプ作成UI
-        ======================================== */
+        /* ========== コントロールパネル ========== */
         .control-panel { background: var(--bg-color); border-top: 2px solid var(--accent-gold); display: flex; flex-direction: column; z-index: 10; }
         .text-input-row { display: flex; padding: 8px; gap: 6px; background: white; }
         .text-input-row input { flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 6px; font-size: 0.95rem; }
@@ -180,13 +138,12 @@
         .tab-btn { flex: 1; padding: 8px; border: none; background: none; font-size: 0.85rem; font-weight: bold; color: #555; cursor: pointer; text-align: center; }
         .tab-btn.active { background: var(--bg-color); color: var(--main-red); border-top: 2px solid var(--main-red); }
 
-        .panel-content { height: 260px; overflow-y: auto; padding: 10px; display: none; }
+        .panel-content { height: 200px; overflow-y: auto; padding: 10px; display: none; }
         .panel-content.active { display: block; }
 
         .search-box { width: 100%; padding: 6px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 8px; font-size: 0.8rem; }
         .stamp-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
 
-        /* パレット内ミニスタンプ */
         .mini-stamp {
             background: white; border: 1px solid #c8c2b5; border-radius: 6px; aspect-ratio: 0.85;
             display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4px; cursor: pointer;
@@ -195,7 +152,6 @@
         .mini-stamp img { width: 100%; height: 100%; object-fit: contain; }
         .mini-stamp .m-text { font-size: 0.55rem; font-weight: bold; color: var(--main-red); text-align: center; width: 100%; white-space: nowrap; overflow: hidden; margin-top: 2px; }
 
-        /* スタンプ自作レイアウト */
         .maker-layout { display: flex; flex-direction: column; gap: 5px; }
         .maker-label { font-size: 0.7rem; color: #666; font-weight: bold; }
         .icon-selector { display: flex; gap: 6px; overflow-x: auto; padding: 4px 0; -webkit-overflow-scrolling: touch; }
@@ -203,12 +159,10 @@
         .icon-opt img { width: 100%; height: 100%; object-fit: contain; }
         .icon-opt.selected { border: 2px solid var(--main-red); background: #fff0f0; }
 
-        /* 吹き出し形状・位置選択 */
         .balloon-selector { display: flex; gap: 5px; flex-wrap: wrap; }
         .balloon-opt {
-            border: 1px solid #ccc; border-radius: 4px; padding: 3px 7px;
-            font-size: 0.7rem; cursor: pointer; background: white; font-weight: bold; color: #555;
-            white-space: nowrap;
+            border: 1px solid #ccc; border-radius: 4px; padding: 3px 8px;
+            font-size: 0.72rem; cursor: pointer; background: white; font-weight: bold; color: #555; white-space: nowrap;
         }
         .balloon-opt.selected { border: 2px solid var(--main-red); background: #fff0f0; color: var(--main-red); }
 
@@ -304,166 +258,151 @@
         "images/sunsun6.png"
     ];
 
-    let selectedBaseIcon = "images/56s1.png";
-    let selectedBalloonShape = "rounded";  // rounded / spiky / thought
-    let selectedBalloonPos = "bottom";     // top / bottom / left / right
-
+    let selectedBaseIcon    = "images/56s1.png";
+    let selectedBalloonShape = "rounded";
+    let selectedBalloonPos   = "bottom";
     let MY_NAME = "名無し";
     let currentRoomId = "";
     let currentRoomPassword = "";
     let roomListCache = {};
     let localMessageCount = 0;
 
-    // ========================================
-    // 吹き出しSVG生成
-    // ========================================
+    /* ================================================
+       吹き出しSVG生成
+       しっぽは「画像側」に向ける
+       pos = 画像に対する吹き出しの位置
+         bottom → 吹き出しは画像の下 → しっぽは吹き出しの上(画像側)
+         top    → 吹き出しは画像の上 → しっぽは吹き出しの下(画像側)
+         right  → 吹き出しは画像の右 → しっぽは吹き出しの左(画像側)
+         left   → 吹き出しは画像の左 → しっぽは吹き出しの右(画像側)
+    ================================================ */
     function buildBalloonSVG(shape, pos, w, h) {
-        // しっぽの向きをposから決定
-        // rounded: 角丸四角＋三角しっぽ
-        // spiky: ギザギザ外周
-        // thought: 雲型＋小丸チェーン
-
-        if (shape === "rounded") {
-            return buildRoundedSVG(pos, w, h);
-        } else if (shape === "spiky") {
-            return buildSpikySVG(pos, w, h);
-        } else {
-            return buildThoughtSVG(pos, w, h);
-        }
+        if (shape === "rounded") return svgRounded(pos, w, h);
+        if (shape === "spiky")   return svgSpiky(pos, w, h);
+        return svgThought(pos, w, h);
     }
 
-    function buildRoundedSVG(pos, w, h) {
-        // 本体を少し内側に取り、しっぽ分の余白を確保
-        const tail = 10;
-        let bodyX = 0, bodyY = 0, bodyW = w, bodyH = h;
-        let tailPath = "";
+    // しっぽの向きをposから決定（しっぽは画像側＝吹き出しの「内側」に向く）
+    function tailDir(pos) {
+        // pos: 吹き出しが画像のどちら側にあるか
+        // bottom → 吹き出しは下 → しっぽは上（画像に向かう）
+        if (pos === "bottom") return "top";
+        if (pos === "top")    return "bottom";
+        if (pos === "right")  return "left";
+        if (pos === "left")   return "right";
+        return "top";
+    }
 
-        if (pos === "bottom") {
-            bodyH = h - tail;
-            tailPath = `M${w*0.4},${bodyH} L${w*0.5},${h} L${w*0.6},${bodyH} Z`;
-        } else if (pos === "top") {
-            bodyY = tail; bodyH = h - tail;
-            tailPath = `M${w*0.4},${tail} L${w*0.5},0 L${w*0.6},${tail} Z`;
-        } else if (pos === "left") {
-            bodyX = tail; bodyW = w - tail;
-            tailPath = `M${tail},${h*0.4} L0,${h*0.5} L${tail},${h*0.6} Z`;
+    function svgRounded(pos, w, h) {
+        const dir  = tailDir(pos);
+        const tw   = 12; // しっぽ幅
+        const th   = 10; // しっぽ高さ
+        const r    = 8;
+        let bx=0, by=0, bw=w, bh=h, tail="";
+
+        if (dir === "top") {
+            by=th; bh=h-th;
+            tail=`M${w/2-tw/2},${th} L${w/2},0 L${w/2+tw/2},${th} Z`;
+        } else if (dir === "bottom") {
+            bh=h-th;
+            tail=`M${w/2-tw/2},${bh} L${w/2},${h} L${w/2+tw/2},${bh} Z`;
+        } else if (dir === "left") {
+            bx=th; bw=w-th;
+            tail=`M${th},${h/2-tw/2} L0,${h/2} L${th},${h/2+tw/2} Z`;
         } else {
-            bodyW = w - tail;
-            tailPath = `M${bodyW},${h*0.4} L${w},${h*0.5} L${bodyW},${h*0.6} Z`;
+            bw=w-th;
+            tail=`M${bw},${h/2-tw/2} L${w},${h/2} L${bw},${h/2+tw/2} Z`;
         }
 
-        return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
-            <rect x="${bodyX+1}" y="${bodyY+1}" width="${bodyW-2}" height="${bodyH-2}" rx="8" ry="8"
+        return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}">
+            <path d="${tail}" fill="white" stroke="#d4af37" stroke-width="1.5" stroke-linejoin="round"/>
+            <rect x="${bx+1}" y="${by+1}" width="${bw-2}" height="${bh-2}" rx="${r}" ry="${r}"
                 fill="white" stroke="#d4af37" stroke-width="1.5"/>
-            <path d="${tailPath}" fill="white" stroke="#d4af37" stroke-width="1.5" stroke-linejoin="round"/>
-            <rect x="${bodyX+2}" y="${bodyY+2}" width="${bodyW-4}" height="${bodyH-4}" rx="7" ry="7"
+            <rect x="${bx+3}" y="${by+3}" width="${bw-6}" height="${bh-6}" rx="${r-1}" ry="${r-1}"
                 fill="white" stroke="none"/>
         </svg>`;
     }
 
-    function buildSpikySVG(pos, w, h) {
-        // ギザギザ外周をポリゴンで作り、しっぽを追加
-        const cx = w / 2, cy = h / 2;
-        const tail = 10;
-        let rOuter, rInner, centerX = cx, centerY = cy;
-        let tailPath = "";
+    function svgSpiky(pos, w, h) {
+        const dir = tailDir(pos);
+        const th  = 10;
+        let cx=w/2, cy=h/2, rx, ry, tail="";
 
-        if (pos === "bottom") {
-            centerY = (h - tail) / 2;
-            rOuter = Math.min(cx, centerY) - 2;
-            tailPath = `M${cx - 6},${centerY * 2} L${cx},${h} L${cx + 6},${centerY * 2} Z`;
-        } else if (pos === "top") {
-            centerY = tail + (h - tail) / 2;
-            rOuter = Math.min(cx, (h - tail) / 2) - 2;
-            tailPath = `M${cx - 6},${tail} L${cx},0 L${cx + 6},${tail} Z`;
-        } else if (pos === "left") {
-            centerX = tail + (w - tail) / 2;
-            rOuter = Math.min((w - tail) / 2, cy) - 2;
-            tailPath = `M${tail},${cy - 6} L0,${cy} L${tail},${cy + 6} Z`;
+        if (dir === "top") {
+            cy=(h-th)/2+th; rx=(w/2)-3; ry=(h-th)/2-3;
+            tail=`M${w/2-6},${th+2} L${w/2},0 L${w/2+6},${th+2} Z`;
+        } else if (dir === "bottom") {
+            cy=(h-th)/2; rx=(w/2)-3; ry=(h-th)/2-3;
+            tail=`M${w/2-6},${h-th-2} L${w/2},${h} L${w/2+6},${h-th-2} Z`;
+        } else if (dir === "left") {
+            cx=(w-th)/2+th; rx=(w-th)/2-3; ry=(h/2)-3;
+            tail=`M${th+2},${h/2-6} L0,${h/2} L${th+2},${h/2+6} Z`;
         } else {
-            centerX = (w - tail) / 2;
-            rOuter = Math.min(centerX, cy) - 2;
-            tailPath = `M${w - tail},${cy - 6} L${w},${cy} L${w - tail},${cy + 6} Z`;
+            cx=(w-th)/2; rx=(w-th)/2-3; ry=(h/2)-3;
+            tail=`M${w-th-2},${h/2-6} L${w},${h/2} L${w-th-2},${h/2+6} Z`;
         }
 
-        rInner = rOuter * 0.72;
-        const spikes = 12;
-        let points = "";
-        for (let i = 0; i < spikes * 2; i++) {
-            const angle = (Math.PI / spikes) * i - Math.PI / 2;
-            const r = i % 2 === 0 ? rOuter : rInner;
-            points += `${centerX + r * Math.cos(angle)},${centerY + r * Math.sin(angle)} `;
+        const spikes=12;
+        const rOuter=Math.min(rx,ry);
+        const rInner=rOuter*0.72;
+        let pts="";
+        for(let i=0;i<spikes*2;i++){
+            const a=(Math.PI/spikes)*i - Math.PI/2;
+            const r=i%2===0?rOuter:rInner;
+            pts+=`${(cx+r*Math.cos(a)).toFixed(1)},${(cy+r*Math.sin(a)).toFixed(1)} `;
         }
 
-        return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
-            <polygon points="${points.trim()}" fill="white" stroke="#d4af37" stroke-width="1.5" stroke-linejoin="round"/>
-            <path d="${tailPath}" fill="white" stroke="#d4af37" stroke-width="1.5" stroke-linejoin="round"/>
+        return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}">
+            <path d="${tail}" fill="white" stroke="#d4af37" stroke-width="1.5" stroke-linejoin="round"/>
+            <polygon points="${pts.trim()}" fill="white" stroke="#d4af37" stroke-width="1.5" stroke-linejoin="round"/>
         </svg>`;
     }
 
-    function buildThoughtSVG(pos, w, h) {
-        // 雲型（複数の円を重ねる）＋小丸チェーン
-        const tail = 14;
-        let cloudCx = w / 2, cloudCy = h / 2;
-        let dotPath = "";
-        let cloudR;
+    function svgThought(pos, w, h) {
+        const dir = tailDir(pos);
+        const th  = 14;
+        let cx=w/2, cy=h/2, cr, dots="";
 
-        if (pos === "bottom") {
-            cloudCy = (h - tail) / 2;
-            cloudR = Math.min(w / 2, cloudCy) - 4;
-            // 小丸チェーン：本体下→外へ
-            dotPath = `
-                <circle cx="${w*0.5}" cy="${cloudCy*2 + 2}" r="3.5" fill="white" stroke="#d4af37" stroke-width="1.2"/>
-                <circle cx="${w*0.5}" cy="${cloudCy*2 + 9}" r="2.5" fill="white" stroke="#d4af37" stroke-width="1.2"/>
-                <circle cx="${w*0.5}" cy="${h - 1}" r="1.8" fill="white" stroke="#d4af37" stroke-width="1.2"/>
-            `;
-        } else if (pos === "top") {
-            cloudCy = tail + (h - tail) / 2;
-            cloudR = Math.min(w / 2, (h - tail) / 2) - 4;
-            dotPath = `
-                <circle cx="${w*0.5}" cy="${tail - 2}" r="3.5" fill="white" stroke="#d4af37" stroke-width="1.2"/>
-                <circle cx="${w*0.5}" cy="${tail - 9}" r="2.5" fill="white" stroke="#d4af37" stroke-width="1.2"/>
-                <circle cx="${w*0.5}" cy="1" r="1.8" fill="white" stroke="#d4af37" stroke-width="1.2"/>
-            `;
-        } else if (pos === "left") {
-            cloudCx = tail + (w - tail) / 2;
-            cloudR = Math.min((w - tail) / 2, h / 2) - 4;
-            dotPath = `
-                <circle cx="${tail - 2}" cy="${h*0.5}" r="3.5" fill="white" stroke="#d4af37" stroke-width="1.2"/>
-                <circle cx="${tail - 9}" cy="${h*0.5}" r="2.5" fill="white" stroke="#d4af37" stroke-width="1.2"/>
-                <circle cx="1" cy="${h*0.5}" r="1.8" fill="white" stroke="#d4af37" stroke-width="1.2"/>
-            `;
+        if (dir === "top") {
+            cy=(h-th)/2+th; cr=Math.min(w/2,(h-th)/2)-5;
+            dots=`<circle cx="${w/2}" cy="${th-3}" r="3.5" fill="white" stroke="#d4af37" stroke-width="1.2"/>
+                  <circle cx="${w/2}" cy="${th-10}" r="2.3" fill="white" stroke="#d4af37" stroke-width="1.2"/>
+                  <circle cx="${w/2}" cy="1.5" r="1.5" fill="white" stroke="#d4af37" stroke-width="1.2"/>`;
+        } else if (dir === "bottom") {
+            cy=(h-th)/2; cr=Math.min(w/2,(h-th)/2)-5;
+            dots=`<circle cx="${w/2}" cy="${h-th+3}" r="3.5" fill="white" stroke="#d4af37" stroke-width="1.2"/>
+                  <circle cx="${w/2}" cy="${h-th+10}" r="2.3" fill="white" stroke="#d4af37" stroke-width="1.2"/>
+                  <circle cx="${w/2}" cy="${h-1.5}" r="1.5" fill="white" stroke="#d4af37" stroke-width="1.2"/>`;
+        } else if (dir === "left") {
+            cx=(w-th)/2+th; cr=Math.min((w-th)/2,h/2)-5;
+            dots=`<circle cx="${th-3}" cy="${h/2}" r="3.5" fill="white" stroke="#d4af37" stroke-width="1.2"/>
+                  <circle cx="${th-10}" cy="${h/2}" r="2.3" fill="white" stroke="#d4af37" stroke-width="1.2"/>
+                  <circle cx="1.5" cy="${h/2}" r="1.5" fill="white" stroke="#d4af37" stroke-width="1.2"/>`;
         } else {
-            cloudCx = (w - tail) / 2;
-            cloudR = Math.min(cloudCx, h / 2) - 4;
-            dotPath = `
-                <circle cx="${w - tail + 2}" cy="${h*0.5}" r="3.5" fill="white" stroke="#d4af37" stroke-width="1.2"/>
-                <circle cx="${w - tail + 9}" cy="${h*0.5}" r="2.5" fill="white" stroke="#d4af37" stroke-width="1.2"/>
-                <circle cx="${w - 1}" cy="${h*0.5}" r="1.8" fill="white" stroke="#d4af37" stroke-width="1.2"/>
-            `;
+            cx=(w-th)/2; cr=Math.min((w-th)/2,h/2)-5;
+            dots=`<circle cx="${w-th+3}" cy="${h/2}" r="3.5" fill="white" stroke="#d4af37" stroke-width="1.2"/>
+                  <circle cx="${w-th+10}" cy="${h/2}" r="2.3" fill="white" stroke="#d4af37" stroke-width="1.2"/>
+                  <circle cx="${w-1.5}" cy="${h/2}" r="1.5" fill="white" stroke="#d4af37" stroke-width="1.2"/>`;
         }
 
-        // 雲：中央の大円＋周囲に小円を配置
-        const numBumps = 7;
-        let bumpCircles = `<circle cx="${cloudCx}" cy="${cloudCy}" r="${cloudR * 0.65}" fill="white" stroke="#d4af37" stroke-width="1.2"/>`;
-        for (let i = 0; i < numBumps; i++) {
-            const angle = (2 * Math.PI / numBumps) * i - Math.PI / 2;
-            const bx = cloudCx + cloudR * 0.6 * Math.cos(angle);
-            const by = cloudCy + cloudR * 0.6 * Math.sin(angle);
-            bumpCircles += `<circle cx="${bx.toFixed(1)}" cy="${by.toFixed(1)}" r="${(cloudR * 0.42).toFixed(1)}" fill="white" stroke="#d4af37" stroke-width="1.2"/>`;
+        const nb=7;
+        let bumps=`<circle cx="${cx}" cy="${cy}" r="${(cr*0.62).toFixed(1)}" fill="white" stroke="#d4af37" stroke-width="1.2"/>`;
+        for(let i=0;i<nb;i++){
+            const a=(2*Math.PI/nb)*i - Math.PI/2;
+            const bx=(cx+cr*0.6*Math.cos(a)).toFixed(1);
+            const by=(cy+cr*0.6*Math.sin(a)).toFixed(1);
+            bumps+=`<circle cx="${bx}" cy="${by}" r="${(cr*0.42).toFixed(1)}" fill="white" stroke="#d4af37" stroke-width="1.2"/>`;
         }
-        // 内側塗り潰し用の大きな白円
-        bumpCircles += `<circle cx="${cloudCx}" cy="${cloudCy}" r="${(cloudR * 0.58).toFixed(1)}" fill="white" stroke="none"/>`;
+        bumps+=`<circle cx="${cx}" cy="${cy}" r="${(cr*0.55).toFixed(1)}" fill="white" stroke="none"/>`;
 
-        return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
-            ${bumpCircles}
-            ${dotPath}
+        return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}">
+            ${bumps}${dots}
         </svg>`;
     }
 
-    // ========================================
-    // スタンプDOM構築
-    // ========================================
+    /* ================================================
+       スタンプDOM構築
+    ================================================ */
     function buildStampDOM(stampData) {
         const shape = stampData.shape || "rounded";
         const pos   = stampData.pos   || "bottom";
@@ -476,51 +415,49 @@
         imgWrapper.className = 'st-img-wrapper';
         imgWrapper.innerHTML = `<img src="${stampData.icon}" loading="lazy">`;
 
-        // 吹き出しラッパー
-        const balloonWrap = document.createElement('div');
-        balloonWrap.className = 'st-balloon-wrap';
+        // 吹き出しDOM
+        const balloon = document.createElement('div');
+        balloon.className = 'st-balloon';
 
-        // SVGサイズ（CSSと合わせる）
-        const svgW = isHoriz ? 52 : 90;
-        const svgH = isHoriz ? 60 : 36;
-
-        balloonWrap.innerHTML = buildBalloonSVG(shape, pos, svgW, svgH);
+        const svgW = isHoriz ? 58 : 90;
+        const svgH = isHoriz ? 64 : 48;
+        balloon.innerHTML = buildBalloonSVG(shape, pos, svgW, svgH);
 
         const textSpan = document.createElement('span');
         textSpan.className = 'st-balloon-text';
         textSpan.innerText = stampData.text;
-        balloonWrap.appendChild(textSpan);
+        balloon.appendChild(textSpan);
 
-        // 位置によって画像と吹き出しの順序を変える
+        // top/left → 吹き出しが先、画像が後
+        // bottom/right → 画像が先、吹き出しが後
         if (pos === "top" || pos === "left") {
-            stampDiv.appendChild(balloonWrap);
+            stampDiv.appendChild(balloon);
             stampDiv.appendChild(imgWrapper);
         } else {
             stampDiv.appendChild(imgWrapper);
-            stampDiv.appendChild(balloonWrap);
+            stampDiv.appendChild(balloon);
         }
 
         return stampDiv;
     }
 
-    // ========================================
-    // 選択UI
-    // ========================================
+    /* ================================================
+       選択UI
+    ================================================ */
     function selectBalloonShape(el) {
         document.querySelectorAll('#balloon-shape-selector .balloon-opt').forEach(e => e.classList.remove('selected'));
         el.classList.add('selected');
         selectedBalloonShape = el.dataset.shape;
     }
-
     function selectBalloonPos(el) {
         document.querySelectorAll('#balloon-pos-selector .balloon-opt').forEach(e => e.classList.remove('selected'));
         el.classList.add('selected');
         selectedBalloonPos = el.dataset.pos;
     }
 
-    // ========================================
-    // GAS通信
-    // ========================================
+    /* ================================================
+       GAS通信
+    ================================================ */
     function callGAS(params, callback) {
         const callbackName = "jsonp_" + Date.now() + "_" + Math.floor(Math.random() * 10000);
         window[callbackName] = function(data) {
@@ -534,7 +471,6 @@
         document.body.appendChild(script);
     }
 
-    // 初期スタンプデータ
     let sharedStamps = [
         { icon: "images/papa.png",   text: "おつかれ！", tag: "挨拶", shape: "rounded", pos: "bottom" },
         { icon: "images/mama.png",   text: "激怒！！！", tag: "感情", shape: "spiky",   pos: "bottom" },
@@ -544,22 +480,14 @@
 
     window.onload = function() {
         MY_NAME = prompt("名前を入力してください") || "名無し";
-
         const savedStamps = localStorage.getItem('dacchijong_custom_images_stamps');
         if (savedStamps) sharedStamps = JSON.parse(savedStamps);
-
         renderMakerIcons();
         renderSharedStamps();
         loadRoomsFromGAS();
-
         setInterval(() => {
-            if (!currentRoomId) {
-                loadRoomsFromGAS();
-            } else {
-                listenNewMessages();
-            }
+            if (!currentRoomId) { loadRoomsFromGAS(); } else { listenNewMessages(); }
         }, 3000);
-
         document.body.addEventListener('touchmove', function(e) {
             if (!e.target.closest('#chat-box') && !e.target.closest('.panel-content') && !e.target.closest('#maker-icons')) {
                 e.preventDefault();
@@ -567,25 +495,16 @@
         }, { passive: false });
     };
 
-    // ========================================
-    // ルーム操作
-    // ========================================
     function loadRoomsFromGAS() {
         callGAS({ action: "fetch_rooms" }, function(res) {
-            console.log("取得結果", res);
-            if (res.success) {
-                roomListCache = res.rooms;
-                renderRoomList();
-            }
+            if (res.success) { roomListCache = res.rooms; renderRoomList(); }
         });
     }
 
     function renderRoomList() {
         const container = document.getElementById('room-list-container');
         container.innerHTML = '';
-        if (Object.keys(roomListCache).length === 0) {
-            roomListCache["リビングルーム"] = { password: "" };
-        }
+        if (Object.keys(roomListCache).length === 0) roomListCache["リビングルーム"] = { password: "" };
         Object.keys(roomListCache).forEach(rId => {
             const room = roomListCache[rId];
             const div = document.createElement('div');
@@ -612,8 +531,7 @@
         const pass = passInput.value.trim();
         if (!name) { alert('部屋の名前を入力してください'); return; }
         postToGAS(name, pass, "システム", `📢 ルーム【${name}】が開設されました。`, false, "システム");
-        nameInput.value = '';
-        passInput.value = '';
+        nameInput.value = ''; passInput.value = '';
         alert(`部屋【${name}】を作成しました！`);
         loadRoomsFromGAS();
     }
@@ -621,10 +539,7 @@
     function tryEnterRoom(roomId, correctPassword) {
         if (correctPassword) {
             const input = prompt("🔑 鍵がかかっています。4桁の暗証番号を入力してください:");
-            if (input !== correctPassword) {
-                alert("暗証番号が違います。入れません！");
-                return;
-            }
+            if (input !== correctPassword) { alert("暗証番号が違います。入れません！"); return; }
         }
         currentRoomId = roomId;
         currentRoomPassword = correctPassword;
@@ -638,8 +553,7 @@
     }
 
     function exitRoom() {
-        currentRoomId = "";
-        currentRoomPassword = "";
+        currentRoomId = ""; currentRoomPassword = "";
         document.getElementById('active-room-title').innerText = "談話室";
         document.getElementById('room-screen').style.display = 'flex';
         document.getElementById('header-action-area').innerHTML =
@@ -647,9 +561,6 @@
         loadRoomsFromGAS();
     }
 
-    // ========================================
-    // メッセージ送受信
-    // ========================================
     function listenNewMessages() {
         if (!currentRoomId) return;
         callGAS({ action: "load_messages", roomId: currentRoomId }, function(res) {
@@ -666,11 +577,7 @@
     function postToGAS(rId, rPw, sender, content, isStamp, tag) {
         callGAS({ action: "send", roomId: rId, password: rPw, sender: sender, content: content, isStamp: isStamp, tag: tag },
             function(res) {
-                if (res.success) {
-                    listenNewMessages();
-                } else {
-                    alert("送信失敗");
-                }
+                if (res.success) { listenNewMessages(); } else { alert("送信失敗"); }
             }
         );
     }
@@ -694,12 +601,10 @@
         const box = document.getElementById('chat-box');
         const row = document.createElement('div');
         row.className = `msg-row ${isOther ? 'other' : 'self'}`;
-
         const nameSpan = document.createElement('span');
         nameSpan.className = 'sender-name';
         nameSpan.innerText = sender;
         row.appendChild(nameSpan);
-
         if (isStamp) {
             let stampData = { icon: "images/56s1.png", text: "エラー", shape: "rounded", pos: "bottom" };
             try { stampData = JSON.parse(content); } catch(e) {}
@@ -710,27 +615,16 @@
             bubble.innerText = content;
             row.appendChild(bubble);
         }
-
         box.appendChild(row);
         box.scrollTop = box.scrollHeight;
     }
 
-    // ========================================
-    // スタンプ作成・表示
-    // ========================================
     function createNewStamp() {
         const textInput = document.getElementById('maker-text');
         const tagSelect = document.getElementById('maker-tag');
         const text = textInput.value.trim();
         if (!text) { alert('文字を入力してください'); return; }
-
-        sharedStamps.unshift({
-            icon: selectedBaseIcon,
-            text: text,
-            tag: tagSelect.value,
-            shape: selectedBalloonShape,
-            pos: selectedBalloonPos
-        });
+        sharedStamps.unshift({ icon: selectedBaseIcon, text: text, tag: tagSelect.value, shape: selectedBalloonShape, pos: selectedBalloonPos });
         localStorage.setItem('dacchijong_custom_images_stamps', JSON.stringify(sharedStamps));
         textInput.value = '';
         renderSharedStamps();
@@ -754,19 +648,15 @@
         container.innerHTML = '';
         sharedStamps.forEach(stamp => {
             if (filterText && !stamp.text.includes(filterText) && !stamp.tag.includes(filterText)) return;
-
             const div = document.createElement('div');
             div.className = 'mini-stamp';
             div.onclick = () => sendStampMessage(stamp);
-
             const wrapper = document.createElement('div');
             wrapper.className = 'm-img-wrapper';
             wrapper.innerHTML = `<img src="${stamp.icon}" loading="lazy">`;
-
             const txt = document.createElement('span');
             txt.className = 'm-text';
             txt.innerText = stamp.text;
-
             div.appendChild(wrapper);
             div.appendChild(txt);
             container.appendChild(div);
