@@ -7,11 +7,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@500&family=Noto+Sans+JP:wght@500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #f7f4eb;         /* 娯楽室共通：生成り色背景 */
-            --main-red: #9e1b1b;         /* 娯楽室共通：メインレッド */
-            --accent-gold: #d4af37;      /* 娯楽室共通：ゴールド */
-            --dark-charcoal: #1a1a1a;    /* 娯楽室共通：チャコール */
-            --chat-bg: #e2dbcd;          /* トーク画面背景 */
+            --bg-color: #f7f4eb;
+            --main-red: #9e1b1b;
+            --accent-gold: #d4af37;
+            --dark-charcoal: #1a1a1a;
+            --chat-bg: #e2dbcd;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -22,28 +22,27 @@
             display: flex; flex-direction: column; box-shadow: 0 0 20px rgba(0,0,0,0.1); position: relative;
         }
 
-        /* 👑 最上部ヘッダー（談話室仕様） */
+        /* ヘッダー固定 */
         header {
             background: linear-gradient(135deg, var(--dark-charcoal) 0%, var(--main-red) 100%);
-            color: white; padding: 12px; text-align: center; border-bottom: 4px solid var(--accent-gold); z-index: 10; position: sticky; top: 0;
+            color: white; padding: 12px; text-align: center; border-bottom: 4px solid var(--accent-gold);
+            z-index: 10; position: sticky; top: 0;
         }
         header h1 { font-family: 'Kiwi Maru', serif; font-size: 1.1rem; color: var(--accent-gold); }
-        
-        /* 動的に変化する左側リンクボタン */
+
         .header-left-btn {
             position: absolute; left: 12px; top: 11px; color: var(--accent-gold); text-decoration: none; font-size: 0.8rem;
             border: 1px solid var(--accent-gold); padding: 4px 8px; border-radius: 4px; background: transparent; cursor: pointer;
             font-weight: bold; line-height: 1; display: inline-block;
         }
 
-        /* 🚪 部屋選択画面（スレッド一覧表示） */
+        /* 部屋選択画面 */
         .room-selector-screen {
             position: absolute; top: 50px; left: 0; right: 0; bottom: 0; background: var(--bg-color);
             z-index: 20; display: flex; flex-direction: column; padding: 15px; overflow-y: auto;
         }
         .screen-title { font-family: 'Kiwi Maru', serif; font-size: 1rem; color: var(--main-red); margin-bottom: 12px; font-weight: bold; }
-        
-        /* 部屋作成フォーム */
+
         .create-room-box {
             background: white; padding: 12px; border: 1px solid #e0dacf; border-radius: 8px; margin-bottom: 20px;
             display: flex; flex-direction: column; gap: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
@@ -63,7 +62,7 @@
         .room-status { font-size: 0.7rem; color: #777; margin-top: 2px; }
         .lock-badge { font-size: 0.75rem; color: #b71c1c; font-weight: bold; }
 
-        /* 💬 トークタイムライン */
+        /* トークタイムライン */
         .chat-timeline {
             flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px;
             -webkit-overflow-scrolling: touch;
@@ -75,20 +74,103 @@
         .msg-bubble { background: white; padding: 8px 14px; border-radius: 12px; font-size: 0.95rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); word-break: break-all; }
         .self .msg-bubble { background: #8cd68c; color: #052e05; }
 
-        /* 🎨 自作スタンプのチャット内表示 */
+        /* ========================================
+           スタンプ表示（吹き出し対応版）
+        ======================================== */
         .stamp-bubble {
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            width: 105px; height: 120px; background: #fff; border: 2px solid var(--accent-gold);
-            border-radius: 8px; box-shadow: 0 3px 5px rgba(0,0,0,0.15); position: relative; overflow: hidden; padding: 4px;
-        }
-        .stamp-bubble .st-img-wrapper { width: 65px; height: 65px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-        .stamp-bubble img { width: 100%; height: 100%; object-fit: contain; }
-        .stamp-bubble .st-text {
-            font-size: 0.7rem; font-weight: bold; color: var(--main-red); text-align: center; width: 100%;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 4px; padding-top: 2px; border-top: 1px dashed #ccc;
+            background: #fff;
+            border: 2px solid var(--accent-gold);
+            border-radius: 8px;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.15);
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px;
         }
 
-        /* 🛠️ コントロールパネル */
+        /* 上下配置：縦並び */
+        .stamp-bubble.pos-top,
+        .stamp-bubble.pos-bottom {
+            flex-direction: column;
+            width: 105px;
+            min-height: 120px;
+        }
+
+        /* 左右配置：横並び */
+        .stamp-bubble.pos-left,
+        .stamp-bubble.pos-right {
+            flex-direction: row;
+            width: 140px;
+            min-height: 80px;
+        }
+
+        .stamp-bubble .st-img-wrapper {
+            display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0;
+        }
+        .stamp-bubble.pos-top .st-img-wrapper,
+        .stamp-bubble.pos-bottom .st-img-wrapper { width: 65px; height: 65px; }
+        .stamp-bubble.pos-left .st-img-wrapper,
+        .stamp-bubble.pos-right .st-img-wrapper { width: 50px; height: 50px; }
+
+        .stamp-bubble img { width: 100%; height: 100%; object-fit: contain; }
+
+        /* 吹き出しコンテナ */
+        .st-balloon-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 上下配置時の吹き出しサイズ */
+        .stamp-bubble.pos-top .st-balloon-wrap,
+        .stamp-bubble.pos-bottom .st-balloon-wrap {
+            width: 90px;
+            min-height: 36px;
+            margin: 3px 0;
+        }
+
+        /* 左右配置時の吹き出しサイズ */
+        .stamp-bubble.pos-left .st-balloon-wrap,
+        .stamp-bubble.pos-right .st-balloon-wrap {
+            width: 52px;
+            min-height: 60px;
+            margin: 0 3px;
+        }
+
+        /* 吹き出しSVG背景 */
+        .st-balloon-svg {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+        }
+
+        /* 吹き出し内テキスト */
+        .st-balloon-text {
+            position: relative;
+            z-index: 1;
+            font-size: 0.65rem;
+            font-weight: bold;
+            color: var(--main-red);
+            text-align: center;
+            padding: 4px 5px;
+            word-break: break-all;
+            line-height: 1.3;
+        }
+
+        /* 左右配置は縦書き */
+        .stamp-bubble.pos-left .st-balloon-text,
+        .stamp-bubble.pos-right .st-balloon-text {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            padding: 5px 4px;
+            font-size: 0.6rem;
+        }
+
+        /* ========================================
+           スタンプ作成UI
+        ======================================== */
         .control-panel { background: var(--bg-color); border-top: 2px solid var(--accent-gold); display: flex; flex-direction: column; z-index: 10; }
         .text-input-row { display: flex; padding: 8px; gap: 6px; background: white; }
         .text-input-row input { flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 6px; font-size: 0.95rem; }
@@ -98,12 +180,12 @@
         .tab-btn { flex: 1; padding: 8px; border: none; background: none; font-size: 0.85rem; font-weight: bold; color: #555; cursor: pointer; text-align: center; }
         .tab-btn.active { background: var(--bg-color); color: var(--main-red); border-top: 2px solid var(--main-red); }
 
-        .panel-content { height: 160px; overflow-y: auto; padding: 10px; display: none; }
+        .panel-content { height: 260px; overflow-y: auto; padding: 10px; display: none; }
         .panel-content.active { display: block; }
-        
+
         .search-box { width: 100%; padding: 6px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 8px; font-size: 0.8rem; }
         .stamp-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-        
+
         /* パレット内ミニスタンプ */
         .mini-stamp {
             background: white; border: 1px solid #c8c2b5; border-radius: 6px; aspect-ratio: 0.85;
@@ -113,12 +195,23 @@
         .mini-stamp img { width: 100%; height: 100%; object-fit: contain; }
         .mini-stamp .m-text { font-size: 0.55rem; font-weight: bold; color: var(--main-red); text-align: center; width: 100%; white-space: nowrap; overflow: hidden; margin-top: 2px; }
 
-        /* スタンプ自作 */
-        .maker-layout { display: flex; flex-direction: column; gap: 6px; }
+        /* スタンプ自作レイアウト */
+        .maker-layout { display: flex; flex-direction: column; gap: 5px; }
+        .maker-label { font-size: 0.7rem; color: #666; font-weight: bold; }
         .icon-selector { display: flex; gap: 6px; overflow-x: auto; padding: 4px 0; -webkit-overflow-scrolling: touch; }
         .icon-opt { width: 45px; height: 45px; background: white; border: 1px solid #ccc; padding: 4px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .icon-opt img { width: 100%; height: 100%; object-fit: contain; }
         .icon-opt.selected { border: 2px solid var(--main-red); background: #fff0f0; }
+
+        /* 吹き出し形状・位置選択 */
+        .balloon-selector { display: flex; gap: 5px; flex-wrap: wrap; }
+        .balloon-opt {
+            border: 1px solid #ccc; border-radius: 4px; padding: 3px 7px;
+            font-size: 0.7rem; cursor: pointer; background: white; font-weight: bold; color: #555;
+            white-space: nowrap;
+        }
+        .balloon-opt.selected { border: 2px solid var(--main-red); background: #fff0f0; color: var(--main-red); }
+
         .maker-form { display: flex; gap: 6px; width: 100%; }
         .maker-form input { flex: 1; padding: 6px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.85rem; }
         .maker-form select { padding: 6px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.85rem; }
@@ -141,7 +234,6 @@
             <input type="password" id="new-room-pass" placeholder="鍵をかける場合の暗証番号（空欄なら公開）" maxlength="4">
             <button class="btn-action" onclick="createNewRoomClick()">新しい部屋を開設</button>
         </div>
-
         <div class="screen-title">💬 現在立っている部屋一覧</div>
         <div class="room-list" id="room-list-container"></div>
     </div>
@@ -161,8 +253,24 @@
 
         <div class="panel-content" id="tab-maker">
             <div class="maker-layout">
-                <span style="font-size: 0.7rem; color:#666; font-weight:bold;">1. ベースとなる画像を選ぶ:</span>
+                <span class="maker-label">1. ベースとなる画像を選ぶ:</span>
                 <div class="icon-selector" id="maker-icons"></div>
+
+                <span class="maker-label">2. 吹き出しの形を選ぶ:</span>
+                <div class="balloon-selector" id="balloon-shape-selector">
+                    <div class="balloon-opt selected" data-shape="rounded" onclick="selectBalloonShape(this)">角丸</div>
+                    <div class="balloon-opt" data-shape="spiky" onclick="selectBalloonShape(this)">ギザギザ</div>
+                    <div class="balloon-opt" data-shape="thought" onclick="selectBalloonShape(this)">思考</div>
+                </div>
+
+                <span class="maker-label">3. 吹き出しの位置を選ぶ:</span>
+                <div class="balloon-selector" id="balloon-pos-selector">
+                    <div class="balloon-opt selected" data-pos="bottom" onclick="selectBalloonPos(this)">↓ 下</div>
+                    <div class="balloon-opt" data-pos="top" onclick="selectBalloonPos(this)">↑ 上</div>
+                    <div class="balloon-opt" data-pos="left" onclick="selectBalloonPos(this)">← 左</div>
+                    <div class="balloon-opt" data-pos="right" onclick="selectBalloonPos(this)">→ 右</div>
+                </div>
+
                 <div class="maker-form">
                     <input type="text" id="maker-text" maxlength="8" placeholder="文字（最大8文字）">
                     <select id="maker-tag">
@@ -183,134 +291,304 @@
 </div>
 
 <script>
-    // 🔴【重要】デプロイしたご自身のGoogle Apps ScriptのURLに差し替えてください
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyW7xYv9OlrbuBCbhxUYxUVG78I2dWf98RlhgVCnqQtwa6s5XHwdQ-oolocv4iAxhSy9w/exec";
 
-    // 📁 アプリ内の特定フォルダ（images/）に入っているベース画像リスト
     const BASE_IMAGE_FILES = [
         "images/56s1.png", "images/56s2.png", "images/56s3.png", "images/56s4.png",
         "images/56s5.png", "images/56s6.png", "images/56s7.png", "images/56s8.png",
-        "images/56s9.png", "images/56s10.png", "images/meicho1.png", "images/nyanko1.png",
-        "images/nyanko2.png", "images/nyanko3.png", "images/nyanko4.png", "images/pok1.png",
-        "images/stf1.png", "images/stf2.png", "images/stf3.png", "images/stf4.png",
-        "images/stf5.png", "images/stf6.png", "images/stf7.png", "images/stf8.png",
-        "images/sunsun1.png","images/sunsun2.png","images/sunsun3.png","images/sunsun5.png",
-        "images/sunsun6.png"
+        "images/56s9.png", "images/56s10.png"
     ];
-    let selectedBaseIcon = "images/56s1.png";
-    
-let MY_NAME = "名無し";
 
+    let selectedBaseIcon = "images/56s1.png";
+    let selectedBalloonShape = "rounded";  // rounded / spiky / thought
+    let selectedBalloonPos = "bottom";     // top / bottom / left / right
+
+    let MY_NAME = "名無し";
     let currentRoomId = "";
     let currentRoomPassword = "";
     let roomListCache = {};
-    let localMessageCount = 0; 
+    let localMessageCount = 0;
 
-function callGAS(params, callback) {
+    // ========================================
+    // 吹き出しSVG生成
+    // ========================================
+    function buildBalloonSVG(shape, pos, w, h) {
+        // しっぽの向きをposから決定
+        // rounded: 角丸四角＋三角しっぽ
+        // spiky: ギザギザ外周
+        // thought: 雲型＋小丸チェーン
 
-    const callbackName =
-        "jsonp_" +
-        Date.now() +
-        "_" +
-        Math.floor(Math.random() * 10000);
+        if (shape === "rounded") {
+            return buildRoundedSVG(pos, w, h);
+        } else if (shape === "spiky") {
+            return buildSpikySVG(pos, w, h);
+        } else {
+            return buildThoughtSVG(pos, w, h);
+        }
+    }
 
-    window[callbackName] = function(data) {
+    function buildRoundedSVG(pos, w, h) {
+        // 本体を少し内側に取り、しっぽ分の余白を確保
+        const tail = 10;
+        let bodyX = 0, bodyY = 0, bodyW = w, bodyH = h;
+        let tailPath = "";
 
-        delete window[callbackName];
+        if (pos === "bottom") {
+            bodyH = h - tail;
+            tailPath = `M${w*0.4},${bodyH} L${w*0.5},${h} L${w*0.6},${bodyH} Z`;
+        } else if (pos === "top") {
+            bodyY = tail; bodyH = h - tail;
+            tailPath = `M${w*0.4},${tail} L${w*0.5},0 L${w*0.6},${tail} Z`;
+        } else if (pos === "left") {
+            bodyX = tail; bodyW = w - tail;
+            tailPath = `M${tail},${h*0.4} L0,${h*0.5} L${tail},${h*0.6} Z`;
+        } else {
+            bodyW = w - tail;
+            tailPath = `M${bodyW},${h*0.4} L${w},${h*0.5} L${bodyW},${h*0.6} Z`;
+        }
 
-        document.body.removeChild(script);
+        return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+            <rect x="${bodyX+1}" y="${bodyY+1}" width="${bodyW-2}" height="${bodyH-2}" rx="8" ry="8"
+                fill="white" stroke="#d4af37" stroke-width="1.5"/>
+            <path d="${tailPath}" fill="white" stroke="#d4af37" stroke-width="1.5" stroke-linejoin="round"/>
+            <rect x="${bodyX+2}" y="${bodyY+2}" width="${bodyW-4}" height="${bodyH-4}" rx="7" ry="7"
+                fill="white" stroke="none"/>
+        </svg>`;
+    }
 
-        callback(data);
-    };
+    function buildSpikySVG(pos, w, h) {
+        // ギザギザ外周をポリゴンで作り、しっぽを追加
+        const cx = w / 2, cy = h / 2;
+        const tail = 10;
+        let rOuter, rInner, centerX = cx, centerY = cy;
+        let tailPath = "";
 
-    const query =
-        new URLSearchParams({
-            ...params,
-            callback: callbackName
-        }).toString();
+        if (pos === "bottom") {
+            centerY = (h - tail) / 2;
+            rOuter = Math.min(cx, centerY) - 2;
+            tailPath = `M${cx - 6},${centerY * 2} L${cx},${h} L${cx + 6},${centerY * 2} Z`;
+        } else if (pos === "top") {
+            centerY = tail + (h - tail) / 2;
+            rOuter = Math.min(cx, (h - tail) / 2) - 2;
+            tailPath = `M${cx - 6},${tail} L${cx},0 L${cx + 6},${tail} Z`;
+        } else if (pos === "left") {
+            centerX = tail + (w - tail) / 2;
+            rOuter = Math.min((w - tail) / 2, cy) - 2;
+            tailPath = `M${tail},${cy - 6} L0,${cy} L${tail},${cy + 6} Z`;
+        } else {
+            centerX = (w - tail) / 2;
+            rOuter = Math.min(centerX, cy) - 2;
+            tailPath = `M${w - tail},${cy - 6} L${w},${cy} L${w - tail},${cy + 6} Z`;
+        }
 
-    const script =
-        document.createElement("script");
+        rInner = rOuter * 0.72;
+        const spikes = 12;
+        let points = "";
+        for (let i = 0; i < spikes * 2; i++) {
+            const angle = (Math.PI / spikes) * i - Math.PI / 2;
+            const r = i % 2 === 0 ? rOuter : rInner;
+            points += `${centerX + r * Math.cos(angle)},${centerY + r * Math.sin(angle)} `;
+        }
 
-    script.src =
-        GAS_API_URL + "?" + query;
+        return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+            <polygon points="${points.trim()}" fill="white" stroke="#d4af37" stroke-width="1.5" stroke-linejoin="round"/>
+            <path d="${tailPath}" fill="white" stroke="#d4af37" stroke-width="1.5" stroke-linejoin="round"/>
+        </svg>`;
+    }
 
-    document.body.appendChild(script);
-}
+    function buildThoughtSVG(pos, w, h) {
+        // 雲型（複数の円を重ねる）＋小丸チェーン
+        const tail = 14;
+        let cloudCx = w / 2, cloudCy = h / 2;
+        let dotPath = "";
+        let cloudR;
+
+        if (pos === "bottom") {
+            cloudCy = (h - tail) / 2;
+            cloudR = Math.min(w / 2, cloudCy) - 4;
+            // 小丸チェーン：本体下→外へ
+            dotPath = `
+                <circle cx="${w*0.5}" cy="${cloudCy*2 + 2}" r="3.5" fill="white" stroke="#d4af37" stroke-width="1.2"/>
+                <circle cx="${w*0.5}" cy="${cloudCy*2 + 9}" r="2.5" fill="white" stroke="#d4af37" stroke-width="1.2"/>
+                <circle cx="${w*0.5}" cy="${h - 1}" r="1.8" fill="white" stroke="#d4af37" stroke-width="1.2"/>
+            `;
+        } else if (pos === "top") {
+            cloudCy = tail + (h - tail) / 2;
+            cloudR = Math.min(w / 2, (h - tail) / 2) - 4;
+            dotPath = `
+                <circle cx="${w*0.5}" cy="${tail - 2}" r="3.5" fill="white" stroke="#d4af37" stroke-width="1.2"/>
+                <circle cx="${w*0.5}" cy="${tail - 9}" r="2.5" fill="white" stroke="#d4af37" stroke-width="1.2"/>
+                <circle cx="${w*0.5}" cy="1" r="1.8" fill="white" stroke="#d4af37" stroke-width="1.2"/>
+            `;
+        } else if (pos === "left") {
+            cloudCx = tail + (w - tail) / 2;
+            cloudR = Math.min((w - tail) / 2, h / 2) - 4;
+            dotPath = `
+                <circle cx="${tail - 2}" cy="${h*0.5}" r="3.5" fill="white" stroke="#d4af37" stroke-width="1.2"/>
+                <circle cx="${tail - 9}" cy="${h*0.5}" r="2.5" fill="white" stroke="#d4af37" stroke-width="1.2"/>
+                <circle cx="1" cy="${h*0.5}" r="1.8" fill="white" stroke="#d4af37" stroke-width="1.2"/>
+            `;
+        } else {
+            cloudCx = (w - tail) / 2;
+            cloudR = Math.min(cloudCx, h / 2) - 4;
+            dotPath = `
+                <circle cx="${w - tail + 2}" cy="${h*0.5}" r="3.5" fill="white" stroke="#d4af37" stroke-width="1.2"/>
+                <circle cx="${w - tail + 9}" cy="${h*0.5}" r="2.5" fill="white" stroke="#d4af37" stroke-width="1.2"/>
+                <circle cx="${w - 1}" cy="${h*0.5}" r="1.8" fill="white" stroke="#d4af37" stroke-width="1.2"/>
+            `;
+        }
+
+        // 雲：中央の大円＋周囲に小円を配置
+        const numBumps = 7;
+        let bumpCircles = `<circle cx="${cloudCx}" cy="${cloudCy}" r="${cloudR * 0.65}" fill="white" stroke="#d4af37" stroke-width="1.2"/>`;
+        for (let i = 0; i < numBumps; i++) {
+            const angle = (2 * Math.PI / numBumps) * i - Math.PI / 2;
+            const bx = cloudCx + cloudR * 0.6 * Math.cos(angle);
+            const by = cloudCy + cloudR * 0.6 * Math.sin(angle);
+            bumpCircles += `<circle cx="${bx.toFixed(1)}" cy="${by.toFixed(1)}" r="${(cloudR * 0.42).toFixed(1)}" fill="white" stroke="#d4af37" stroke-width="1.2"/>`;
+        }
+        // 内側塗り潰し用の大きな白円
+        bumpCircles += `<circle cx="${cloudCx}" cy="${cloudCy}" r="${(cloudR * 0.58).toFixed(1)}" fill="white" stroke="none"/>`;
+
+        return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+            ${bumpCircles}
+            ${dotPath}
+        </svg>`;
+    }
+
+    // ========================================
+    // スタンプDOM構築
+    // ========================================
+    function buildStampDOM(stampData) {
+        const shape = stampData.shape || "rounded";
+        const pos   = stampData.pos   || "bottom";
+        const isHoriz = (pos === "left" || pos === "right");
+
+        const stampDiv = document.createElement('div');
+        stampDiv.className = `stamp-bubble pos-${pos}`;
+
+        const imgWrapper = document.createElement('div');
+        imgWrapper.className = 'st-img-wrapper';
+        imgWrapper.innerHTML = `<img src="${stampData.icon}" loading="lazy">`;
+
+        // 吹き出しラッパー
+        const balloonWrap = document.createElement('div');
+        balloonWrap.className = 'st-balloon-wrap';
+
+        // SVGサイズ（CSSと合わせる）
+        const svgW = isHoriz ? 52 : 90;
+        const svgH = isHoriz ? 60 : 36;
+
+        balloonWrap.innerHTML = buildBalloonSVG(shape, pos, svgW, svgH);
+
+        const textSpan = document.createElement('span');
+        textSpan.className = 'st-balloon-text';
+        textSpan.innerText = stampData.text;
+        balloonWrap.appendChild(textSpan);
+
+        // 位置によって画像と吹き出しの順序を変える
+        if (pos === "top" || pos === "left") {
+            stampDiv.appendChild(balloonWrap);
+            stampDiv.appendChild(imgWrapper);
+        } else {
+            stampDiv.appendChild(imgWrapper);
+            stampDiv.appendChild(balloonWrap);
+        }
+
+        return stampDiv;
+    }
+
+    // ========================================
+    // 選択UI
+    // ========================================
+    function selectBalloonShape(el) {
+        document.querySelectorAll('#balloon-shape-selector .balloon-opt').forEach(e => e.classList.remove('selected'));
+        el.classList.add('selected');
+        selectedBalloonShape = el.dataset.shape;
+    }
+
+    function selectBalloonPos(el) {
+        document.querySelectorAll('#balloon-pos-selector .balloon-opt').forEach(e => e.classList.remove('selected'));
+        el.classList.add('selected');
+        selectedBalloonPos = el.dataset.pos;
+    }
+
+    // ========================================
+    // GAS通信
+    // ========================================
+    function callGAS(params, callback) {
+        const callbackName = "jsonp_" + Date.now() + "_" + Math.floor(Math.random() * 10000);
+        window[callbackName] = function(data) {
+            delete window[callbackName];
+            document.body.removeChild(script);
+            callback(data);
+        };
+        const query = new URLSearchParams({ ...params, callback: callbackName }).toString();
+        const script = document.createElement("script");
+        script.src = GAS_API_URL + "?" + query;
+        document.body.appendChild(script);
+    }
 
     // 初期スタンプデータ
     let sharedStamps = [
-        { icon: "images/56s1.png", text: "おつかれ！", tag: "挨拶" },
-        { icon: "images/56s2.png", text: "激怒！！！", tag: "感情" },
-        { icon: "images/56s3.png", text: "了解です", tag: "挨拶" },
-        { icon: "images/56s4.png", text: "ご飯できた", tag: "連絡" }
+        { icon: "images/papa.png",   text: "おつかれ！", tag: "挨拶", shape: "rounded", pos: "bottom" },
+        { icon: "images/mama.png",   text: "激怒！！！", tag: "感情", shape: "spiky",   pos: "bottom" },
+        { icon: "images/tile01.png", text: "了解です",   tag: "挨拶", shape: "rounded", pos: "right"  },
+        { icon: "images/alert.png",  text: "ご飯できた", tag: "連絡", shape: "thought", pos: "top"    }
     ];
 
-window.onload = function() {
-    MY_NAME = prompt("名前を入力してください") || "名無し";
+    window.onload = function() {
+        MY_NAME = prompt("名前を入力してください") || "名無し";
 
-    const savedStamps = localStorage.getItem('dacchijong_custom_images_stamps');
-    if (savedStamps) sharedStamps = JSON.parse(savedStamps);
+        const savedStamps = localStorage.getItem('dacchijong_custom_images_stamps');
+        if (savedStamps) sharedStamps = JSON.parse(savedStamps);
 
-    renderMakerIcons();
-    renderSharedStamps();
-    loadRoomsFromGAS();
+        renderMakerIcons();
+        renderSharedStamps();
+        loadRoomsFromGAS();
 
-    setInterval(() => {
-        if (!currentRoomId) {
-            loadRoomsFromGAS();
-        } else {
-            listenNewMessages();
-        }
-    }, 3000);
+        setInterval(() => {
+            if (!currentRoomId) {
+                loadRoomsFromGAS();
+            } else {
+                listenNewMessages();
+            }
+        }, 3000);
 
-    document.body.addEventListener('touchmove', function(e) {
-        if (!e.target.closest('#chat-box') && !e.target.closest('.panel-content') && !e.target.closest('#maker-icons')) {
-            e.preventDefault();
-        }
-    }, { passive: false });
-};
-    
-function loadRoomsFromGAS() {
+        document.body.addEventListener('touchmove', function(e) {
+            if (!e.target.closest('#chat-box') && !e.target.closest('.panel-content') && !e.target.closest('#maker-icons')) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+    };
 
-    callGAS(
-        {
-            action: "fetch_rooms"
-        },
-        function(res) {
-
+    // ========================================
+    // ルーム操作
+    // ========================================
+    function loadRoomsFromGAS() {
+        callGAS({ action: "fetch_rooms" }, function(res) {
             console.log("取得結果", res);
-
             if (res.success) {
-
                 roomListCache = res.rooms;
-
-                console.log("roomListCache", roomListCache);
-
                 renderRoomList();
             }
-        }
-    );
-}
+        });
+    }
 
     function renderRoomList() {
         const container = document.getElementById('room-list-container');
         container.innerHTML = '';
-        
         if (Object.keys(roomListCache).length === 0) {
             roomListCache["リビングルーム"] = { password: "" };
         }
-
         Object.keys(roomListCache).forEach(rId => {
             const room = roomListCache[rId];
             const div = document.createElement('div');
             div.className = 'room-item';
             div.onclick = () => tryEnterRoom(rId, room.password);
-
             const info = document.createElement('div');
             info.className = 'room-info';
             info.innerHTML = `<span class="room-name">${rId}</span><span class="room-status">タップして入室</span>`;
-            
             div.appendChild(info);
             if (room.password) {
                 const badge = document.createElement('span');
@@ -327,7 +605,6 @@ function loadRoomsFromGAS() {
         const passInput = document.getElementById('new-room-pass');
         const name = nameInput.value.trim();
         const pass = passInput.value.trim();
-
         if (!name) { alert('部屋の名前を入力してください'); return; }
         postToGAS(name, pass, "システム", `📢 ルーム【${name}】が開設されました。`, false, "システム");
         nameInput.value = '';
@@ -336,7 +613,6 @@ function loadRoomsFromGAS() {
         loadRoomsFromGAS();
     }
 
-    // 🔑 ルームに入室したときの処理（左ボタンを「部屋一覧」へ切り替え）
     function tryEnterRoom(roomId, correctPassword) {
         if (correctPassword) {
             const input = prompt("🔑 鍵がかかっています。4桁の暗証番号を入力してください:");
@@ -349,117 +625,64 @@ function loadRoomsFromGAS() {
         currentRoomPassword = correctPassword;
         document.getElementById('active-room-title').innerText = `談話室: ${roomId}`;
         document.getElementById('room-screen').style.display = 'none';
-        
-        // 💡 ヘッダー左のリンクを「🚪 部屋一覧」に戻るボタン（JavaScript実行）に書き換える
-        document.getElementById('header-action-area').innerHTML = 
+        document.getElementById('header-action-area').innerHTML =
             `<button class="header-left-btn" onclick="exitRoom()">🚪 部屋一覧</button>`;
-        
         localMessageCount = 0;
         document.getElementById('chat-box').innerHTML = '';
         listenNewMessages();
     }
 
-    // 🚪 ルームから退室してロビーに戻るときの処理（左ボタンを「◀ 戻る」の外部URLリンクへ切り替え）
     function exitRoom() {
         currentRoomId = "";
         currentRoomPassword = "";
         document.getElementById('active-room-title').innerText = "談話室";
         document.getElementById('room-screen').style.display = 'flex';
-        
-        // 💡 ヘッダー左のリンクを「◀ 戻る」（index.htmlへの通常ハイパーリンク）に戻す
-        document.getElementById('header-action-area').innerHTML = 
+        document.getElementById('header-action-area').innerHTML =
             `<a href="https://bob-mstsr.github.io/dacchi-jang/index.html" class="header-left-btn">◀ 戻る</a>`;
-            
         loadRoomsFromGAS();
     }
 
-function listenNewMessages() {
-
-    if (!currentRoomId) return;
-
-    callGAS(
-        {
-            action: "load_messages",
-            roomId: currentRoomId
-        },
-        function(res) {
-
-            if (
-                res.success &&
-                res.messages.length >
-                localMessageCount
-            ) {
-
-                for (
-                    let i = localMessageCount;
-                    i < res.messages.length;
-                    i++
-                ) {
-
-               
-     const m =
-                        res.messages[i];
-
-                    appendBubbleToTimeline(
-                        m.sender,
-                        m.content,
-                        m.sender !== MY_NAME,
-                        m.isStamp
-                    );
+    // ========================================
+    // メッセージ送受信
+    // ========================================
+    function listenNewMessages() {
+        if (!currentRoomId) return;
+        callGAS({ action: "load_messages", roomId: currentRoomId }, function(res) {
+            if (res.success && res.messages.length > localMessageCount) {
+                for (let i = localMessageCount; i < res.messages.length; i++) {
+                    const m = res.messages[i];
+                    appendBubbleToTimeline(m.sender, m.content, m.sender !== MY_NAME, m.isStamp);
                 }
-
-                localMessageCount =
-                    res.messages.length;
+                localMessageCount = res.messages.length;
             }
-        }
-    );
-}
+        });
+    }
 
-function postToGAS(
-    rId,
-    rPw,
-    sender,
-    content,
-    isStamp,
-    tag
-) {
-
-    callGAS(
-        {
-            action: "send",
-            roomId: rId,
-            password: rPw,
-            sender: sender,
-            content: content,
-            isStamp: isStamp,
-            tag: tag
-        },
-        function(res) {
-
-            if (res.success) {
-
-                listenNewMessages();
-
-            } else {
-
-                alert("送信失敗");
+    function postToGAS(rId, rPw, sender, content, isStamp, tag) {
+        callGAS({ action: "send", roomId: rId, password: rPw, sender: sender, content: content, isStamp: isStamp, tag: tag },
+            function(res) {
+                if (res.success) {
+                    listenNewMessages();
+                } else {
+                    alert("送信失敗");
+                }
             }
-        }
-    );
-}
+        );
+    }
 
     function sendTextMessage() {
         const input = document.getElementById('text-msg');
         const text = input.value.trim();
         if (!text || !currentRoomId) return;
-
         postToGAS(currentRoomId, currentRoomPassword, MY_NAME, text, false, "");
         input.value = '';
     }
 
-    function sendStampMessage(iconPath, text) {
+    function sendStampMessage(stamp) {
         if (!currentRoomId) return;
-        postToGAS(currentRoomId, currentRoomPassword, MY_NAME, JSON.stringify({ icon: iconPath, text: text }), true, "");
+        postToGAS(currentRoomId, currentRoomPassword, MY_NAME,
+            JSON.stringify({ icon: stamp.icon, text: stamp.text, shape: stamp.shape, pos: stamp.pos }),
+            true, "");
     }
 
     function appendBubbleToTimeline(sender, content, isOther, isStamp) {
@@ -473,23 +696,9 @@ function postToGAS(
         row.appendChild(nameSpan);
 
         if (isStamp) {
-            var stampData = { icon: "images/papa.png", text: "エラー" };
-            try { stampData = JSON.parse(content); } catch(e) { }
-
-            const stampDiv = document.createElement('div');
-            stampDiv.className = 'stamp-bubble';
-            
-            const imgWrapper = document.createElement('div');
-            imgWrapper.className = 'st-img-wrapper';
-            imgWrapper.innerHTML = `<img src="${stampData.icon}" loading="lazy">`;
-            
-            const textSpan = document.createElement('span');
-            textSpan.className = 'st-text';
-            textSpan.innerText = stampData.text;
-            
-            stampDiv.appendChild(imgWrapper);
-            stampDiv.appendChild(textSpan);
-            row.appendChild(stampDiv);
+            let stampData = { icon: "images/56s1.png", text: "エラー", shape: "rounded", pos: "bottom" };
+            try { stampData = JSON.parse(content); } catch(e) {}
+            row.appendChild(buildStampDOM(stampData));
         } else {
             const bubble = document.createElement('div');
             bubble.className = 'msg-bubble';
@@ -501,15 +710,23 @@ function postToGAS(
         box.scrollTop = box.scrollHeight;
     }
 
+    // ========================================
+    // スタンプ作成・表示
+    // ========================================
     function createNewStamp() {
         const textInput = document.getElementById('maker-text');
         const tagSelect = document.getElementById('maker-tag');
         const text = textInput.value.trim();
         if (!text) { alert('文字を入力してください'); return; }
 
-        sharedStamps.unshift({ icon: selectedBaseIcon, text: text, tag: tagSelect.value });
+        sharedStamps.unshift({
+            icon: selectedBaseIcon,
+            text: text,
+            tag: tagSelect.value,
+            shape: selectedBalloonShape,
+            pos: selectedBalloonPos
+        });
         localStorage.setItem('dacchijong_custom_images_stamps', JSON.stringify(sharedStamps));
-        
         textInput.value = '';
         renderSharedStamps();
         switchTab('repo');
@@ -535,7 +752,7 @@ function postToGAS(
 
             const div = document.createElement('div');
             div.className = 'mini-stamp';
-            div.onclick = () => sendStampMessage(stamp.icon, stamp.text);
+            div.onclick = () => sendStampMessage(stamp);
 
             const wrapper = document.createElement('div');
             wrapper.className = 'm-img-wrapper';
