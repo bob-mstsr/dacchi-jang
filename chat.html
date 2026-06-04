@@ -330,7 +330,7 @@
     // ギザギザ：ジグザグポリゴンで四角の輪郭を描く＋しっぽ
     function svgSpiky(pos, w, h) {
         const dir = tailDir(pos);
-        const tw=10, th=9, spike=5, step=10;
+        const tw=10, th=9, spike=9, step=18;
         let bx=0, by=0, bw=w, bh=h, tail="";
 
         if (dir === "top")    { by=th; bh=h-th; tail=`M${w/2-tw/2},${th} L${w/2},0 L${w/2+tw/2},${th} Z`; }
