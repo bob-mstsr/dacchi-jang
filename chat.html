@@ -251,15 +251,9 @@
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyW7xYv9OlrbuBCbhxUYxUVG78I2dWf98RlhgVCnqQtwa6s5XHwdQ-oolocv4iAxhSy9w/exec";
 
     const BASE_IMAGE_FILES = [
-
-                "images/56s1.png", "images/56s2.png", "images/56s3.png", "images/56s4.png",
-        "images/56s5.png", "images/56s6.png", "images/56s7.png", "images/56s8.png",
-        "images/56s9.png", "images/56s10.png", "images/meicho1.png", "images/nyanko1.png",
-        "images/nyanko2.png", "images/nyanko3.png", "images/nyanko4.png", "images/pok1.png",
-        "images/stf1.png", "images/stf2.png", "images/stf3.png", "images/stf4.png",
-        "images/stf5.png", "images/stf6.png", "images/stf7.png", "images/stf8.png",
-        "images/sunsun1.png","images/sunsun2.png","images/sunsun3.png","images/sunsun5.png",
-        "images/sunsun6.png"
+        "images/56s1.png","images/56s2.png","images/56s3.png","images/56s4.png",
+        "images/56s5.png","images/56s6.png","images/56s7.png","images/56s8.png",
+        "images/56s9.png","images/56s10.png"
     ];
 
     let selectedBaseIcon    = "images/56s1.png";
@@ -327,47 +321,47 @@
         </svg>`;
     }
 
-    // ギザギザ：ジグザグポリゴンで四角の輪郭を描く＋しっぽ
+    // ギザギザ：中心から放射状の爆発星形＋しっぽ
     function svgSpiky(pos, w, h) {
         const dir = tailDir(pos);
-        const tw=10, th=9, spike=9, step=18;
-        let bx=0, by=0, bw=w, bh=h, tail="";
+        const pad = 10; // しっぽ用の余白
+        // 吹き出し本体の中心・半径
+        let cx = w/2, cy = h/2;
+        let rOuter, rInner, tailPts = "";
 
-        if (dir === "top")    { by=th; bh=h-th; tail=`M${w/2-tw/2},${th} L${w/2},0 L${w/2+tw/2},${th} Z`; }
-        else if (dir === "bottom") { bh=h-th; tail=`M${w/2-tw/2},${bh} L${w/2},${h} L${w/2+tw/2},${bh} Z`; }
-        else if (dir === "left")   { bx=th; bw=w-th; tail=`M${th},${h/2-tw/2} L0,${h/2} L${th},${h/2+tw/2} Z`; }
-        else                       { bw=w-th; tail=`M${bw},${h/2-tw/2} L${w},${h/2} L${bw},${h/2+tw/2} Z`; }
+        if (dir === "top") {
+            cy = (h - pad)/2 + pad;
+            rOuter = Math.min(w/2, (h-pad)/2) - 1;
+            tailPts = `${w/2-7},${pad+2} ${w/2},0 ${w/2+7},${pad+2}`;
+        } else if (dir === "bottom") {
+            cy = (h - pad)/2;
+            rOuter = Math.min(w/2, (h-pad)/2) - 1;
+            tailPts = `${w/2-7},${h-pad-2} ${w/2},${h} ${w/2+7},${h-pad-2}`;
+        } else if (dir === "left") {
+            cx = (w - pad)/2 + pad;
+            rOuter = Math.min((w-pad)/2, h/2) - 1;
+            tailPts = `${pad+2},${h/2-7} 0,${h/2} ${pad+2},${h/2+7}`;
+        } else {
+            cx = (w - pad)/2;
+            rOuter = Math.min((w-pad)/2, h/2) - 1;
+            tailPts = `${w-pad-2},${h/2-7} ${w},${h/2} ${w-pad-2},${h/2+7}`;
+        }
+        rInner = rOuter * 0.48;
 
-        // 四角の4辺をジグザグで描くポリゴン
+        // 放射状ポリゴン（13本の尖り）
+        const numSpikes = 13;
         let pts = [];
-        // 上辺：左→右
-        for(let x=bx; x<bx+bw; x+=step){
-            pts.push(`${x},${by}`);
-            pts.push(`${Math.min(x+step/2, bx+bw)},${by-spike}`);
-        }
-        pts.push(`${bx+bw},${by}`);
-        // 右辺：上→下
-        for(let y=by; y<by+bh; y+=step){
-            pts.push(`${bx+bw},${y}`);
-            pts.push(`${bx+bw+spike},${Math.min(y+step/2, by+bh)}`);
-        }
-        pts.push(`${bx+bw},${by+bh}`);
-        // 下辺：右→左
-        for(let x=bx+bw; x>bx; x-=step){
-            pts.push(`${x},${by+bh}`);
-            pts.push(`${Math.max(x-step/2, bx)},${by+bh+spike}`);
-        }
-        pts.push(`${bx},${by+bh}`);
-        // 左辺：下→上
-        for(let y=by+bh; y>by; y-=step){
-            pts.push(`${bx},${y}`);
-            pts.push(`${bx-spike},${Math.max(y-step/2, by)}`);
+        for (let i = 0; i < numSpikes * 2; i++) {
+            const angle = (Math.PI / numSpikes) * i - Math.PI / 2;
+            const r = i % 2 === 0 ? rOuter : rInner;
+            pts.push(`${(cx + r * Math.cos(angle)).toFixed(2)},${(cy + r * Math.sin(angle)).toFixed(2)}`);
         }
 
-        return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${-spike} ${-spike} ${w+spike*2} ${h+spike*2}">
-            <path d="${tail}" fill="white" stroke="#d4af37" stroke-width="1.5" stroke-linejoin="round"/>
-            <polygon points="${pts.join(' ')}" fill="white" stroke="#d4af37" stroke-width="1.5" stroke-linejoin="round"/>
-            <rect x="${bx+5}" y="${by+5}" width="${bw-10}" height="${bh-10}" rx="4" ry="4" fill="white" stroke="none"/>
+        const vpad = rOuter + 2;
+        return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${cx-vpad} ${Math.min(cy,pad/2)-vpad} ${vpad*2} ${vpad*2 + (dir==="top"||dir==="bottom"?pad:0)}">
+            <polygon points="${pts.join(' ')}" fill="white" stroke="#d4af37" stroke-width="1.8" stroke-linejoin="round"/>
+            <polygon points="${tailPts}" fill="white" stroke="#d4af37" stroke-width="1.5" stroke-linejoin="round"/>
+            <circle cx="${cx}" cy="${cy}" r="${rInner*0.95}" fill="white" stroke="none"/>
         </svg>`;
     }
 
