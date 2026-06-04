@@ -100,10 +100,12 @@
             position: relative;
             flex-shrink: 0;
         }
+        /* 上下配置：横長・低め（8文字横2列想定） */
         .stamp-bubble.pos-top    .st-balloon,
-        .stamp-bubble.pos-bottom .st-balloon { width: 100px; height: 64px; }
+        .stamp-bubble.pos-bottom .st-balloon { width: 72px; height: 40px; }
+        /* 左右配置：縦長・細め（8文字縦並び想定） */
         .stamp-bubble.pos-left   .st-balloon,
-        .stamp-bubble.pos-right  .st-balloon { width: 68px; height: 80px; }
+        .stamp-bubble.pos-right  .st-balloon { width: 36px; height: 72px; }
 
         .st-balloon svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
 
@@ -112,20 +114,20 @@
             position: absolute;
             top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 0.62rem;
+            font-size: 0.58rem;
             font-weight: bold;
             color: var(--main-red);
             text-align: center;
-            line-height: 1.3;
+            line-height: 1.25;
             word-break: break-all;
-            width: 70%;
+            width: 72%;
             z-index: 2;
         }
         .stamp-bubble.pos-left  .st-balloon-text,
         .stamp-bubble.pos-right .st-balloon-text {
             writing-mode: vertical-rl;
             width: auto;
-            height: 70%;
+            height: 72%;
         }
 
         /* ========== コントロールパネル ========== */
@@ -249,14 +251,9 @@
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyW7xYv9OlrbuBCbhxUYxUVG78I2dWf98RlhgVCnqQtwa6s5XHwdQ-oolocv4iAxhSy9w/exec";
 
     const BASE_IMAGE_FILES = [
-                "images/56s1.png", "images/56s2.png", "images/56s3.png", "images/56s4.png",
-        "images/56s5.png", "images/56s6.png", "images/56s7.png", "images/56s8.png",
-        "images/56s9.png", "images/56s10.png", "images/meicho1.png", "images/nyanko1.png",
-        "images/nyanko2.png", "images/nyanko3.png", "images/nyanko4.png", "images/pok1.png",
-        "images/stf1.png", "images/stf2.png", "images/stf3.png", "images/stf4.png",
-        "images/stf5.png", "images/stf6.png", "images/stf7.png", "images/stf8.png",
-        "images/sunsun1.png","images/sunsun2.png","images/sunsun3.png","images/sunsun5.png",
-        "images/sunsun6.png"
+        "images/56s1.png","images/56s2.png","images/56s3.png","images/56s4.png",
+        "images/56s5.png","images/56s6.png","images/56s7.png","images/56s8.png",
+        "images/56s9.png","images/56s10.png"
     ];
 
     let selectedBaseIcon    = "images/56s1.png";
@@ -324,98 +321,92 @@
         </svg>`;
     }
 
-    // ギザギザ：角丸と同じ四角ベース＋外周にトゲを重ねる
+    // ギザギザ：ジグザグポリゴンで四角の輪郭を描く＋しっぽ
     function svgSpiky(pos, w, h) {
         const dir = tailDir(pos);
-        const tw=12, th=10, r=8;
+        const tw=10, th=9, spike=5, step=10;
         let bx=0, by=0, bw=w, bh=h, tail="";
 
-        if (dir === "top") {
-            by=th; bh=h-th;
-            tail=`M${w/2-tw/2},${th} L${w/2},0 L${w/2+tw/2},${th} Z`;
-        } else if (dir === "bottom") {
-            bh=h-th;
-            tail=`M${w/2-tw/2},${bh} L${w/2},${h} L${w/2+tw/2},${bh} Z`;
-        } else if (dir === "left") {
-            bx=th; bw=w-th;
-            tail=`M${th},${h/2-tw/2} L0,${h/2} L${th},${h/2+tw/2} Z`;
-        } else {
-            bw=w-th;
-            tail=`M${bw},${h/2-tw/2} L${w},${h/2} L${bw},${h/2+tw/2} Z`;
+        if (dir === "top")    { by=th; bh=h-th; tail=`M${w/2-tw/2},${th} L${w/2},0 L${w/2+tw/2},${th} Z`; }
+        else if (dir === "bottom") { bh=h-th; tail=`M${w/2-tw/2},${bh} L${w/2},${h} L${w/2+tw/2},${bh} Z`; }
+        else if (dir === "left")   { bx=th; bw=w-th; tail=`M${th},${h/2-tw/2} L0,${h/2} L${th},${h/2+tw/2} Z`; }
+        else                       { bw=w-th; tail=`M${bw},${h/2-tw/2} L${w},${h/2} L${bw},${h/2+tw/2} Z`; }
+
+        // 四角の4辺をジグザグで描くポリゴン
+        let pts = [];
+        // 上辺：左→右
+        for(let x=bx; x<bx+bw; x+=step){
+            pts.push(`${x},${by}`);
+            pts.push(`${Math.min(x+step/2, bx+bw)},${by-spike}`);
+        }
+        pts.push(`${bx+bw},${by}`);
+        // 右辺：上→下
+        for(let y=by; y<by+bh; y+=step){
+            pts.push(`${bx+bw},${y}`);
+            pts.push(`${bx+bw+spike},${Math.min(y+step/2, by+bh)}`);
+        }
+        pts.push(`${bx+bw},${by+bh}`);
+        // 下辺：右→左
+        for(let x=bx+bw; x>bx; x-=step){
+            pts.push(`${x},${by+bh}`);
+            pts.push(`${Math.max(x-step/2, bx)},${by+bh+spike}`);
+        }
+        pts.push(`${bx},${by+bh}`);
+        // 左辺：下→上
+        for(let y=by+bh; y>by; y-=step){
+            pts.push(`${bx},${y}`);
+            pts.push(`${bx-spike},${Math.max(y-step/2, by)}`);
         }
 
-        const spikesH=6, spikesV=4, spikeOut=6, spikeIn=3;
-        let spikePath="";
-        for(let i=0;i<spikesH;i++){
-            const x=bx+bw*(i+0.5)/spikesH;
-            spikePath+=`M${x-spikeIn},${by+1} L${x},${by-spikeOut} L${x+spikeIn},${by+1} `;
-            spikePath+=`M${x-spikeIn},${by+bh-1} L${x},${by+bh+spikeOut} L${x+spikeIn},${by+bh-1} `;
-        }
-        for(let i=0;i<spikesV;i++){
-            const y=by+bh*(i+0.5)/spikesV;
-            spikePath+=`M${bx+1},${y-spikeIn} L${bx-spikeOut},${y} L${bx+1},${y+spikeIn} `;
-            spikePath+=`M${bx+bw-1},${y-spikeIn} L${bx+bw+spikeOut},${y} L${bx+bw-1},${y+spikeIn} `;
-        }
-
-        return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}">
+        return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${-spike} ${-spike} ${w+spike*2} ${h+spike*2}">
             <path d="${tail}" fill="white" stroke="#d4af37" stroke-width="1.5" stroke-linejoin="round"/>
-            <rect x="${bx+1}" y="${by+1}" width="${bw-2}" height="${bh-2}" rx="${r}" ry="${r}"
-                fill="white" stroke="#d4af37" stroke-width="1.5"/>
-            <rect x="${bx+3}" y="${by+3}" width="${bw-6}" height="${bh-6}" rx="${r-1}" ry="${r-1}"
-                fill="white" stroke="none"/>
-            <path d="${spikePath}" fill="#d4af37" stroke="none"/>
+            <polygon points="${pts.join(' ')}" fill="white" stroke="#d4af37" stroke-width="1.5" stroke-linejoin="round"/>
+            <rect x="${bx+5}" y="${by+5}" width="${bw-10}" height="${bh-10}" rx="4" ry="4" fill="white" stroke="none"/>
         </svg>`;
     }
 
-    // 思考：角丸と同じ四角ベース＋外周に雲ボコボコ＋小丸チェーン
+    // 思考：四角の輪郭を雲ボコボコで描く＋小丸チェーン
     function svgThought(pos, w, h) {
         const dir = tailDir(pos);
-        const th=14, r=10;
-        let bx=0, by=0, bw=w, bh=h, dots="";
+        const th=12, br=4;
+        let bx=br, by=br, bw=w-br*2, bh=h-br*2, dots="";
 
-        if (dir === "top") {
-            by=th; bh=h-th;
-            dots=`<circle cx="${w/2}" cy="${th-3}" r="4" fill="white" stroke="#d4af37" stroke-width="1.2"/>
-                  <circle cx="${w/2}" cy="${th-10}" r="2.5" fill="white" stroke="#d4af37" stroke-width="1.2"/>
-                  <circle cx="${w/2}" cy="1.5" r="1.5" fill="white" stroke="#d4af37" stroke-width="1.2"/>`;
-        } else if (dir === "bottom") {
-            bh=h-th;
-            dots=`<circle cx="${w/2}" cy="${bh+3}" r="4" fill="white" stroke="#d4af37" stroke-width="1.2"/>
-                  <circle cx="${w/2}" cy="${bh+10}" r="2.5" fill="white" stroke="#d4af37" stroke-width="1.2"/>
-                  <circle cx="${w/2}" cy="${h-1.5}" r="1.5" fill="white" stroke="#d4af37" stroke-width="1.2"/>`;
-        } else if (dir === "left") {
-            bx=th; bw=w-th;
-            dots=`<circle cx="${th-3}" cy="${h/2}" r="4" fill="white" stroke="#d4af37" stroke-width="1.2"/>
-                  <circle cx="${th-10}" cy="${h/2}" r="2.5" fill="white" stroke="#d4af37" stroke-width="1.2"/>
-                  <circle cx="1.5" cy="${h/2}" r="1.5" fill="white" stroke="#d4af37" stroke-width="1.2"/>`;
-        } else {
-            bw=w-th;
-            dots=`<circle cx="${bw+3}" cy="${h/2}" r="4" fill="white" stroke="#d4af37" stroke-width="1.2"/>
-                  <circle cx="${bw+10}" cy="${h/2}" r="2.5" fill="white" stroke="#d4af37" stroke-width="1.2"/>
-                  <circle cx="${w-1.5}" cy="${h/2}" r="1.5" fill="white" stroke="#d4af37" stroke-width="1.2"/>`;
-        }
+        if (dir === "top")    { by=th+br; bh=h-th-br*2;
+            dots=`<circle cx="${w/2}" cy="${th-1}" r="3" fill="white" stroke="#d4af37" stroke-width="1.2"/>
+                  <circle cx="${w/2}" cy="${th-7}" r="2" fill="white" stroke="#d4af37" stroke-width="1.2"/>
+                  <circle cx="${w/2}" cy="${th-12}" r="1.3" fill="white" stroke="#d4af37" stroke-width="1.2"/>`; }
+        else if (dir === "bottom") { bh=h-th-br*2;
+            dots=`<circle cx="${w/2}" cy="${by+bh+1}" r="3" fill="white" stroke="#d4af37" stroke-width="1.2"/>
+                  <circle cx="${w/2}" cy="${by+bh+7}" r="2" fill="white" stroke="#d4af37" stroke-width="1.2"/>
+                  <circle cx="${w/2}" cy="${by+bh+12}" r="1.3" fill="white" stroke="#d4af37" stroke-width="1.2"/>`; }
+        else if (dir === "left")   { bx=th+br; bw=w-th-br*2;
+            dots=`<circle cx="${th-1}" cy="${h/2}" r="3" fill="white" stroke="#d4af37" stroke-width="1.2"/>
+                  <circle cx="${th-7}" cy="${h/2}" r="2" fill="white" stroke="#d4af37" stroke-width="1.2"/>
+                  <circle cx="${th-12}" cy="${h/2}" r="1.3" fill="white" stroke="#d4af37" stroke-width="1.2"/>`; }
+        else { bw=w-th-br*2;
+            dots=`<circle cx="${bx+bw+1}" cy="${h/2}" r="3" fill="white" stroke="#d4af37" stroke-width="1.2"/>
+                  <circle cx="${bx+bw+7}" cy="${h/2}" r="2" fill="white" stroke="#d4af37" stroke-width="1.2"/>
+                  <circle cx="${bx+bw+12}" cy="${h/2}" r="1.3" fill="white" stroke="#d4af37" stroke-width="1.2"/>`; }
 
-        const bumpR=5;
-        const nbH=Math.max(3, Math.floor(bw/(bumpR*2.2)));
-        const nbV=Math.max(2, Math.floor(bh/(bumpR*2.2)));
+        // 四角の外周に沿って雲ボコボコ円を並べる
+        const nbH = Math.max(3, Math.round(bw / (br*2.2)));
+        const nbV = Math.max(2, Math.round(bh / (br*2.2)));
         let cc="";
         for(let i=0;i<nbH;i++){
-            const x=(bx+bw*(i+0.5)/nbH).toFixed(1);
-            cc+=`<circle cx="${x}" cy="${by.toFixed(1)}" r="${bumpR}" fill="white" stroke="#d4af37" stroke-width="1.2"/>`;
-            cc+=`<circle cx="${x}" cy="${(by+bh).toFixed(1)}" r="${bumpR}" fill="white" stroke="#d4af37" stroke-width="1.2"/>`;
+            const x = (bx + bw*(i+0.5)/nbH).toFixed(1);
+            cc += `<circle cx="${x}" cy="${by}" r="${br}" fill="white" stroke="#d4af37" stroke-width="1.2"/>`;
+            cc += `<circle cx="${x}" cy="${by+bh}" r="${br}" fill="white" stroke="#d4af37" stroke-width="1.2"/>`;
         }
         for(let i=0;i<nbV;i++){
-            const y=(by+bh*(i+0.5)/nbV).toFixed(1);
-            cc+=`<circle cx="${bx.toFixed(1)}" cy="${y}" r="${bumpR}" fill="white" stroke="#d4af37" stroke-width="1.2"/>`;
-            cc+=`<circle cx="${(bx+bw).toFixed(1)}" cy="${y}" r="${bumpR}" fill="white" stroke="#d4af37" stroke-width="1.2"/>`;
+            const y = (by + bh*(i+0.5)/nbV).toFixed(1);
+            cc += `<circle cx="${bx}" cy="${y}" r="${br}" fill="white" stroke="#d4af37" stroke-width="1.2"/>`;
+            cc += `<circle cx="${bx+bw}" cy="${y}" r="${br}" fill="white" stroke="#d4af37" stroke-width="1.2"/>`;
         }
 
-        return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}">
+        const vb = `${-br} ${-br} ${w+br*2} ${h+br*2}`;
+        return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb}">
             ${cc}
-            <rect x="${bx+1}" y="${by+1}" width="${bw-2}" height="${bh-2}" rx="${r}" ry="${r}"
-                fill="white" stroke="#d4af37" stroke-width="1.5"/>
-            <rect x="${bx+3}" y="${by+3}" width="${bw-6}" height="${bh-6}" rx="${r-1}" ry="${r-1}"
-                fill="white" stroke="none"/>
+            <rect x="${bx+2}" y="${by+2}" width="${bw-4}" height="${bh-4}" rx="6" ry="6" fill="white" stroke="none"/>
             ${dots}
         </svg>`;
     }
@@ -439,8 +430,8 @@
         const balloon = document.createElement('div');
         balloon.className = 'st-balloon';
 
-        const svgW = isHoriz ? 68 : 100;
-        const svgH = isHoriz ? 80 : 64;
+        const svgW = isHoriz ? 36 : 72;
+        const svgH = isHoriz ? 72 : 40;
         balloon.innerHTML = buildBalloonSVG(shape, pos, svgW, svgH);
 
         const textSpan = document.createElement('span');
