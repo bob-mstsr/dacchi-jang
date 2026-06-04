@@ -151,6 +151,7 @@
         .mini-stamp .m-img-wrapper { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
         .mini-stamp img { width: 100%; height: 100%; object-fit: contain; }
         .mini-stamp .m-text { font-size: 0.55rem; font-weight: bold; color: var(--main-red); text-align: center; width: 100%; white-space: nowrap; overflow: hidden; margin-top: 2px; }
+        .mini-stamp .m-label { font-size: 0.48rem; color: #999; text-align: center; width: 100%; white-space: nowrap; overflow: hidden; margin-top: 1px; }
 
         .maker-layout { display: flex; flex-direction: column; gap: 5px; }
         .maker-label { font-size: 0.7rem; color: #666; font-weight: bold; }
@@ -323,80 +324,99 @@
         </svg>`;
     }
 
+    // ギザギザ：角丸と同じ四角ベース＋外周にトゲを重ねる
     function svgSpiky(pos, w, h) {
         const dir = tailDir(pos);
-        const th  = 10;
-        let cx=w/2, cy=h/2, rx, ry, tail="";
+        const tw=12, th=10, r=8;
+        let bx=0, by=0, bw=w, bh=h, tail="";
 
         if (dir === "top") {
-            cy=(h-th)/2+th; rx=(w/2)-3; ry=(h-th)/2-3;
-            tail=`M${w/2-6},${th+2} L${w/2},0 L${w/2+6},${th+2} Z`;
+            by=th; bh=h-th;
+            tail=`M${w/2-tw/2},${th} L${w/2},0 L${w/2+tw/2},${th} Z`;
         } else if (dir === "bottom") {
-            cy=(h-th)/2; rx=(w/2)-3; ry=(h-th)/2-3;
-            tail=`M${w/2-6},${h-th-2} L${w/2},${h} L${w/2+6},${h-th-2} Z`;
+            bh=h-th;
+            tail=`M${w/2-tw/2},${bh} L${w/2},${h} L${w/2+tw/2},${bh} Z`;
         } else if (dir === "left") {
-            cx=(w-th)/2+th; rx=(w-th)/2-3; ry=(h/2)-3;
-            tail=`M${th+2},${h/2-6} L0,${h/2} L${th+2},${h/2+6} Z`;
+            bx=th; bw=w-th;
+            tail=`M${th},${h/2-tw/2} L0,${h/2} L${th},${h/2+tw/2} Z`;
         } else {
-            cx=(w-th)/2; rx=(w-th)/2-3; ry=(h/2)-3;
-            tail=`M${w-th-2},${h/2-6} L${w},${h/2} L${w-th-2},${h/2+6} Z`;
+            bw=w-th;
+            tail=`M${bw},${h/2-tw/2} L${w},${h/2} L${bw},${h/2+tw/2} Z`;
         }
 
-        const spikes=12;
-        const rOuter=Math.min(rx,ry);
-        const rInner=rOuter*0.72;
-        let pts="";
-        for(let i=0;i<spikes*2;i++){
-            const a=(Math.PI/spikes)*i - Math.PI/2;
-            const r=i%2===0?rOuter:rInner;
-            pts+=`${(cx+r*Math.cos(a)).toFixed(1)},${(cy+r*Math.sin(a)).toFixed(1)} `;
+        const spikesH=6, spikesV=4, spikeOut=6, spikeIn=3;
+        let spikePath="";
+        for(let i=0;i<spikesH;i++){
+            const x=bx+bw*(i+0.5)/spikesH;
+            spikePath+=`M${x-spikeIn},${by+1} L${x},${by-spikeOut} L${x+spikeIn},${by+1} `;
+            spikePath+=`M${x-spikeIn},${by+bh-1} L${x},${by+bh+spikeOut} L${x+spikeIn},${by+bh-1} `;
+        }
+        for(let i=0;i<spikesV;i++){
+            const y=by+bh*(i+0.5)/spikesV;
+            spikePath+=`M${bx+1},${y-spikeIn} L${bx-spikeOut},${y} L${bx+1},${y+spikeIn} `;
+            spikePath+=`M${bx+bw-1},${y-spikeIn} L${bx+bw+spikeOut},${y} L${bx+bw-1},${y+spikeIn} `;
         }
 
         return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}">
             <path d="${tail}" fill="white" stroke="#d4af37" stroke-width="1.5" stroke-linejoin="round"/>
-            <polygon points="${pts.trim()}" fill="white" stroke="#d4af37" stroke-width="1.5" stroke-linejoin="round"/>
+            <rect x="${bx+1}" y="${by+1}" width="${bw-2}" height="${bh-2}" rx="${r}" ry="${r}"
+                fill="white" stroke="#d4af37" stroke-width="1.5"/>
+            <rect x="${bx+3}" y="${by+3}" width="${bw-6}" height="${bh-6}" rx="${r-1}" ry="${r-1}"
+                fill="white" stroke="none"/>
+            <path d="${spikePath}" fill="#d4af37" stroke="none"/>
         </svg>`;
     }
 
+    // 思考：角丸と同じ四角ベース＋外周に雲ボコボコ＋小丸チェーン
     function svgThought(pos, w, h) {
         const dir = tailDir(pos);
-        const th  = 14;
-        let cx=w/2, cy=h/2, cr, dots="";
+        const th=14, r=10;
+        let bx=0, by=0, bw=w, bh=h, dots="";
 
         if (dir === "top") {
-            cy=(h-th)/2+th; cr=Math.min(w/2,(h-th)/2)-5;
-            dots=`<circle cx="${w/2}" cy="${th-3}" r="3.5" fill="white" stroke="#d4af37" stroke-width="1.2"/>
-                  <circle cx="${w/2}" cy="${th-10}" r="2.3" fill="white" stroke="#d4af37" stroke-width="1.2"/>
+            by=th; bh=h-th;
+            dots=`<circle cx="${w/2}" cy="${th-3}" r="4" fill="white" stroke="#d4af37" stroke-width="1.2"/>
+                  <circle cx="${w/2}" cy="${th-10}" r="2.5" fill="white" stroke="#d4af37" stroke-width="1.2"/>
                   <circle cx="${w/2}" cy="1.5" r="1.5" fill="white" stroke="#d4af37" stroke-width="1.2"/>`;
         } else if (dir === "bottom") {
-            cy=(h-th)/2; cr=Math.min(w/2,(h-th)/2)-5;
-            dots=`<circle cx="${w/2}" cy="${h-th+3}" r="3.5" fill="white" stroke="#d4af37" stroke-width="1.2"/>
-                  <circle cx="${w/2}" cy="${h-th+10}" r="2.3" fill="white" stroke="#d4af37" stroke-width="1.2"/>
+            bh=h-th;
+            dots=`<circle cx="${w/2}" cy="${bh+3}" r="4" fill="white" stroke="#d4af37" stroke-width="1.2"/>
+                  <circle cx="${w/2}" cy="${bh+10}" r="2.5" fill="white" stroke="#d4af37" stroke-width="1.2"/>
                   <circle cx="${w/2}" cy="${h-1.5}" r="1.5" fill="white" stroke="#d4af37" stroke-width="1.2"/>`;
         } else if (dir === "left") {
-            cx=(w-th)/2+th; cr=Math.min((w-th)/2,h/2)-5;
-            dots=`<circle cx="${th-3}" cy="${h/2}" r="3.5" fill="white" stroke="#d4af37" stroke-width="1.2"/>
-                  <circle cx="${th-10}" cy="${h/2}" r="2.3" fill="white" stroke="#d4af37" stroke-width="1.2"/>
+            bx=th; bw=w-th;
+            dots=`<circle cx="${th-3}" cy="${h/2}" r="4" fill="white" stroke="#d4af37" stroke-width="1.2"/>
+                  <circle cx="${th-10}" cy="${h/2}" r="2.5" fill="white" stroke="#d4af37" stroke-width="1.2"/>
                   <circle cx="1.5" cy="${h/2}" r="1.5" fill="white" stroke="#d4af37" stroke-width="1.2"/>`;
         } else {
-            cx=(w-th)/2; cr=Math.min((w-th)/2,h/2)-5;
-            dots=`<circle cx="${w-th+3}" cy="${h/2}" r="3.5" fill="white" stroke="#d4af37" stroke-width="1.2"/>
-                  <circle cx="${w-th+10}" cy="${h/2}" r="2.3" fill="white" stroke="#d4af37" stroke-width="1.2"/>
+            bw=w-th;
+            dots=`<circle cx="${bw+3}" cy="${h/2}" r="4" fill="white" stroke="#d4af37" stroke-width="1.2"/>
+                  <circle cx="${bw+10}" cy="${h/2}" r="2.5" fill="white" stroke="#d4af37" stroke-width="1.2"/>
                   <circle cx="${w-1.5}" cy="${h/2}" r="1.5" fill="white" stroke="#d4af37" stroke-width="1.2"/>`;
         }
 
-        const nb=7;
-        let bumps=`<circle cx="${cx}" cy="${cy}" r="${(cr*0.62).toFixed(1)}" fill="white" stroke="#d4af37" stroke-width="1.2"/>`;
-        for(let i=0;i<nb;i++){
-            const a=(2*Math.PI/nb)*i - Math.PI/2;
-            const bx=(cx+cr*0.6*Math.cos(a)).toFixed(1);
-            const by=(cy+cr*0.6*Math.sin(a)).toFixed(1);
-            bumps+=`<circle cx="${bx}" cy="${by}" r="${(cr*0.42).toFixed(1)}" fill="white" stroke="#d4af37" stroke-width="1.2"/>`;
+        const bumpR=5;
+        const nbH=Math.max(3, Math.floor(bw/(bumpR*2.2)));
+        const nbV=Math.max(2, Math.floor(bh/(bumpR*2.2)));
+        let cc="";
+        for(let i=0;i<nbH;i++){
+            const x=(bx+bw*(i+0.5)/nbH).toFixed(1);
+            cc+=`<circle cx="${x}" cy="${by.toFixed(1)}" r="${bumpR}" fill="white" stroke="#d4af37" stroke-width="1.2"/>`;
+            cc+=`<circle cx="${x}" cy="${(by+bh).toFixed(1)}" r="${bumpR}" fill="white" stroke="#d4af37" stroke-width="1.2"/>`;
         }
-        bumps+=`<circle cx="${cx}" cy="${cy}" r="${(cr*0.55).toFixed(1)}" fill="white" stroke="none"/>`;
+        for(let i=0;i<nbV;i++){
+            const y=(by+bh*(i+0.5)/nbV).toFixed(1);
+            cc+=`<circle cx="${bx.toFixed(1)}" cy="${y}" r="${bumpR}" fill="white" stroke="#d4af37" stroke-width="1.2"/>`;
+            cc+=`<circle cx="${(bx+bw).toFixed(1)}" cy="${y}" r="${bumpR}" fill="white" stroke="#d4af37" stroke-width="1.2"/>`;
+        }
 
         return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}">
-            ${bumps}${dots}
+            ${cc}
+            <rect x="${bx+1}" y="${by+1}" width="${bw-2}" height="${bh-2}" rx="${r}" ry="${r}"
+                fill="white" stroke="#d4af37" stroke-width="1.5"/>
+            <rect x="${bx+3}" y="${by+3}" width="${bw-6}" height="${bh-6}" rx="${r-1}" ry="${r-1}"
+                fill="white" stroke="none"/>
+            ${dots}
         </svg>`;
     }
 
@@ -648,6 +668,8 @@
         container.innerHTML = '';
         sharedStamps.forEach(stamp => {
             if (filterText && !stamp.text.includes(filterText) && !stamp.tag.includes(filterText)) return;
+            const shapeLabel = { rounded:'角丸', spiky:'ギザギザ', thought:'思考' };
+            const posLabel   = { top:'↑上', bottom:'↓下', left:'←左', right:'→右' };
             const div = document.createElement('div');
             div.className = 'mini-stamp';
             div.onclick = () => sendStampMessage(stamp);
@@ -657,8 +679,12 @@
             const txt = document.createElement('span');
             txt.className = 'm-text';
             txt.innerText = stamp.text;
+            const lbl = document.createElement('span');
+            lbl.className = 'm-label';
+            lbl.innerText = `${shapeLabel[stamp.shape]||''}・${posLabel[stamp.pos]||''}`;
             div.appendChild(wrapper);
             div.appendChild(txt);
+            div.appendChild(lbl);
             container.appendChild(div);
         });
     }
