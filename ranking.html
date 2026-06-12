@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ランキング＆成績推移 - だっち雀</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@500&family=Noto+Sans+JP:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f7f4eb;
+            --main-red: #9e1b1b;
+            --accent-gold: #d4af37;
+            --dark-charcoal: #1a1a1a;
+            --card-bg: #ffffff;
+            --green-win: #2e7d32;
+            --red-loss: #c62828;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--dark-charcoal);
+            padding-bottom: 60px;
+        }
+        .app-container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: #fffdf9;
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        header {
+            background: linear-gradient(135deg, var(--dark-charcoal) 0%, var(--main-red) 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-bottom: 4px solid var(--accent-gold);
+            position: relative;
+        }
+        header::before {
+            content: "";
+            position: absolute;
+            top: 5px; left: 5px; right: 5px; bottom: 5px;
+            border: 1px solid rgba(212,175,55,0.3);
+            pointer-events: none;
+        }
+        header h1 {
+            font-family: 'Kiwi Maru', serif;
+            font-size: 1.6rem;
+            color: var(--accent-gold);
+        }
+        .back-btn {
+            position: absolute;
+            left: 15px; top: 22px;
+            color: var(--accent-gold);
+            text-decoration: none;
+            font-size: 0.9rem;
+            border: 1px solid var(--accent-gold);
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+        main { padding: 15px; }
+
+        h2 {
+            font-size: 1.1rem;
+            border-left: 4px solid var(--main-red);
+            padding-left: 8px;
+            margin: 20px 0 12px 0;
+        }
+
+        /* タブ */
+        .tab-bar {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            background: white;
+            border: 2px solid #e0dacf;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        .tab-btn {
+            padding: 12px;
+            border: none;
+            background: white;
+            font-family: 'Noto Sans JP', sans-serif;
+            font-size: 0.95rem;
+            font-weight: bold;
+            cursor: pointer;
+            color: #aaa;
+            transition: all 0.2s;
+        }
+        .tab-btn.active {
+            background: var(--main-red);
+            color: white;
+        }
+
+        /* ランキングカード */
+        .rank-card {
+            background: white;
+            border: 2px solid #e0dacf;
+            border-radius: 10px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .rank-card.rank-1 {
+            border-color: var(--accent-gold);
+            background: linear-gradient(135deg, #fff 70%, #fffde7 100%);
+            box-shadow: 0 4px 12px rgba(212,175,55,0.2);
+        }
+        .rank-card.rank-2 {
+            border-color: #90a4ae;
+            background: linear-gradient(135deg, #fff 80%, #f5f5f5 100%);
+        }
+        .rank-card.rank-3 {
+            border-color: #a1887f;
+            background: linear-gradient(135deg, #fff 80%, #fbe9e7 100%);
+        }
+
+        .rank-num {
+            font-family: 'Kiwi Maru', serif;
+            font-size: 1.6rem;
+            font-weight: 700;
+            width: 36px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .rank-1 .rank-num { color: var(--accent-gold); }
+        .rank-2 .rank-num { color: #90a4ae; }
+        .rank-3 .rank-num { color: #a1887f; }
+
+        .rank-info { flex: 1; }
+        .rank-name {
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .rank-stats {
+            font-size: 0.78rem;
+            color: #888;
+            display: flex;
+            gap: 10px;
+        }
+
+        .rank-total {
+            text-align: right;
+        }
+        .rank-total-val {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+        .plus { color: var(--green-win); }
+        .minus { color: var(--red-loss); }
+        .rank-total-label {
+            font-size: 0.72rem;
+            color: #aaa;
+        }
+
+        /* フィルタ */
+        .filter-bar {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 12px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+        .filter-chip {
+            padding: 5px 12px;
+            border: 1px solid #e0dacf;
+            border-radius: 20px;
+            background: white;
+            font-size: 0.8rem;
+            cursor: pointer;
+            white-space: nowrap;
+            font-family: 'Noto Sans JP', sans-serif;
+            transition: all 0.2s;
+        }
+        .filter-chip.active {
+            background: var(--main-red);
+            color: white;
+            border-color: var(--main-red);
+        }
+
+        /* 成績推移グラフ */
+        .chart-container {
+            background: white;
+            border: 1px solid #e0dacf;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .chart-title {
+            font-size: 0.85rem;
+            color: #888;
+            margin-bottom: 10px;
+        }
+        canvas {
+            width: 100% !important;
+        }
+
+        /* 個人成績選択 */
+        .member-selector {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        .member-chip {
+            padding: 6px 14px;
+            border: 2px solid #e0dacf;
+            border-radius: 20px;
+            background: white;
+            font-size: 0.85rem;
+            cursor: pointer;
+            font-family: 'Noto Sans JP', sans-serif;
+            transition: all 0.2s;
+        }
+
+        /* 成績一覧テーブル */
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #e0dacf;
+            font-size: 0.82rem;
+        }
+        .history-table th {
+            background: #f1eae0;
+            padding: 8px 6px;
+            text-align: center;
+        }
+        .history-table td {
+            padding: 8px 6px;
+            border-bottom: 1px solid #eee;
+            text-align: center;
+        }
+        .history-table tr:last-child td { border-bottom: none; }
+
+        .hidden { display: none; }
+
+        .loading-msg {
+            text-align: center;
+            color: #aaa;
+            padding: 30px;
+            font-size: 0.9rem;
+        }
+
+        /* 統計サマリー */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        .stat-box {
+            background: white;
+            border: 1px solid #e0dacf;
+            border-radius: 8px;
+            padding: 10px 6px;
+            text-align: center;
+        }
+        .stat-val {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--main-red);
+        }
+        .stat-label {
+            font-size: 0.7rem;
+            color: #aaa;
+            margin-top: 2px;
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <header>
+        <a href="index.html" class="back-btn">◀ 戻る</a>
+        <h1>ランキング＆成績</h1>
+    </header>
+    <main>
+        <div class="tab-bar">
+            <button class="tab-btn active" id="tab-rank" onclick="switchTab('rank')">🏆 ランキング</button>
+            <button class="tab-btn" id="tab-history" onclick="switchTab('history')">📈 成績推移</button>
+        </div>
+
+        <!-- ランキングタブ -->
+        <div id="panel-rank">
+            <div class="filter-bar">
+                <button class="filter-chip active" onclick="setRankFilter('total', this)">トータル</button>
+                <button class="filter-chip" onclick="setRankFilter('san', this)">三人打ち</button>
+                <button class="filter-chip" onclick="setRankFilter('yon', this)">四人打ち</button>
+                <button class="filter-chip" onclick="setRankFilter('win', this)">1位回数</button>
+                <button class="filter-chip" onclick="setRankFilter('avg', this)">平均順位</button>
+            </div>
+            <div id="ranking-list">
+                <div class="loading-msg">🀄 データを読み込み中...</div>
+            </div>
+        </div>
+
+        <!-- 成績推移タブ -->
+        <div id="panel-history" class="hidden">
+            <div class="member-selector" id="member-selector"></div>
+
+            <div class="stats-grid" id="stats-summary"></div>
+
+            <div class="chart-container">
+                <div class="chart-title">📊 スコア累積推移（ゲームごと）</div>
+                <canvas id="trend-chart" height="200"></canvas>
+            </div>
+
+            <h2>直近の対戦記録</h2>
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>日時</th>
+                        <th>形式</th>
+                        <th>順位</th>
+                        <th>スコア</th>
+                        <th>コイン</th>
+                    </tr>
+                </thead>
+                <tbody id="history-tbody">
+                    <tr><td colspan="5" class="loading-msg">読み込み中...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+</div>
+
+<script>
+const GAS_URL = "https://script.google.com/macros/s/AKfycbyY8IPkIqaIEf3uLe2FUwIZaFQf5ismy8AWBJVmQ1nPlDQpAnERrDfSpH5JCYdvBesD4A/exec";
+
+let globalMembers = [];
+let globalGameResults = [];
+let currentRankFilter = 'total';
+let selectedMemberId = null;
+let chartInstance = null;
+
+// ===== データ取得 =====
+function fetchData() {
+    if (GAS_URL.includes("ここに取得した")) {
+        // ダミーデータで表示
+        globalMembers = [
+            { id: "member_1", name: "お父さん", balance: 1240 },
+            { id: "member_2", name: "お母さん", balance: 870 },
+            { id: "member_3", name: "長男", balance: 450 },
+            { id: "member_4", name: "長女", balance: 320 },
+            { id: "member_5", name: "弟", balance: 180 }
+        ];
+        globalGameResults = generateDummyResults();
+        init();
+        return;
+    }
+
+    const cbName = 'rankInit_' + Date.now();
+    const script = document.createElement('script');
+    window[cbName] = function(data) {
+        globalMembers = data.members;
+        globalGameResults = data.gameResults || [];
+        init();
+        delete window[cbName];
+        document.body.removeChild(script);
+    };
+    script.onerror = () => { alert("データ取得失敗"); };
+    script.src = GAS_URL + '?callback=' + cbName;
+    document.body.appendChild(script);
+}
+
+function generateDummyResults() {
+    const members = ["member_1","member_2","member_3","member_4","member_5"];
+    const names = {"member_1":"お父さん","member_2":"お母さん","member_3":"長男","member_4":"長女","member_5":"弟"};
+    const results = [];
+    for (let i = 0; i < 20; i++) {
+        const mode = Math.random() > 0.4 ? '四人打ち' : '三人打ち';
+        const count = mode === '三人打ち' ? 3 : 4;
+        const players = [...members].sort(() => Math.random() - 0.5).slice(0, count);
+        const date = new Date(2026, 0, 1 + i * 2);
+        const dateStr = `${date.getMonth()+1}/${date.getDate()} ${12 + i % 3}:00`;
+        const scores = [14, -6, -8].concat(count === 4 ? [-5] : []).sort(() => Math.random() - 0.5);
+        players.forEach((id, idx) => {
+            results.push({
+                gameDate: dateStr, gameMode: mode,
+                memberId: id, memberName: names[id],
+                rank: idx + 1, score: scores[idx],
+                coin: Math.round(scores[idx] * (idx === 0 ? 1.5 : idx === 1 ? 1.2 : 1.5))
+            });
+        });
+    }
+    return results;
+}
+
+function init() {
+    selectedMemberId = globalMembers[0]?.id || null;
+    buildMemberSelector();
+    renderRanking();
+    renderHistory();
+}
+
+// ===== ランキング =====
+function setRankFilter(filter, el) {
+    currentRankFilter = filter;
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    renderRanking();
+}
+
+function renderRanking() {
+    const container = document.getElementById('ranking-list');
+
+    const stats = globalMembers.map(m => {
+        const myResults = globalGameResults.filter(r => r.memberId === m.id);
+        const sanResults = myResults.filter(r => r.gameMode === '三人打ち');
+        const yonResults = myResults.filter(r => r.gameMode === '四人打ち');
+        const totalCoin = myResults.reduce((s, r) => s + r.coin, 0);
+        const sanCoin = sanResults.reduce((s, r) => s + r.coin, 0);
+        const yonCoin = yonResults.reduce((s, r) => s + r.coin, 0);
+        const wins = myResults.filter(r => r.rank === 1).length;
+        const avgRank = myResults.length > 0
+            ? (myResults.reduce((s, r) => s + r.rank, 0) / myResults.length).toFixed(2)
+            : '-';
+        return { ...m, totalCoin, sanCoin, yonCoin, wins, avgRank, games: myResults.length };
+    });
+
+    let sorted;
+    switch (currentRankFilter) {
+        case 'san':   sorted = [...stats].sort((a,b) => b.sanCoin - a.sanCoin); break;
+        case 'yon':   sorted = [...stats].sort((a,b) => b.yonCoin - a.yonCoin); break;
+        case 'win':   sorted = [...stats].sort((a,b) => b.wins - a.wins); break;
+        case 'avg':   sorted = [...stats].sort((a,b) => parseFloat(a.avgRank) - parseFloat(b.avgRank)); break;
+        default:      sorted = [...stats].sort((a,b) => b.totalCoin - a.totalCoin);
+    }
+
+    const rankClasses = ['rank-1','rank-2','rank-3',''];
+    const rankEmojis = ['🥇','🥈','🥉',''];
+
+    container.innerHTML = sorted.map((m, i) => {
+        let mainVal, mainLabel;
+        switch (currentRankFilter) {
+            case 'san':   mainVal = m.sanCoin; mainLabel = '三麻コイン'; break;
+            case 'yon':   mainVal = m.yonCoin; mainLabel = '四麻コイン'; break;
+            case 'win':   mainVal = m.wins; mainLabel = '1位回数'; break;
+            case 'avg':   mainVal = m.avgRank; mainLabel = '平均順位'; break;
+            default:      mainVal = m.totalCoin; mainLabel = 'トータルP';
+        }
+        const valClass = (typeof mainVal === 'number' && mainVal < 0) ? 'minus' : 'plus';
+        const sign = (typeof mainVal === 'number' && mainVal > 0) ? '+' : '';
+
+        return `
+        <div class="rank-card ${rankClasses[i] || ''}">
+            <div class="rank-num">${rankEmojis[i] || (i+1)}</div>
+            <div class="rank-info">
+                <div class="rank-name">${m.name}</div>
+                <div class="rank-stats">
+                    <span>${m.games}ゲーム</span>
+                    <span>1位${m.wins}回</span>
+                    <span>平均${m.avgRank}位</span>
+                </div>
+            </div>
+            <div class="rank-total">
+                <div class="rank-total-val ${valClass}">${sign}${mainVal}${currentRankFilter === 'win' ? '回' : (currentRankFilter === 'avg' ? '位' : 'P')}</div>
+                <div class="rank-total-label">${mainLabel}</div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+// ===== 成績推移 =====
+function buildMemberSelector() {
+    const container = document.getElementById('member-selector');
+    const colors = ['#9e1b1b','#1a73e8','#2e7d32','#e65100'];
+    container.innerHTML = globalMembers.map((m, i) => `
+        <button class="member-chip ${m.id === selectedMemberId ? 'active' : ''}"
+            id="chip-${m.id}"
+            style="${m.id === selectedMemberId ? `background:${colors[i%colors.length]};color:white;border-color:${colors[i%colors.length]}` : ''}"
+            data-color="${colors[i%colors.length]}"
+            onclick="selectMember('${m.id}', this)">
+            ${m.name}
+        </button>
+    `).join('');
+}
+
+function selectMember(id, el) {
+    selectedMemberId = id;
+    document.querySelectorAll('.member-chip').forEach(c => {
+        c.style.background = '';
+        c.style.color = '';
+        c.style.borderColor = '';
+        c.classList.remove('active');
+    });
+    el.style.background = el.dataset.color;
+    el.style.color = 'white';
+    el.style.borderColor = el.dataset.color;
+    el.classList.add('active');
+    renderHistory();
+}
+
+function renderHistory() {
+    if (!selectedMemberId) return;
+    const myResults = globalGameResults
+        .filter(r => r.memberId === selectedMemberId)
+        .slice(-30); // 直近30件
+
+    // 統計サマリー
+    const totalGames = myResults.length;
+    const wins = myResults.filter(r => r.rank === 1).length;
+    const totalCoin = myResults.reduce((s, r) => s + r.coin, 0);
+    const avgRank = totalGames > 0
+        ? (myResults.reduce((s, r) => s + r.rank, 0) / totalGames).toFixed(1)
+        : '-';
+
+    document.getElementById('stats-summary').innerHTML = `
+        <div class="stat-box"><div class="stat-val">${totalGames}</div><div class="stat-label">対戦数</div></div>
+        <div class="stat-box"><div class="stat-val">${wins}</div><div class="stat-label">1位回数</div></div>
+        <div class="stat-box"><div class="stat-val">${avgRank}</div><div class="stat-label">平均順位</div></div>
+        <div class="stat-box"><div class="stat-val ${totalCoin >= 0 ? 'plus' : 'minus'}">${totalCoin >= 0 ? '+' : ''}${totalCoin}P</div><div class="stat-label">獲得コイン</div></div>
+        <div class="stat-box"><div class="stat-val">${totalGames > 0 ? Math.round(wins/totalGames*100) : 0}%</div><div class="stat-label">1位率</div></div>
+        <div class="stat-box"><div class="stat-val">${myResults.filter(r => r.gameMode === '三人打ち').length}</div><div class="stat-label">三麻</div></div>
+    `;
+
+    // チャート
+    drawChart(myResults);
+
+    // 履歴テーブル
+    const tbody = document.getElementById('history-tbody');
+    if (myResults.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="color:#aaa;padding:20px;text-align:center">まだ記録がありません</td></tr>';
+        return;
+    }
+    tbody.innerHTML = [...myResults].reverse().map(r => {
+        const coinClass = r.coin >= 0 ? 'plus' : 'minus';
+        const scoreClass = r.score >= 0 ? 'plus' : 'minus';
+        const rankEmoji = ['🥇','🥈','🥉','4️⃣'][r.rank - 1] || r.rank;
+        return `
+        <tr>
+            <td style="font-size:0.75rem;">${r.gameDate}</td>
+            <td style="font-size:0.75rem;">${r.gameMode}</td>
+            <td>${rankEmoji}</td>
+            <td class="${scoreClass}" style="font-weight:bold;">${r.score >= 0 ? '+' : ''}${r.score}</td>
+            <td class="${coinClass}" style="font-weight:bold;">${r.coin >= 0 ? '+' : ''}${r.coin}P</td>
+        </tr>`;
+    }).join('');
+}
+
+function drawChart(results) {
+    const canvas = document.getElementById('trend-chart');
+    const ctx = canvas.getContext('2d');
+
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr || 440 * dpr;
+    canvas.height = 200 * dpr;
+    ctx.scale(dpr, dpr);
+
+    const W = canvas.width / dpr;
+    const H = 200;
+
+    ctx.clearRect(0, 0, W, H);
+
+    if (results.length === 0) {
+        ctx.fillStyle = '#aaa';
+        ctx.font = '14px Noto Sans JP';
+        ctx.textAlign = 'center';
+        ctx.fillText('データなし', W/2, H/2);
+        return;
+    }
+
+    // 累積コインを計算
+    const cumData = [];
+    let cum = 0;
+    results.forEach(r => { cum += r.coin; cumData.push(cum); });
+
+    const maxV = Math.max(...cumData, 0);
+    const minV = Math.min(...cumData, 0);
+    const range = Math.max(maxV - minV, 1);
+    const pad = { top: 20, bottom: 30, left: 40, right: 15 };
+    const chartW = W - pad.left - pad.right;
+    const chartH = H - pad.top - pad.bottom;
+
+    const toX = i => pad.left + (i / Math.max(cumData.length - 1, 1)) * chartW;
+    const toY = v => pad.top + chartH - ((v - minV) / range) * chartH;
+
+    // ゼロライン
+    const zeroY = toY(0);
+    ctx.strokeStyle = '#e0dacf';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(pad.left, zeroY);
+    ctx.lineTo(W - pad.right, zeroY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // グラデーション塗りつぶし
+    const grad = ctx.createLinearGradient(0, pad.top, 0, H - pad.bottom);
+    grad.addColorStop(0, 'rgba(158,27,27,0.2)');
+    grad.addColorStop(1, 'rgba(158,27,27,0)');
+    ctx.beginPath();
+    ctx.moveTo(toX(0), zeroY);
+    cumData.forEach((v, i) => ctx.lineTo(toX(i), toY(v)));
+    ctx.lineTo(toX(cumData.length-1), zeroY);
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // ライン
+    ctx.strokeStyle = '#9e1b1b';
+    ctx.lineWidth = 2.5;
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    cumData.forEach((v, i) => {
+        if (i === 0) ctx.moveTo(toX(i), toY(v));
+        else ctx.lineTo(toX(i), toY(v));
+    });
+    ctx.stroke();
+
+    // 各点
+    cumData.forEach((v, i) => {
+        ctx.beginPath();
+        ctx.arc(toX(i), toY(v), 4, 0, Math.PI * 2);
+        ctx.fillStyle = v >= 0 ? '#9e1b1b' : '#1a73e8';
+        ctx.fill();
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+    });
+
+    // Y軸ラベル
+    ctx.fillStyle = '#aaa';
+    ctx.font = `11px Noto Sans JP`;
+    ctx.textAlign = 'right';
+    [maxV, 0, minV].forEach(v => {
+        ctx.fillText((v >= 0 ? '+' : '') + v + 'P', pad.left - 4, toY(v) + 4);
+    });
+}
+
+function switchTab(tab) {
+    document.getElementById('panel-rank').classList.toggle('hidden', tab !== 'rank');
+    document.getElementById('panel-history').classList.toggle('hidden', tab !== 'history');
+    document.getElementById('tab-rank').classList.toggle('active', tab === 'rank');
+    document.getElementById('tab-history').classList.toggle('active', tab !== 'rank');
+
+    if (tab === 'history') {
+        // タブ切替後にcanvasサイズが確定してからチャート描画
+        setTimeout(() => {
+            const myResults = globalGameResults.filter(r => r.memberId === selectedMemberId).slice(-30);
+            drawChart(myResults);
+        }, 50);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', fetchData);
+</script>
+</body>
+</html>

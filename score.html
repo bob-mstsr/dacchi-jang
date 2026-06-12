@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>成績入力 - だっち雀</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@500&family=Noto+Sans+JP:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f7f4eb;
+            --main-red: #9e1b1b;
+            --accent-gold: #d4af37;
+            --dark-charcoal: #1a1a1a;
+            --card-bg: #ffffff;
+            --green-win: #2e7d32;
+            --blue-info: #1a73e8;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--dark-charcoal);
+            padding-bottom: 60px;
+        }
+        .app-container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: #fffdf9;
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        header {
+            background: linear-gradient(135deg, var(--dark-charcoal) 0%, var(--main-red) 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-bottom: 4px solid var(--accent-gold);
+            position: relative;
+        }
+        header::before {
+            content: "";
+            position: absolute;
+            top: 5px; left: 5px; right: 5px; bottom: 5px;
+            border: 1px solid rgba(212,175,55,0.3);
+            pointer-events: none;
+        }
+        header h1 {
+            font-family: 'Kiwi Maru', serif;
+            font-size: 1.6rem;
+            color: var(--accent-gold);
+        }
+        .back-btn {
+            position: absolute;
+            left: 15px; top: 22px;
+            color: var(--accent-gold);
+            text-decoration: none;
+            font-size: 0.9rem;
+            border: 1px solid var(--accent-gold);
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+        main { padding: 15px; }
+
+        h2 {
+            font-size: 1.1rem;
+            border-left: 4px solid var(--main-red);
+            padding-left: 8px;
+            margin: 20px 0 12px 0;
+        }
+
+        /* モード選択 */
+        .mode-toggle {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .mode-btn {
+            padding: 12px;
+            border: 2px solid #e0dacf;
+            border-radius: 8px;
+            background: white;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+            font-family: 'Noto Sans JP', sans-serif;
+        }
+        .mode-btn.active {
+            border-color: var(--main-red);
+            background: #fff5f5;
+            color: var(--main-red);
+        }
+
+        /* 入力カード */
+        .player-input-card {
+            background: white;
+            border: 2px solid #e0dacf;
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: border-color 0.2s;
+        }
+        .player-input-card.rank-1 { border-color: var(--accent-gold); background: linear-gradient(135deg, #fff 85%, #fffde7 100%); }
+        .player-input-card.rank-2 { border-color: #90a4ae; background: linear-gradient(135deg, #fff 85%, #f5f5f5 100%); }
+        .player-input-card.rank-3 { border-color: #a1887f; background: linear-gradient(135deg, #fff 85%, #fbe9e7 100%); }
+        .player-input-card.rank-4 { border-color: #78909c; }
+
+        .rank-badge {
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem; font-weight: 700;
+            flex-shrink: 0;
+            background: #eee; color: #999;
+        }
+        .rank-badge.r1 { background: var(--accent-gold); color: white; }
+        .rank-badge.r2 { background: #90a4ae; color: white; }
+        .rank-badge.r3 { background: #a1887f; color: white; }
+        .rank-badge.r4 { background: #78909c; color: white; }
+
+        .player-select {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #e0dacf;
+            border-radius: 6px;
+            font-family: 'Noto Sans JP', sans-serif;
+            font-size: 0.95rem;
+            background: white;
+        }
+        .score-input-wrap {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .score-input {
+            width: 90px;
+            padding: 8px;
+            border: 1px solid #e0dacf;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            text-align: right;
+            font-family: 'Noto Sans JP', sans-serif;
+        }
+        .score-unit { font-size: 0.8rem; color: #888; white-space: nowrap; }
+
+        /* 役満祝儀 */
+        .yakuman-section {
+            background: #fff5f5;
+            border: 2px dashed var(--main-red);
+            border-radius: 10px;
+            padding: 14px;
+            margin: 15px 0;
+        }
+        .yakuman-section h3 {
+            font-size: 0.95rem;
+            color: var(--main-red);
+            margin-bottom: 10px;
+        }
+        .yakuman-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        .yakuman-row select, .yakuman-row input {
+            flex: 1;
+            padding: 7px;
+            border: 1px solid #e0dacf;
+            border-radius: 6px;
+            font-family: 'Noto Sans JP', sans-serif;
+            font-size: 0.9rem;
+        }
+        .yakuman-add-btn {
+            background: none;
+            border: 1px dashed var(--main-red);
+            color: var(--main-red);
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            font-family: 'Noto Sans JP', sans-serif;
+        }
+        .remove-btn {
+            background: none;
+            border: none;
+            color: #ccc;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0 4px;
+        }
+
+        /* 計算プレビュー */
+        .preview-box {
+            background: var(--dark-charcoal);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            color: white;
+        }
+        .preview-box h3 {
+            font-size: 0.85rem;
+            color: var(--accent-gold);
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+        .preview-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            font-size: 0.9rem;
+        }
+        .preview-row:last-child { border-bottom: none; }
+        .preview-name { color: #ccc; }
+        .preview-score { font-weight: 700; }
+        .preview-score.plus { color: #69f0ae; }
+        .preview-score.minus { color: #ff5252; }
+        .preview-coin { color: var(--accent-gold); font-size: 0.85rem; }
+
+        /* 送信ボタン */
+        .submit-btn {
+            width: 100%;
+            background: linear-gradient(135deg, var(--dark-charcoal), var(--main-red));
+            color: white;
+            border: none;
+            padding: 14px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Noto Sans JP', sans-serif;
+            border-bottom: 3px solid var(--accent-gold);
+            margin-top: 10px;
+        }
+        .submit-btn:disabled { background: #ccc; border-bottom-color: #aaa; cursor: not-allowed; }
+
+        .calc-btn {
+            width: 100%;
+            background: white;
+            color: var(--main-red);
+            border: 2px solid var(--main-red);
+            padding: 10px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Noto Sans JP', sans-serif;
+            margin-bottom: 8px;
+        }
+
+        .hidden { display: none; }
+
+        .info-note {
+            font-size: 0.78rem;
+            color: #888;
+            text-align: center;
+            margin-top: 8px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <header>
+        <a href="index.html" class="back-btn">◀ 戻る</a>
+        <h1>成績入力</h1>
+    </header>
+    <main>
+        <h2>対戦形式を選ぶ</h2>
+        <div class="mode-toggle">
+            <button class="mode-btn active" id="btn-san" onclick="setMode(3)">🀄 三人打ち</button>
+            <button class="mode-btn" id="btn-yon" onclick="setMode(4)">🀄 四人打ち</button>
+        </div>
+
+        <h2>最終点数を入力（実際の持ち点）</h2>
+        <div id="player-inputs"></div>
+
+        <div class="yakuman-section">
+            <h3>🐉 役満祝儀（発生した場合のみ）</h3>
+            <div id="yakuman-list"></div>
+            <button class="yakuman-add-btn" onclick="addYakuman()">＋ 役満を追加</button>
+        </div>
+
+        <button class="calc-btn" onclick="calcPreview()">🧮 点数を計算してプレビュー</button>
+
+        <div id="preview-area" class="hidden"></div>
+
+        <button class="submit-btn" id="submit-btn" onclick="submitResult()" disabled>
+            ✅ この結果を銀行に反映する
+        </button>
+        <p class="info-note">反映後、だっち銀行の通帳に自動で記録されます</p>
+    </main>
+</div>
+
+<script>
+const GAS_URL = "https://script.google.com/macros/s/AKfycbyY8IPkIqaIEf3uLe2FUwIZaFQf5ismy8AWBJVmQ1nPlDQpAnERrDfSpH5JCYdvBesD4A/exec";
+
+// plofile.htmlと同じメンバーリスト（GASから取得）
+let globalMembers = [];
+let currentMode = 3;
+let calcResult = null;
+
+// GASからメンバー取得
+function fetchMembers() {
+    if (GAS_URL.includes("ここに取得した")) {
+        globalMembers = [
+            { id: "member_1", name: "お父さん" },
+            { id: "member_2", name: "お母さん" },
+            { id: "member_3", name: "長男" },
+            { id: "member_4", name: "長女" }
+        ];
+        buildInputs();
+        return;
+    }
+    const cbName = 'scoreInit_' + Date.now();
+    const script = document.createElement('script');
+    window[cbName] = function(data) {
+        globalMembers = data.members;
+        buildInputs();
+        delete window[cbName];
+        document.body.removeChild(script);
+    };
+    script.onerror = () => { alert("メンバー取得失敗"); delete window[cbName]; document.body.removeChild(script); };
+    script.src = GAS_URL + '?callback=' + cbName;
+    document.body.appendChild(script);
+}
+
+function setMode(n) {
+    currentMode = n;
+    document.getElementById('btn-san').classList.toggle('active', n === 3);
+    document.getElementById('btn-yon').classList.toggle('active', n === 4);
+    buildInputs();
+    document.getElementById('preview-area').classList.add('hidden');
+    document.getElementById('submit-btn').disabled = true;
+    calcResult = null;
+}
+
+function buildInputs() {
+    const container = document.getElementById('player-inputs');
+    container.innerHTML = '';
+    const rankLabels = ['1位', '2位', '3位', '4位'];
+    const rankClasses = ['r1', 'r2', 'r3', 'r4'];
+    const count = currentMode;
+
+    for (let i = 0; i < count; i++) {
+        const memberOptions = globalMembers.map(m =>
+            `<option value="${m.id}">${m.name}</option>`
+        ).join('');
+
+        container.insertAdjacentHTML('beforeend', `
+            <div class="player-input-card" id="card-${i}">
+                <div class="rank-badge ${rankClasses[i]}">${rankLabels[i]}</div>
+                <select class="player-select" id="player-${i}" onchange="onPlayerChange()">
+                    <option value="">-- 選んでください --</option>
+                    ${memberOptions}
+                </select>
+                <div class="score-input-wrap">
+                    <input type="number" class="score-input" id="score-${i}"
+                        placeholder="${currentMode === 3 ? '35000' : '25000'}"
+                        oninput="onScoreChange()" step="100">
+                    <span class="score-unit">点</span>
+                </div>
+            </div>
+        `);
+    }
+
+    // 役満セレクトも再構築
+    rebuildYakumanSelects();
+}
+
+// ===== 点数計算ロジック =====
+function roundScore(rawScore, border) {
+    if (rawScore >= border) {
+        // ボーダー以上：100の位切り下げ
+        return Math.floor(rawScore / 100) * 100;
+    } else {
+        // ボーダー未満：100の位切り上げ
+        return Math.ceil(rawScore / 100) * 100;
+    }
+}
+
+function calcPreview() {
+    const count = currentMode;
+    const border = count === 3 ? 40000 : 30000;  // 返し点
+    const startPoint = count === 3 ? 35000 : 25000;
+
+    // 入力値収集
+    const players = [];
+    for (let i = 0; i < count; i++) {
+        const playerId = document.getElementById(`player-${i}`).value;
+        const playerName = globalMembers.find(m => m.id === playerId)?.name || '';
+        const rawScore = parseInt(document.getElementById(`score-${i}`).value) || 0;
+        if (!playerId || rawScore === 0) {
+            alert(`${i+1}位のプレイヤーと点数を入力してください`);
+            return;
+        }
+        players.push({ id: playerId, name: playerName, rawScore, rank: i + 1 });
+    }
+
+    // 重複チェック
+    const ids = players.map(p => p.id);
+    if (new Set(ids).size !== ids.length) {
+        alert("同じプレイヤーが複数選ばれています");
+        return;
+    }
+
+    // 丸め処理
+    players.forEach(p => {
+        p.roundedScore = roundScore(p.rawScore, border);
+    });
+
+    // スコア計算（1000点 = 1スコア）
+    // 2位以下はマイナスを計算、1位は他全員のマイナス合計
+    let firstScore = 0;
+    players.forEach(p => {
+        if (p.rank === 1) return;
+        p.score = (p.roundedScore - border) / 1000;  // マイナスになる
+        firstScore += Math.abs(p.score);  // 1位に還元
+    });
+    players[0].score = firstScore;
+
+    // だっちコイン換算
+    players.forEach(p => {
+        p.coin = calcCoin(p.score, p.rank, count);
+    });
+
+    // 役満祝儀を加算
+    const yakuRows = document.querySelectorAll('.yakuman-row');
+    yakuRows.forEach(row => {
+        const sel = row.querySelector('select');
+        if (!sel || !sel.value) return;
+        const bonus = count === 3 ? 500 : 700;
+        const target = players.find(p => p.id === sel.value);
+        if (target) {
+            target.coin += bonus;
+            target.yakumanBonus = (target.yakumanBonus || 0) + bonus;
+        }
+    });
+
+    calcResult = players;
+    renderPreview(players);
+    document.getElementById('submit-btn').disabled = false;
+}
+
+function calcCoin(score, rank, mode) {
+    if (mode === 3) {
+        if (rank === 1) return score > 0 ? Math.round(score * 1.5) : 0;
+        if (rank === 2) return score > 0 ? Math.round(score * 1.0) : Math.round(score * 1.2);
+        if (rank === 3) return score > 0 ? 0 : Math.round(score * 1.5);
+    } else {
+        if (rank === 1) return score > 0 ? Math.round(score * 1.5) : 0;
+        if (rank === 2) return score > 0 ? Math.round(score * 1.2) : Math.round(score * 1.0);
+        if (rank === 3) return score > 0 ? Math.round(score * 0.8) : Math.round(score * 1.2);
+        if (rank === 4) return score > 0 ? 0 : Math.round(score * 1.5);
+    }
+    return 0;
+}
+
+function renderPreview(players) {
+    const area = document.getElementById('preview-area');
+    let rows = players.map(p => {
+        const scoreClass = p.score >= 0 ? 'plus' : 'minus';
+        const coinSign = p.coin >= 0 ? '+' : '';
+        const scoreDisplay = p.score >= 0 ? `+${p.score}` : `${p.score}`;
+        const yakuStr = p.yakumanBonus ? ` <span style="color:#d4af37">+${p.yakumanBonus}P祝儀</span>` : '';
+        return `
+        <div class="preview-row">
+            <span class="preview-name">${p.rank}位 ${p.name}</span>
+            <div style="text-align:right">
+                <span class="preview-score ${scoreClass}">${scoreDisplay}</span>
+                <span style="color:#999; font-size:0.8rem"> → </span>
+                <span class="preview-coin">${coinSign}${p.coin}P${yakuStr}</span>
+            </div>
+        </div>`;
+    }).join('');
+
+    area.innerHTML = `
+        <div class="preview-box">
+            <h3>📊 計算プレビュー（${currentMode}人打ち）</h3>
+            ${rows}
+        </div>`;
+    area.classList.remove('hidden');
+}
+
+// ===== GASへ送信 =====
+function submitResult() {
+    if (!calcResult) return;
+
+    if (GAS_URL.includes("ここに取得した")) {
+        alert("疑似モードです。GASのURLを設定してください。\n\n計算結果:\n" +
+            calcResult.map(p => `${p.name}: ${p.coin >= 0 ? '+' : ''}${p.coin}P`).join('\n'));
+        return;
+    }
+
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true;
+    btn.innerText = "送信中...";
+
+    const gameDate = new Intl.DateTimeFormat('ja-JP', {
+        year: 'numeric', month: 'numeric', day: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+    }).format(new Date());
+
+    const modeLabel = currentMode === 3 ? '三人打ち' : '四人打ち';
+
+    // 各プレイヤー分を順番に送信
+    const promises = calcResult.map(p => {
+        const detail = `🀄 ${modeLabel} ${p.rank}位（スコア${p.score >= 0 ? '+' : ''}${p.score}）`;
+        const payload = {
+            memberId: p.id,
+            amount: p.coin,
+            detail: detail,
+            type: p.coin >= 0 ? "収入" : "支出"
+        };
+        return fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) })
+            .then(r => r.json());
+    });
+
+    // 役満祝儀（運営から支払い）は別途ログ追記
+    calcResult.forEach(p => {
+        if (p.yakumanBonus) {
+            const payload = {
+                memberId: p.id,
+                amount: p.yakumanBonus,
+                detail: `🐉 役満祝儀（運営より）`,
+                type: "収入"
+            };
+            promises.push(fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) }).then(r => r.json()));
+        }
+    });
+
+    // game_resultsシートへの記録
+    calcResult.forEach(p => {
+        const resultPayload = {
+            mode: "save_game_result",
+            gameDate: gameDate,
+            gameMode: modeLabel,
+            memberId: p.id,
+            memberName: p.name,
+            rank: p.rank,
+            rawScore: p.rawScore,
+            score: p.score,
+            coin: p.coin
+        };
+        promises.push(fetch(GAS_URL, { method: "POST", body: JSON.stringify(resultPayload) }).then(r => r.json()));
+    });
+
+    Promise.all(promises)
+        .then(results => {
+            const allOk = results.every(r => r.status === "success");
+            if (allOk) {
+                alert("✅ 成績を反映しました！\n" + calcResult.map(p => `${p.name}: ${p.coin >= 0 ? '+' : ''}${p.coin}P`).join('\n'));
+                location.reload();
+            } else {
+                alert("一部の送信に失敗しました。銀行ページで確認してください。");
+                btn.disabled = false;
+                btn.innerText = "✅ この結果を銀行に反映する";
+            }
+        })
+        .catch(() => {
+            alert("通信エラーが発生しました。");
+            btn.disabled = false;
+            btn.innerText = "✅ この結果を銀行に反映する";
+        });
+}
+
+// ===== 役満祝儀 =====
+function addYakuman() {
+    const list = document.getElementById('yakuman-list');
+    const div = document.createElement('div');
+    div.className = 'yakuman-row';
+    const memberOptions = globalMembers.map(m =>
+        `<option value="${m.id}">${m.name}</option>`
+    ).join('');
+    div.innerHTML = `
+        <select><option value="">-- 役満者 --</option>${memberOptions}</select>
+        <input type="text" placeholder="役名（例：国士無双）" style="flex:1.5">
+        <button class="remove-btn" onclick="this.parentElement.remove()">✕</button>
+    `;
+    list.appendChild(div);
+}
+
+function rebuildYakumanSelects() {
+    const rows = document.querySelectorAll('.yakuman-row select');
+    const memberOptions = globalMembers.map(m =>
+        `<option value="${m.id}">${m.name}</option>`
+    ).join('');
+    rows.forEach(sel => {
+        const current = sel.value;
+        sel.innerHTML = `<option value="">-- 役満者 --</option>${memberOptions}`;
+        sel.value = current;
+    });
+}
+
+function onPlayerChange() {}
+function onScoreChange() {
+    // 点数変更時は再計算が必要なのでプレビューをリセット
+    document.getElementById('preview-area').classList.add('hidden');
+    document.getElementById('submit-btn').disabled = true;
+    calcResult = null;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    fetchMembers();
+});
+</script>
+</body>
+</html>
