@@ -615,17 +615,13 @@ function approveGame(idx) {
         players: game.players
     };
 
-    fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) })
-        .then(r => r.json())
-        .then(res => {
-            if (res.status === 'success') {
-                alert('✅ 承認・反映しました！');
-                fetchDataFromServer();
-            } else {
-                alert('エラー: ' + (res.message || '不明'));
-            }
-        })
-        .catch(() => alert('通信エラーが発生しました'));
+    fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' });
+
+    // レスポンスを待たず即座にUI更新
+    globalPendingGames.splice(idx, 1);
+    renderPendingGames();
+    alert('✅ 承認・反映しました！');
+    setTimeout(() => fetchDataFromServer(), 1500);
 }
 
 // 🗑 ゲーム却下：仮登録を削除するだけ（残高には触らない）
@@ -640,17 +636,13 @@ function rejectGame(idx) {
         pendingId: game.pendingId
     };
 
-    fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) })
-        .then(r => r.json())
-        .then(res => {
-            if (res.status === 'success') {
-                alert('🗑 却下・削除しました');
-                fetchDataFromServer();
-            } else {
-                alert('エラー: ' + (res.message || '不明'));
-            }
-        })
-        .catch(() => alert('通信エラーが発生しました'));
+    fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' });
+
+    // レスポンスを待たず即座にUI更新
+    globalPendingGames.splice(idx, 1);
+    renderPendingGames();
+    alert('🗑 却下・削除しました');
+    setTimeout(() => fetchDataFromServer(), 1500);
 }
 
 // 👑 管理者コマンドの執行
