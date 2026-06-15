@@ -313,7 +313,8 @@ function fetchMembers() {
             { id: "member_1", name: "お父さん" },
             { id: "member_2", name: "お母さん" },
             { id: "member_3", name: "長男" },
-            { id: "member_4", name: "長女" }
+            { id: "member_4", name: "長女" },
+            { id: "member_5", name: "弟" }
         ];
         buildInputs();
         return;
@@ -509,56 +510,31 @@ function submitResult() {
 
     const modeLabel = currentMode === 3 ? '三人打ち' : '四人打ち';
 
-    // 各プレイヤー分を順番に送信
-    const promises = calcResult.map(p => {
-        const detail = `🀄 ${modeLabel} ${p.rank}位（スコア${p.score >= 0 ? '+' : ''}${p.score}）`;
-        const payload = {
-            memberId: p.id,
-            amount: p.coin,
-            detail: detail,
-            type: p.coin >= 0 ? "収入" : "支出"
-        };
-        return fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) })
-            .then(r => r.json());
-    });
+    // 全プレイヤーをまとめて1回だけ送信（pending_gamesに仮登録）
+    const payload = {
+        mode: "save_game_result",
+        gameDate: gameDate,
+        gameMode: modeLabel,
+        players: calcResult.map(p => ({
+            memberId:     p.id,
+            memberName:   p.name,
+            rank:         p.rank,
+            rawScore:     p.rawScore,
+            score:        p.score,
+            coin:         p.coin,
+            yakumanBonus: p.yakumanBonus || 0
+        }))
+    };
 
-    // 役満祝儀（運営から支払い）は別途ログ追記
-    calcResult.forEach(p => {
-        if (p.yakumanBonus) {
-            const payload = {
-                memberId: p.id,
-                amount: p.yakumanBonus,
-                detail: `🐉 役満祝儀（運営より）`,
-                type: "収入"
-            };
-            promises.push(fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) }).then(r => r.json()));
-        }
-    });
-
-    // game_resultsシートへの記録
-    calcResult.forEach(p => {
-        const resultPayload = {
-            mode: "save_game_result",
-            gameDate: gameDate,
-            gameMode: modeLabel,
-            memberId: p.id,
-            memberName: p.name,
-            rank: p.rank,
-            rawScore: p.rawScore,
-            score: p.score,
-            coin: p.coin
-        };
-        promises.push(fetch(GAS_URL, { method: "POST", body: JSON.stringify(resultPayload) }).then(r => r.json()));
-    });
-
-    Promise.all(promises)
-        .then(results => {
-            const allOk = results.every(r => r.status === "success");
-            if (allOk) {
-                alert("✅ 成績を反映しました！\n" + calcResult.map(p => `${p.name}: ${p.coin >= 0 ? '+' : ''}${p.coin}P`).join('\n'));
+    fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) })
+        .then(r => r.json())
+        .then(res => {
+            if (res.status === "success") {
+                alert("✅ 成績を仮登録しました！\n管理者の承認後にだっちコインへ反映されます。\n\n" +
+                    calcResult.map(p => `${p.name}: ${p.coin >= 0 ? '+' : ''}${p.coin}P`).join('\n'));
                 location.reload();
             } else {
-                alert("一部の送信に失敗しました。銀行ページで確認してください。");
+                alert("エラー: " + (res.message || "不明"));
                 btn.disabled = false;
                 btn.innerText = "✅ この結果を銀行に反映する";
             }
