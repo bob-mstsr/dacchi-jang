@@ -366,8 +366,6 @@
                 <div class="form-group">
                     <label>執行する手続き</label>
                     <select id="admin-action" onchange="onActionChange()">
-                        <option value="yakuman3">🎉 三人打ち 役満祝儀 (+500G)</option>
-                        <option value="yakuman4">🎉 四人打ち 役満祝儀 (+700G)</option>
                         <option value="tokusei">📜 徳政令を実行（借金をゼロに戻す）</option>
                         <option value="sub_manual">🛒 ストア景品引換の代行 (引落b)</option>
                         <option value="add_manual">🎁 その他 運営からの特別支給 (預金b)</option>
@@ -477,14 +475,23 @@ function onActionChange() {
     const amtInput = document.getElementById('admin-amount');
     const memoInput = document.getElementById('admin-memo');
 
-    if (action === "yakuman3") { amtInput.value = 500; amtInput.disabled = true; memoInput.value = "三麻 役満祝儀！"; }
-    else if (action === "yakuman4") { amtInput.value = 700; amtInput.disabled = true; memoInput.value = "四麻 役満祝儀！"; }
-    else if (action === "tokusei") { amtInput.value = 0; amtInput.disabled = true; memoInput.value = "徳政令（借金免除）"; }
+    if (action === "tokusei") { amtInput.value = 0; amtInput.disabled = true; memoInput.value = "徳政令（借金免除）"; }
     else { amtInput.value = ""; amtInput.disabled = false; memoInput.value = ""; }
 }
 
 function toggleAdminPanel() {
-    document.getElementById('admin-panel').classList.toggle('hidden');
+    const panel = document.getElementById('admin-panel');
+    if (!panel.classList.contains('hidden')) {
+        panel.classList.add('hidden');
+        return;
+    }
+    const input = prompt('🔒 管理者パスワードを入力してください');
+    if (input === null) return;
+    if (input === '1040') {
+        panel.classList.remove('hidden');
+    } else {
+        alert('パスワードが違います');
+    }
 }
 
 function changeTradeQty(delta) {

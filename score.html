@@ -431,7 +431,7 @@ function calcPreview() {
         p.coin = calcCoin(p.score, p.rank, count);
     });
 
-    // 役満祝儀を加算
+    // 役満祝儀（p.coinには含めず、yakumanBonusとして分離管理）
     const yakuRows = document.querySelectorAll('.yakuman-row');
     yakuRows.forEach(row => {
         const sel = row.querySelector('select');
@@ -439,7 +439,6 @@ function calcPreview() {
         const bonus = count === 3 ? 500 : 700;
         const target = players.find(p => p.id === sel.value);
         if (target) {
-            target.coin += bonus;
             target.yakumanBonus = (target.yakumanBonus || 0) + bonus;
         }
     });
@@ -469,7 +468,9 @@ function renderPreview(players) {
         const scoreClass = p.score >= 0 ? 'plus' : 'minus';
         const coinSign = p.coin >= 0 ? '+' : '';
         const scoreDisplay = p.score >= 0 ? `+${p.score}` : `${p.score}`;
-        const yakuStr = p.yakumanBonus ? ` <span style="color:#d4af37">+${p.yakumanBonus}P祝儀</span>` : '';
+        const yakuStr = p.yakumanBonus
+            ? ` <span style="color:#d4af37">＋祝儀${p.yakumanBonus}P（別途）</span>`
+            : '';
         return `
         <div class="preview-row">
             <span class="preview-name">${p.rank}位 ${p.name}</span>
