@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>娯楽室 - だっち雀</title>
+<link href="https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@500&family=Noto+Sans+JP:wght@500;700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0a0a1a; font-family: 'Noto Sans JP', sans-serif; overflow: hidden; width: 100vw; height: 100vh; display: flex; flex-direction: column; }
+header {
+  background: linear-gradient(135deg, #1a1a1a, #9e1b1b);
+  border-bottom: 3px solid #d4af37;
+  padding: 10px 16px;
+  display: flex; align-items: center; justify-content: space-between;
+  z-index: 10; flex-shrink: 0;
+}
+header h1 { font-family: 'Kiwi Maru', serif; color: #d4af37; font-size: 1.2rem; letter-spacing: 3px; }
+.back-btn { color: #d4af37; text-decoration: none; font-size: 0.82rem; border: 1px solid #d4af37; padding: 4px 10px; border-radius: 4px; }
+#canvas-container { flex: 1; position: relative; }
+canvas { display: block; width: 100% !important; height: 100% !important; }
+
+/* オーバーレイ */
+.overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.8); z-index: 100;
+  align-items: center; justify-content: center;
+  backdrop-filter: blur(6px);
+}
+.overlay.show { display: flex; }
+.game-menu {
+  background: linear-gradient(135deg, #0d0d1a, #1a0a2e);
+  border: 2px solid #b44fff; border-radius: 14px;
+  padding: 28px 22px; width: 300px;
+  box-shadow: 0 0 40px rgba(180,79,255,0.5), 0 0 80px rgba(0,212,255,0.2);
+  animation: menuAppear 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes menuAppear {
+  from { transform: scale(0.8) translateY(20px); opacity: 0; }
+  to   { transform: scale(1) translateY(0); opacity: 1; }
+}
+.game-menu h2 { font-family: 'Kiwi Maru', serif; color: #00d4ff; text-align: center; font-size: 1.1rem; margin-bottom: 4px; text-shadow: 0 0 10px #00d4ff; }
+.game-menu .sub { text-align: center; color: rgba(255,255,255,0.4); font-size: 0.72rem; margin-bottom: 20px; }
+.menu-item {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%; padding: 14px 16px; margin-bottom: 12px;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(180,79,255,0.4);
+  border-radius: 10px; color: white; text-decoration: none;
+  font-family: 'Noto Sans JP', sans-serif; font-size: 0.9rem; font-weight: bold;
+  transition: all 0.2s;
+}
+.menu-item:active { background: rgba(180,79,255,0.2); border-color: #b44fff; box-shadow: 0 0 12px rgba(180,79,255,0.4); }
+.menu-item .ico { font-size: 1.4rem; width: 36px; text-align: center; }
+.menu-item .inf .ttl { font-size: 0.88rem; }
+.menu-item .inf .dsc { font-size: 0.68rem; color: rgba(255,255,255,0.45); margin-top: 2px; }
+.menu-close { width: 100%; padding: 10px; background: none; border: 1px dashed rgba(255,255,255,0.2); border-radius: 8px; color: rgba(255,255,255,0.4); font-family: 'Noto Sans JP', sans-serif; font-size: 0.82rem; cursor: pointer; margin-top: 4px; }
+.tap-label {
+  position: absolute; background: rgba(0,0,0,0.75); color: #d4af37;
+  font-size: 0.65rem; padding: 3px 8px; border-radius: 20px;
+  border: 1px solid rgba(212,175,55,0.5); pointer-events: none;
+  transform: translateX(-50%); white-space: nowrap;
+  animation: labelFloat 2s ease-in-out infinite;
+}
+@keyframes labelFloat { 0%,100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-4px); } }
+</style>
+</head>
+<body>
+
+<header>
+  <a href="index.html" class="back-btn">◀ 戻る</a>
+  <h1>娯楽室</h1>
+  <div style="width:60px"></div>
+</header>
+
+<div id="canvas-container">
+  <canvas id="c"></canvas>
+</div>
+
+<!-- ゲームメニュー -->
+<div class="overlay" id="gameOverlay" onclick="closeMenu(event)">
+  <div class="game-menu">
+    <h2>🎮 ゲームセレクト</h2>
+    <div class="sub">モニターから遊ぶゲームを選択</div>
+    <a href="mahjong2048.html" class="menu-item">
+      <div class="ico">🧩</div>
+      <div class="inf"><div class="ttl">だっち雀2048</div><div class="dsc">麻雀牌で遊ぶ2048パズル</div></div>
+      <span style="color:rgba(255,255,255,0.3)">▶</span>
+    </a>
+    <a href="shanghai.html" class="menu-item">
+      <div class="ico">🐼</div>
+      <div class="inf"><div class="ttl">上海</div><div class="dsc">同じ牌をペアで取り除くパズル</div></div>
+      <span style="color:rgba(255,255,255,0.3)">▶</span>
+    </a>
+    <a href="shisensho.html" class="menu-item">
+      <div class="ico">🐉</div>
+      <div class="inf"><div class="ttl">四川省</div><div class="dsc">線で繋げて消す牌パズル</div></div>
+      <span style="color:rgba(255,255,255,0.3)">▶</span>
+    </a>
+    <button class="menu-close" onclick="closeMenu()">✕ 閉じる</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ========== Three.js セットアップ ==========
+const container = document.getElementById('canvas-container');
+const canvas = document.getElementById('c');
+const W = container.clientWidth, H = container.clientHeight;
+
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setSize(W, H);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.setClearColor(0x0a0a1a);
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0x0a0a1a, 30, 60);
+
+// カメラ（斜め上から見下ろす等角的視点）
+const camera = new THREE.PerspectiveCamera(45, W / H, 0.1, 100);
+camera.position.set(10, 13, 14);
+camera.lookAt(0, 2.5, 0);
+
+// ========== ライト ==========
+const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+scene.add(ambient);
+
+const sun = new THREE.DirectionalLight(0xffffff, 0.8);
+sun.position.set(5, 15, 8);
+sun.castShadow = true;
+sun.shadow.mapSize.width = 1024;
+sun.shadow.mapSize.height = 1024;
+sun.shadow.camera.near = 0.5;
+sun.shadow.camera.far = 50;
+sun.shadow.camera.left = -15;
+sun.shadow.camera.right = 15;
+sun.shadow.camera.top = 15;
+sun.shadow.camera.bottom = -15;
+scene.add(sun);
+
+// ネオン点光源（モニター周辺）
+const neonPurple = new THREE.PointLight(0xb44fff, 2, 6);
+neonPurple.position.set(5, 3, -3);
+scene.add(neonPurple);
+const neonBlue = new THREE.PointLight(0x00d4ff, 1.5, 5);
+neonBlue.position.set(5, 4, -3);
+scene.add(neonBlue);
+
+// ========== ブロック生成ヘルパー ==========
+function makeBox(w, h, d, color, options = {}) {
+  const geo = new THREE.BoxGeometry(w, h, d);
+  const mat = new THREE.MeshLambertMaterial({ color, ...options });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  return mesh;
+}
+
+function makeBoxMultiMat(w, h, d, colors) {
+  const geo = new THREE.BoxGeometry(w, h, d);
+  const mats = colors.map(c => new THREE.MeshLambertMaterial({ color: c }));
+  const mesh = new THREE.Mesh(geo, mats);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  return mesh;
+}
+
+// ブロックをシーンに追加（底面基準のy座標）
+function addBlock(mesh, x, yBottom, z) {
+  const h = mesh.geometry.parameters.height;
+  mesh.position.set(x, yBottom + h / 2, z);
+  scene.add(mesh);
+  return mesh;
+}
+
+// ========== 床 ==========
+const floorGeo = new THREE.PlaneGeometry(16, 14);
+// マイクラ風グレー床テクスチャ（Canvas）
+const floorCanvas = document.createElement('canvas');
+floorCanvas.width = 512; floorCanvas.height = 512;
+const fc = floorCanvas.getContext('2d');
+for (let y = 0; y < 16; y++) {
+  for (let x = 0; x < 16; x++) {
+    const v = 130 + Math.random() * 30;
+    fc.fillStyle = `rgb(${v},${v},${v})`;
+    fc.fillRect(x * 32, y * 32, 32, 32);
+    fc.strokeStyle = 'rgba(0,0,0,0.15)';
+    fc.strokeRect(x * 32, y * 32, 32, 32);
+  }
+}
+const floorTex = new THREE.CanvasTexture(floorCanvas);
+const floorMat = new THREE.MeshLambertMaterial({ map: floorTex });
+const floor = new THREE.Mesh(floorGeo, floorMat);
+floor.rotation.x = -Math.PI / 2;
+floor.receiveShadow = true;
+scene.add(floor);
+
+// ========== 壁 ==========
+function makeBrickWall() {
+  const wc = document.createElement('canvas');
+  wc.width = 512; wc.height = 512;
+  const ctx = wc.getContext('2d');
+  // 目地（グレー背景）
+  ctx.fillStyle = '#aaaaaa';
+  ctx.fillRect(0, 0, 512, 512);
+  const bw = 64, bh = 28;
+  for (let row = 0; row < wc.height / bh + 1; row++) {
+    for (let col = 0; col < wc.width / bw + 1; col++) {
+      const ox = row % 2 === 0 ? 0 : bw / 2;
+      // 白レンガ（少し色むら）
+      const v = 238 + Math.floor(Math.random() * 14);
+      ctx.fillStyle = `rgb(${v},${v},${v-2})`;
+      ctx.fillRect(col * bw - ox + 2, row * bh + 2, bw - 4, bh - 4);
+    }
+  }
+  return new THREE.CanvasTexture(wc);
+}
+
+// 共有壁テクスチャ（1回だけ生成して全壁で使い回す）
+const sharedBrickTex = makeBrickWall();
+sharedBrickTex.wrapS = THREE.RepeatWrapping;
+sharedBrickTex.wrapT = THREE.RepeatWrapping;
+
+// 奥壁
+const backWall = new THREE.Mesh(
+  new THREE.BoxGeometry(16, 8, 0.3),
+  new THREE.MeshLambertMaterial({ map: sharedBrickTex })
+);
+backWall.position.set(0, 4, -7);
+backWall.receiveShadow = true;
+scene.add(backWall);
+
+// 左壁（1枚の壁。窓は手前に絵として重ねるだけ）
+const WALL_X = -8;
+const WIN_Y = 3.5;   // 窓中心の高さ
+const WIN_Z = 1.0;   // 窓中心のZ位置
+const WIN_H = 4.0;   // 窓の高さ
+const WIN_W = 5.0;   // 窓の幅（Z方向）
+
+const leftWall = new THREE.Mesh(
+  new THREE.BoxGeometry(0.3, 8, 14),
+  new THREE.MeshLambertMaterial({ map: sharedBrickTex })
+);
+leftWall.position.set(WALL_X, 4, 0);
+leftWall.receiveShadow = true;
+scene.add(leftWall);
+
+// ========== 左壁の窓（壁に絵を重ねる方式） ==========
+const FT = 0.25;
+const winTop   = WIN_Y + WIN_H / 2;
+const winBot   = WIN_Y - WIN_H / 2;
+const winFront = WIN_Z + WIN_W / 2;
+const winBack  = WIN_Z - WIN_W / 2;
+
+// 外観イラスト（1枚の絵として描く：空・雲・地面・木）
+const winSceneCanvas = document.createElement('canvas');
+winSceneCanvas.width = 512; winSceneCanvas.height = 420;
+const wsc = winSceneCanvas.getContext('2d');
+const skyGrad = wsc.createLinearGradient(0,0,0,420);
+skyGrad.addColorStop(0, '#4aa8e8');
+skyGrad.addColorStop(1, '#a8d8f8');
+wsc.fillStyle = skyGrad; wsc.fillRect(0,0,512,420);
+wsc.fillStyle = '#fff';
+[[40,50,90,40],[280,30,130,35],[400,70,90,28]].forEach(([x,y,w,h])=>{
+  wsc.beginPath(); wsc.ellipse(x+w/2,y+h/2,w/2,h/2,0,0,Math.PI*2); wsc.fill();
+});
+const groundGrad = wsc.createLinearGradient(0,280,0,420);
+groundGrad.addColorStop(0,'#4ab84a'); groundGrad.addColorStop(1,'#2a8a2a');
+wsc.fillStyle = groundGrad; wsc.fillRect(0,280,512,140);
+[[110,170],[260,150],[400,180]].forEach(([x,y])=>{
+  wsc.fillStyle='#5a3010'; wsc.fillRect(x-8,y,16,130);
+  wsc.fillStyle='#2a8a2a'; wsc.beginPath(); wsc.arc(x,y,42,0,Math.PI*2); wsc.fill();
+  wsc.fillStyle='#3aaa3a'; wsc.beginPath(); wsc.arc(x-12,y-15,26,0,Math.PI*2); wsc.fill();
+});
+const winSceneTex = new THREE.CanvasTexture(winSceneCanvas);
+
+// 外観パネル（壁の手前にぴったり重ねる・窓と同サイズ）
+const winBg = new THREE.Mesh(
+  new THREE.PlaneGeometry(WIN_W, WIN_H),
+  new THREE.MeshBasicMaterial({ map: winSceneTex })
+);
+winBg.rotation.y = Math.PI / 2;
+winBg.position.set(WALL_X + 0.18, WIN_Y, WIN_Z);
+scene.add(winBg);
+
+// 半透明ガラス（外観パネルのさらに手前）
+const winGlass = new THREE.Mesh(
+  new THREE.PlaneGeometry(WIN_W, WIN_H),
+  new THREE.MeshLambertMaterial({ color: 0xdff5ff, transparent: true, opacity: 0.18, side: THREE.DoubleSide })
+);
+winGlass.rotation.y = Math.PI / 2;
+winGlass.position.set(WALL_X + 0.22, WIN_Y, WIN_Z);
+scene.add(winGlass);
+
+// 窓枠（上下左右＋中桟）— 全て同じ白で統一
+const wfTop = makeBox(0.3, FT, WIN_W + FT*2, 0xf2f2f2);
+wfTop.position.set(WALL_X + 0.2, winTop + FT/2, WIN_Z); scene.add(wfTop);
+const wfBot2 = makeBox(0.3, FT, WIN_W + FT*2, 0xf2f2f2);
+wfBot2.position.set(WALL_X + 0.2, winBot - FT/2, WIN_Z); scene.add(wfBot2);
+const wfL = makeBox(0.3, WIN_H + FT*2, FT, 0xf2f2f2);
+wfL.position.set(WALL_X + 0.2, WIN_Y, winBack - FT/2); scene.add(wfL);
+const wfR = makeBox(0.3, WIN_H + FT*2, FT, 0xf2f2f2);
+wfR.position.set(WALL_X + 0.2, WIN_Y, winFront + FT/2); scene.add(wfR);
+const wfMV = makeBox(0.3, WIN_H, FT*0.6, 0xf2f2f2);
+wfMV.position.set(WALL_X + 0.2, WIN_Y, WIN_Z); scene.add(wfMV);
+const wfMH = makeBox(0.3, FT*0.6, WIN_W, 0xf2f2f2);
+wfMH.position.set(WALL_X + 0.2, WIN_Y, WIN_Z); scene.add(wfMH);
+
+// ========== 樺の木壁画（左奥） ==========
+const artCanvas = document.createElement('canvas');
+artCanvas.width = 256; artCanvas.height = 256;
+const artCtx = artCanvas.getContext('2d');
+// 空
+artCtx.fillStyle = '#87ceeb';
+artCtx.fillRect(0, 0, 256, 256);
+// 樺の木幹（白っぽい）
+for (let i = 0; i < 5; i++) {
+  const x = 20 + i * 46;
+  artCtx.fillStyle = '#e8e8e0';
+  artCtx.fillRect(x, 0, 18, 256);
+  // 黒い節
+  for (let j = 0; j < 5; j++) {
+    artCtx.fillStyle = 'rgba(0,0,0,0.3)';
+    artCtx.fillRect(x + 4, 20 + j * 50 + Math.random() * 10, 10, 6);
+  }
+}
+// 葉（緑）
+artCtx.fillStyle = 'rgba(60,140,60,0.6)';
+for (let i = 0; i < 20; i++) {
+  artCtx.fillRect(Math.random()*220, Math.random()*150, 16, 16);
+}
+const artTex = new THREE.CanvasTexture(artCanvas);
+const artMesh = new THREE.Mesh(
+  new THREE.BoxGeometry(3.5, 4, 0.15),
+  new THREE.MeshLambertMaterial({ map: artTex })
+);
+artMesh.position.set(-5.5, 4.5, -6.8);
+artMesh.userData.clickable = 'art';
+scene.add(artMesh);
+
+// 壁画フレーム（artMeshより奥に配置）
+const frameM = makeBox(3.8, 4.3, 0.1, 0x333333);
+frameM.position.set(-5.5, 4.5, -6.92);
+scene.add(frameM);
+
+// ========== ソファ（黒・左中央・大型） ==========
+// 座面
+const sofaSeat = makeBox(5.0, 0.6, 2.4, 0x2a2a2a);
+addBlock(sofaSeat, -4.5, 1.0, -3.5);
+sofaSeat.userData.clickable = 'sofa';
+// 背もたれ
+const sofaBack = makeBox(5.0, 1.8, 0.5, 0x1a1a1a);
+addBlock(sofaBack, -4.5, 1.0, -4.6);
+sofaBack.userData.clickable = 'sofa';
+// 肘掛け左
+const sofaArmL = makeBox(0.5, 1.0, 2.4, 0x222222);
+addBlock(sofaArmL, -6.9, 1.0, -3.5);
+sofaArmL.userData.clickable = 'sofa';
+// 肘掛け右
+const sofaArmR = makeBox(0.5, 1.0, 2.4, 0x222222);
+addBlock(sofaArmR, -2.1, 1.0, -3.5);
+sofaArmR.userData.clickable = 'sofa';
+// クッション（緑）x2
+const cushion = makeBox(1.8, 0.25, 1.0, 0x2d7a27);
+addBlock(cushion, -5.5, 1.6, -4.2);
+cushion.userData.clickable = 'sofa';
+const cushion2 = makeBox(1.8, 0.25, 1.0, 0x3a6b34);
+addBlock(cushion2, -3.5, 1.6, -4.2);
+cushion2.userData.clickable = 'sofa';
+// ソファ脚
+[-6.5, -2.5].forEach(x => [-2.5, -4.4].forEach(z => {
+  const leg = makeBox(0.25, 1.0, 0.25, 0x111111);
+  addBlock(leg, x, 0, z);
+}));
+
+// ========== デスク（右奥・白） ==========
+// 天板
+const deskTop = makeBox(5, 0.3, 2.5, 0xf0f0f0);
+addBlock(deskTop, 3.5, 2.5, -4.0);
+// 脚
+[[1.2, -3.0], [1.2, -4.8], [5.8, -3.0], [5.8, -4.8]].forEach(([x, z]) => {
+  const leg = makeBox(0.2, 2.5, 0.2, 0xe0e0e0);
+  addBlock(leg, x, 0, z);
+});
+// 棚（デスク下）
+const shelf = makeBox(5, 0.2, 0.8, 0xe8e8e8);
+addBlock(shelf, 3.5, 1.2, -4.5);
+
+// ========== モニター（右奥・大型） ==========
+// モニター枠（黒）
+const monFrame = makeBox(5.2, 3.2, 0.25, 0x111111);
+addBlock(monFrame, 3.5, 2.8, -6.6);
+monFrame.userData.clickable = 'monitor';
+
+// モニター画面（麻雀ゲーム画面：4辺手牌＋捨て牌＋サイコロのみ）
+const monCanvas = document.createElement('canvas');
+monCanvas.width = 512; monCanvas.height = 320;
+const mc = monCanvas.getContext('2d');
+const CX = 256, CY = 160;
+
+// 卓のフェルト
+const feltGrad = mc.createRadialGradient(CX,CY,40,CX,CY,260);
+feltGrad.addColorStop(0, '#2f7d4f');
+feltGrad.addColorStop(1, '#1d5a37');
+mc.fillStyle = feltGrad;
+mc.fillRect(0, 0, 512, 320);
+mc.strokeStyle = '#5a3a1a';
+mc.lineWidth = 12;
+mc.strokeRect(6, 6, 500, 308);
+
+// 牌描画ヘルパー（faceUp: true=表向き, false=裏向き）
+function drawTile(x, y, w, h, rot, faceUp, tileColor) {
+  mc.save();
+  mc.translate(x, y);
+  mc.rotate(rot);
+  mc.fillStyle = 'rgba(0,0,0,0.25)';
+  mc.fillRect(-w/2+1, -h/2+2, w, h);
+  if (faceUp) {
+    mc.fillStyle = '#f5f0e0';
+    mc.fillRect(-w/2, -h/2, w, h);
+    mc.strokeStyle = '#b8ac8c';
+    mc.lineWidth = 1;
+    mc.strokeRect(-w/2, -h/2, w, h);
+    mc.fillStyle = tileColor || '#c82020';
+    mc.beginPath();
+    mc.arc(0, -h*0.1, w*0.18, 0, Math.PI*2);
+    mc.fill();
+  } else {
+    mc.fillStyle = '#1c4a7a';
+    mc.fillRect(-w/2, -h/2, w, h);
+    mc.strokeStyle = '#0d2d4d';
+    mc.lineWidth = 1;
+    mc.strokeRect(-w/2, -h/2, w, h);
+    mc.fillStyle = 'rgba(255,255,255,0.15)';
+    mc.fillRect(-w/2+2, -h/2+2, w-4, h*0.3);
+  }
+  mc.restore();
+}
+
+const handColors = ['#c82020','#2f7d4f','#1c4a7a','#c82020','#2f7d4f','#1c4a7a'];
+
+// ① 4辺の手牌（下のみ表向き、他3辺は裏向き）
+// 下（自分）：表向き・大きめ・横一列13枚
+for (let i = 0; i < 13; i++) {
+  drawTile(58 + i * 27, 300, 23, 32, 0, true, handColors[i % handColors.length]);
+}
+// 上（対面）：裏向き
+for (let i = 0; i < 13; i++) {
+  drawTile(90 + i * 24, 12, 18, 13, 0, false);
+}
+// 左：裏向き・縦
+for (let i = 0; i < 13; i++) {
+  drawTile(12, 48 + i * 16, 13, 18, Math.PI/2, false);
+}
+// 右：裏向き・縦
+for (let i = 0; i < 13; i++) {
+  drawTile(500, 48 + i * 16, 13, 18, Math.PI/2, false);
+}
+
+// ② 各プレイヤーの前に捨て牌（表向き）：1列目6枚・2列目3枚、4人とも同数
+// originX,originY: 1列目(奥側)の左端の牌の中心
+// colDX,colDY: 同じ列で隣の牌へ移動する方向ベクトル（左→右方向）
+// rowDX,rowDY: 1列目→2列目（奥→手前）へ移動する方向ベクトル
+function drawDiscard(originX, originY, colDX, colDY, rowDX, rowDY, rot) {
+  // 1列目（奥）：左から6枚
+  for (let i = 0; i < 6; i++) {
+    const x = originX + colDX * i;
+    const y = originY + colDY * i;
+    drawTile(x, y, 15, 20, rot, true, '#2f7d4f');
+  }
+  // 2列目（手前）：左から3枚
+  for (let i = 0; i < 3; i++) {
+    const x = originX + rowDX + colDX * i;
+    const y = originY + rowDY + colDY * i;
+    drawTile(x, y, 15, 20, rot, true, '#c82020');
+  }
+}
+// 下（自分）：1列目(6枚)が中央寄り、2列目(3枚)が手牌寄り
+drawDiscard(CX - 45, 230, 16, 0, 0, 20, 0);
+// 上（対面）：1列目(6枚)が中央寄り、2列目(3枚)が手牌寄り
+drawDiscard(CX + 45, 90, -16, 0, 0, -20, 0);
+// 左プレイヤー：1列目(6枚)が中央寄り、2列目(3枚)が手牌寄り
+drawDiscard(82, CY - 45, 0, 16, -20, 0, Math.PI/2);
+// 右プレイヤー：1列目(6枚)が中央寄り、2列目(3枚)が手牌寄り
+drawDiscard(430, CY - 45, 0, 16, 20, 0, Math.PI/2);
+
+// ③ 山：描画なし（指示により省略）
+
+// ④ 中央にサイコロ2つ
+function drawDice(x, y, pips) {
+  mc.save();
+  mc.translate(x, y);
+  mc.fillStyle = '#fff';
+  mc.shadowColor = 'rgba(0,0,0,0.4)';
+  mc.shadowBlur = 4;
+  mc.shadowOffsetY = 2;
+  mc.beginPath();
+  mc.roundRect(-11, -11, 22, 22, 4);
+  mc.fill();
+  mc.shadowBlur = 0;
+  mc.strokeStyle = '#ccc';
+  mc.lineWidth = 1;
+  mc.stroke();
+  mc.fillStyle = '#c82020';
+  const pipPos = {
+    1: [[0,0]],
+    2: [[-5,-5],[5,5]],
+    3: [[-5,-5],[0,0],[5,5]],
+    4: [[-5,-5],[5,-5],[-5,5],[5,5]],
+    5: [[-5,-5],[5,-5],[0,0],[-5,5],[5,5]],
+    6: [[-5,-5],[5,-5],[-5,0],[5,0],[-5,5],[5,5]],
+  };
+  (pipPos[pips] || pipPos[1]).forEach(([px,py]) => {
+    mc.beginPath();
+    mc.arc(px, py, 2, 0, Math.PI*2);
+    mc.fill();
+  });
+  mc.restore();
+}
+drawDice(CX - 16, CY, 4);
+drawDice(CX + 16, CY, 1);
+
+// スコア表示UI（右上）
+mc.fillStyle = 'rgba(0,0,0,0.5)';
+mc.fillRect(376, 6, 130, 30);
+mc.fillStyle = '#ffd700';
+mc.font = 'bold 13px sans-serif';
+mc.fillText('🀄 だっち雀', 384, 26);
+
+const monTex = new THREE.CanvasTexture(monCanvas);
+const monScreen = new THREE.Mesh(
+  new THREE.BoxGeometry(4.9, 2.9, 0.05),
+  new THREE.MeshBasicMaterial({ map: monTex })
+);
+monScreen.position.set(3.5, 4.45, -6.47);
+monScreen.userData.clickable = 'monitor';
+scene.add(monScreen);
+
+// モニタースタンド
+const monStand = makeBox(0.25, 0.6, 0.25, 0x333333);
+addBlock(monStand, 3.5, 2.8, -6.5);
+const monBase = makeBox(1.4, 0.12, 0.7, 0x222222);
+addBlock(monBase, 3.5, 2.8, -6.3);
+
+// RGB発光
+const rgbGeo = new THREE.BoxGeometry(5.6, 3.6, 0.05);
+const rgbMat = new THREE.MeshBasicMaterial({ color: 0xb44fff, transparent: true, opacity: 0.35 });
+const rgbGlow = new THREE.Mesh(rgbGeo, rgbMat);
+rgbGlow.position.set(3.5, 4.45, -6.72);
+scene.add(rgbGlow);
+neonPurple.position.set(3.5, 4.5, -5.5);
+neonBlue.position.set(3.5, 5.5, -5.5);
+
+// ========== ファミコン（デスク上） ==========
+const famiBody = makeBox(0.8, 0.2, 0.6, 0xddd8c0);
+addBlock(famiBody, 2.0, 2.8, -5.5);
+const famiRed1 = makeBox(0.25, 0.15, 0.35, 0xcc2020);
+addBlock(famiRed1, 1.75, 3.0, -5.5);
+const famiRed2 = makeBox(0.25, 0.15, 0.35, 0xcc2020);
+addBlock(famiRed2, 2.2, 3.0, -5.5);
+
+// ========== ゲーミングチェア（モニター向き） ==========
+// グループで回転管理
+const chairGroup = new THREE.Group();
+chairGroup.position.set(3.0, 0, -2.5);
+scene.add(chairGroup);
+// 座面
+const chairSeat = makeBox(1.4, 0.3, 1.4, 0x1a1a1a);
+chairSeat.position.set(0, 1.45, 0);
+chairGroup.add(chairSeat);
+// 背もたれ（モニター方向=-Z方向へ傾ける）
+const chairBack = makeBox(1.2, 2.0, 0.28, 0x111111);
+chairBack.position.set(0, 2.6, 0.65);
+chairGroup.add(chairBack);
+const chairHead = makeBox(1.0, 0.5, 0.22, 0x222222);
+chairHead.position.set(0, 3.65, 0.62);
+chairGroup.add(chairHead);
+// 脚
+const baseAngles = [0, 72, 144, 216, 288];
+baseAngles.forEach(ang => {
+  const rad = ang * Math.PI / 180;
+  const leg = makeBox(0.12, 0.12, 0.9, 0x333333);
+  leg.position.set(Math.sin(rad)*0.65, 0.65, Math.cos(rad)*0.65);
+  leg.rotation.y = rad;
+  chairGroup.add(leg);
+});
+
+// ========== 電子ピアノ（左手前・高め） ==========
+const pianoLegH = 2.0;
+// ピアノ脚（先に）
+[[-6.8,3.5],[-6.8,4.5],[-3.2,3.5],[-3.2,4.5]].forEach(([x,z]) => {
+  const l = makeBox(0.28, pianoLegH, 0.28, 0x3a2010);
+  addBlock(l, x, 0, z);
+});
+// 本体
+const pianoBody = makeBox(4.5, 0.65, 1.2, 0x1a0d00);
+addBlock(pianoBody, -5.0, pianoLegH, 4.0);
+pianoBody.userData.clickable = 'piano';
+// 鍵盤
+const keyCanvas = document.createElement('canvas');
+keyCanvas.width = 512; keyCanvas.height = 128;
+const kc = keyCanvas.getContext('2d');
+kc.fillStyle = '#f5f5f0'; kc.fillRect(0, 0, 512, 128);
+for (let i = 0; i < 22; i++) {
+  kc.strokeStyle = '#bbb'; kc.lineWidth = 2;
+  kc.beginPath(); kc.moveTo(i*23.2, 0); kc.lineTo(i*23.2, 128); kc.stroke();
+}
+[1,2,4,5,6,8,9,11,12,13,15,16].forEach(i => {
+  kc.fillStyle = '#111';
+  kc.fillRect(i*23.2-5, 0, 14, 80);
+});
+const keyTex = new THREE.CanvasTexture(keyCanvas);
+const pianoKeys = new THREE.Mesh(
+  new THREE.BoxGeometry(4.3, 0.06, 1.0),
+  new THREE.MeshBasicMaterial({ map: keyTex })
+);
+pianoKeys.position.set(-5.0, pianoLegH + 0.68, 4.0);
+pianoKeys.userData.clickable = 'piano';
+scene.add(pianoKeys);
+
+// ========== センターテーブル（茶色・大型・脚位置修正） ==========
+const tW = 3.5, tD = 2.2, tH = 0.3, tLegH = 1.3;
+const tX = 0.5, tZ = 2.0;
+const tableTop = makeBox(tW, tH, tD, 0x8B5E3C);
+addBlock(tableTop, tX, tLegH, tZ);
+// 脚：天板の四隅に正確に配置
+const tLegR = 0.22;
+[
+  [tX - tW/2 + tLegR, tZ - tD/2 + tLegR],
+  [tX - tW/2 + tLegR, tZ + tD/2 - tLegR],
+  [tX + tW/2 - tLegR, tZ - tD/2 + tLegR],
+  [tX + tW/2 - tLegR, tZ + tD/2 - tLegR],
+].forEach(([x, z]) => {
+  const l = makeBox(tLegR*2, tLegH, tLegR*2, 0x6B4423);
+  addBlock(l, x, 0, z);
+});
+
+// ========== ラグ（白ドット柄） ==========
+const rugCanvas = document.createElement('canvas');
+rugCanvas.width = 256; rugCanvas.height = 128;
+const rc = rugCanvas.getContext('2d');
+rc.fillStyle = '#cccccc'; rc.fillRect(0, 0, 256, 128);
+for (let y = 0; y < 8; y++) {
+  for (let x = 0; x < 16; x++) {
+    const v = 200 + Math.random() * 40;
+    rc.fillStyle = `rgba(${v},${v},${v},0.8)`;
+    rc.fillRect(x*16+2, y*16+2, 12, 12);
+  }
+}
+const rugTex = new THREE.CanvasTexture(rugCanvas);
+const rug = new THREE.Mesh(
+  new THREE.BoxGeometry(4.5, 0.05, 2.5),
+  new THREE.MeshLambertMaterial({ map: rugTex })
+);
+rug.position.set(0.5, 0.03, 1.5);
+rug.receiveShadow = true;
+scene.add(rug);
+
+// ========== クリック判定 ==========
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+const clickableObjects = [];
+scene.traverse(obj => { if (obj.userData.clickable) clickableObjects.push(obj); });
+
+// タップラベル（HTMLオーバーレイ）
+const labels = [
+  { obj: monFrame, text: '🎮 タップ', id: 'lbl-mon' },
+  { obj: sofaSeat, text: '🛋 タップ', id: 'lbl-sofa' },
+  { obj: pianoBody, text: '🎹 タップ', id: 'lbl-piano' },
+  { obj: artMesh,  text: '🖼 タップ', id: 'lbl-art' },
+];
+labels.forEach(l => {
+  const div = document.createElement('div');
+  div.className = 'tap-label';
+  div.id = l.id;
+  div.innerText = l.text;
+  document.getElementById('canvas-container').appendChild(div);
+});
+
+function updateLabels() {
+  labels.forEach(l => {
+    const div = document.getElementById(l.id);
+    if (!div) return;
+    const pos = l.obj.position.clone();
+    pos.y += l.obj.geometry.parameters.height / 2 + 0.15;
+    pos.project(camera);
+    const x = (pos.x * 0.5 + 0.5) * container.clientWidth;
+    const y = (-pos.y * 0.5 + 0.5) * container.clientHeight;
+    if (pos.z > 1 || x < 0 || x > container.clientWidth || y < 0 || y > container.clientHeight) {
+      div.style.display = 'none';
+      return;
+    }
+    div.style.display = 'block';
+    div.style.left = x + 'px';
+    div.style.top = (y - 14) + 'px';
+  });
+}
+
+function onTap(event) {
+  if (document.getElementById('gameOverlay').classList.contains('show')) return;
+  const rect = canvas.getBoundingClientRect();
+  const clientX = event.touches ? event.touches[0].clientX : event.clientX;
+  const clientY = event.touches ? event.touches[0].clientY : event.clientY;
+  mouse.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+  mouse.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects(scene.children, true);
+  for (const hit of hits) {
+    let obj = hit.object;
+    while (obj && !obj.userData.clickable) obj = obj.parent;
+    if (obj && obj.userData.clickable) {
+      clickFurniture(obj.userData.clickable);
+      return;
+    }
+  }
+}
+canvas.addEventListener('click', onTap);
+canvas.addEventListener('touchend', e => { e.preventDefault(); onTap(e); }, { passive: false });
+
+// ========== アクション ==========
+function clickFurniture(name) {
+  if (name === 'monitor') {
+    document.getElementById('gameOverlay').classList.add('show');
+    return;
+  }
+  const msg = {
+    piano: '🎹 将来ここに音楽ページが繋がります',
+    sofa:  '🛋 将来ここにくつろぎコンテンツが繋がります',
+    art:   '🖼 将来ここにギャラリーページが繋がります',
+  };
+  alert(msg[name] || '準備中です');
+}
+
+function closeMenu(e) {
+  if (!e || e.target === document.getElementById('gameOverlay')) {
+    document.getElementById('gameOverlay').classList.remove('show');
+  }
+}
+
+// ========== アニメーション ==========
+let t = 0;
+function animate() {
+  requestAnimationFrame(animate);
+  t += 0.02;
+  // RGB発光アニメ
+  rgbGlow.material.color.setHSL((t * 0.1) % 1, 1, 0.5);
+  neonPurple.color.setHSL((t * 0.1) % 1, 1, 0.5);
+  neonPurple.intensity = 1.5 + Math.sin(t) * 0.5;
+  updateLabels();
+  renderer.render(scene, camera);
+}
+animate();
+
+// リサイズ対応
+window.addEventListener('resize', () => {
+  const w = container.clientWidth, h = container.clientHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+});
+</script>
+</body>
+</html>
