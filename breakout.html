@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>娯楽室：だっち雀 ブロック崩し</title>
     <link href="https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@500&family=Noto+Sans+JP:wght@500;700&display=swap" rel="stylesheet">
     <style>
@@ -21,6 +21,7 @@
             color: var(--dark-charcoal);
             overflow: hidden;
             user-select: none;
+            -webkit-user-select: none;
         }
 
         .app-container {
@@ -28,30 +29,34 @@
             margin: 0 auto;
             background-color: #fffdf9;
             height: 100vh;
+            /* iOSのSafari対策 */
+            height: calc(var(--vh, 1vh) * 100);
             box-shadow: 0 0 20px rgba(0,0,0,0.1);
             display: flex;
             flex-direction: column;
+            overflow: hidden;
         }
 
         header {
             background: linear-gradient(135deg, var(--dark-charcoal) 0%, var(--main-red) 100%);
             color: white;
-            padding: 12px;
+            padding: 10px;
             text-align: center;
             border-bottom: 4px solid var(--accent-gold);
             position: relative;
+            flex-shrink: 0;
         }
         header h1 {
             font-family: 'Kiwi Maru', serif;
-            font-size: 1.3rem;
+            font-size: 1.1rem;
             color: var(--accent-gold);
         }
         .back-btn {
             position: absolute;
-            left: 12px; top: 14px;
+            left: 10px; top: 11px;
             color: var(--accent-gold);
             text-decoration: none;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             border: 1px solid var(--accent-gold);
             padding: 2px 6px;
             border-radius: 4px;
@@ -59,16 +64,17 @@
 
         .info-panel {
             display: grid;
-            grid-template-columns: 1fr 100px 1fr;
+            grid-template-columns: 1fr 90px 1fr;
             gap: 5px;
-            padding: 8px;
+            padding: 6px;
             background: #fff;
             border-bottom: 1px solid #e0dacf;
             text-align: center;
             align-items: center;
+            flex-shrink: 0;
         }
-        .info-box { font-size: 0.75rem; color: #666; }
-        .info-box span { display: block; font-size: 1.1rem; font-weight: bold; color: var(--dark-charcoal); }
+        .info-box { font-size: 0.7rem; color: #666; }
+        .info-box span { display: block; font-size: 1rem; font-weight: bold; color: var(--dark-charcoal); }
         .info-box span.score { color: var(--main-red); }
         
         .dora-container {
@@ -76,14 +82,15 @@
             flex-direction: column;
             align-items: center;
         }
-        .dora-label { font-size: 0.65rem; color: var(--main-red); font-weight: bold; margin-bottom: 2px; }
+        .dora-label { font-size: 0.6rem; color: var(--main-red); font-weight: bold; margin-bottom: 1px; }
         .dora-tile {
-            width: 32px; height: 42px;
+            width: 28px; height: 36px;
             background: white; border: 1px solid #b5af9f; border-radius: 2px;
-            box-shadow: 0 2px 0 #bbb; font-size: 1.3rem; font-weight: bold;
+            box-shadow: 0 2px 0 #bbb; font-size: 1.1rem; font-weight: bold;
             display: flex; align-items: center; justify-content: center;
         }
 
+        /* 📱 画面全体にフィットさせるゲーム領域 */
         .game-wrapper {
             flex-grow: 1;
             position: relative;
@@ -91,108 +98,131 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            overflow: hidden;
         }
 
-        canvas { width: 100%; height: 50%; background: transparent; display: block; }
+        /* Canvas自体の表示サイズを親要素に追従させ、はみ出しを防ぐ */
+        .canvas-container {
+            flex-grow: 1;
+            position: relative;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background: transparent;
+        }
+        canvas {
+            max-width: 100%;
+            max-height: 100%;
+            aspect-ratio: 1 / 1;
+            background: transparent;
+            display: block;
+        }
 
         /* 🎁 アイテムストックエリア */
         .item-stock-panel {
             background: rgba(0,0,0,0.6);
-            padding: 6px;
+            padding: 4px;
             border-top: 1px solid rgba(255,255,255,0.1);
             border-bottom: 1px solid var(--accent-gold);
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 4px;
+            gap: 2px;
+            flex-shrink: 0;
         }
-        .item-title-lbl { font-size: 0.65rem; color: var(--accent-gold); font-weight: bold; }
-        .item-slots { display: flex; gap: 8px; justify-content: center; width: 100%; }
+        .item-title-lbl { font-size: 0.6rem; color: var(--accent-gold); font-weight: bold; }
+        .item-slots { display: flex; gap: 6px; justify-content: center; width: 100%; }
         .item-slot {
-            width: 80px; height: 34px; background: rgba(255,255,255,0.15);
+            width: 22%; height: 30px; background: rgba(255,255,255,0.15);
             border: 1px dashed #aaa; border-radius: 4px;
             display: flex; align-items: center; justify-content: center;
-            font-size: 0.7rem; color: #ccc; font-weight: bold; cursor: pointer;
-            transition: all 0.2s; text-align: center; line-height: 1.2;
+            font-size: 0.6rem; color: #ccc; font-weight: bold; cursor: pointer;
+            transition: all 0.2s; text-align: center; line-height: 1.1;
         }
         .item-slot.filled {
             background: linear-gradient(135deg, #fff 0%, #e6dfd3 100%);
             border: 1px solid var(--accent-gold); color: var(--dark-charcoal);
             box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
-        .item-slot.filled:hover { transform: translateY(-2px); box-shadow: 0 4px 8px var(--accent-gold); }
 
         /* 効果中バッジ */
         .status-effect-bar {
-            height: 20px; background: rgba(0,0,0,0.4); text-align: center;
-            font-size: 0.7rem; color: #fff; line-height: 20px; font-weight: bold;
+            position: absolute; top: 0; left: 0; width: 100%;
+            height: 18px; background: rgba(0,0,0,0.5); text-align: center;
+            font-size: 0.65rem; color: #fff; line-height: 18px; font-weight: bold;
+            z-index: 10;
         }
 
         .action-bar {
-            height: 55px; background: rgba(0,0,0,0.85);
+            height: 50px; background: rgba(0,0,0,0.85);
             display: flex; align-items: center; justify-content: center;
-            color: #fff; font-size: 0.85rem; border-top: 1px solid rgba(255,255,255,0.2);
-            padding: 5px; gap: 10px; position: relative;
+            color: #fff; font-size: 0.8rem; border-top: 1px solid rgba(255,255,255,0.2);
+            padding: 4px; gap: 6px; position: relative;
+            flex-shrink: 0;
         }
-        .tsumo-display-area { display: flex; align-items: center; gap: 8px; }
+        .tsumo-display-area { display: flex; align-items: center; gap: 6px; }
         .tsumo-box {
-            width: 30px; height: 40px; background: white; border-radius: 2px;
-            color: var(--dark-charcoal); font-size: 1.2rem; font-weight: bold;
+            width: 26px; height: 36px; background: white; border-radius: 2px;
+            color: var(--dark-charcoal); font-size: 1.1rem; font-weight: bold;
             display: flex; align-items: center; justify-content: center;
             box-shadow: 0 2px 0 #bbb;
         }
-        .action-btn { padding: 6px 12px; border-radius: 4px; border: none; font-weight: bold; cursor: pointer; font-size: 0.8rem; }
+        .action-btn { padding: 5px 8px; border-radius: 4px; border: none; font-weight: bold; cursor: pointer; font-size: 0.75rem; }
         .btn-get { background: var(--accent-gold); color: #1a1a1a; }
         .btn-cut { background: #666; color: white; }
-        .btn-win { background: #e53935; color: white; animation: pulse 0.8s infinite alternate; font-size: 0.85rem; padding: 6px 16px; }
-        .btn-yakuman { background: #6a1b9a; color: #fff; border: 2px solid var(--accent-gold); animation: pulse 0.5s infinite alternate; font-size: 0.8rem; padding: 6px 10px; margin-left: 4px;}
-        @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.04); } }
+        .btn-win { background: #e53935; color: white; animation: pulse 0.8s infinite alternate; font-size: 0.75rem; padding: 5px 12px; }
+        .btn-yakuman { background: #6a1b9a; color: #fff; border: 2px solid var(--accent-gold); font-size: 0.75rem; padding: 5px 8px; }
 
         /* ⑤ 自由牌選択パネル用ポップアップ */
         .search-tile-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.9); display: none; flex-direction: column;
-            justify-content: center; align-items: center; z-index: 150; padding: 15px;
+            justify-content: center; align-items: center; z-index: 150; padding: 10px;
         }
-        .search-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; max-width: 340px; margin-top: 10px; }
+        .search-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; width: 100%; max-width: 320px; margin-top: 8px; }
         .search-btn-tile {
-            aspect-ratio: 3/4; background: white; border-radius: 3px; font-size: 1.3rem; font-weight: bold;
+            aspect-ratio: 3/4; background: white; border-radius: 3px; font-size: 1.2rem; font-weight: bold;
             display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 0 #bbb;
+            color: var(--dark-charcoal);
         }
 
+        /* 🀄 手牌コンテナ（スマホでも絶対にはみ出さない） */
         .tehai-container {
-            height: 65px; background: rgba(0, 0, 0, 0.4);
+            height: 52px; background: rgba(0, 0, 0, 0.4);
             border-top: 1px solid rgba(255,255,255,0.2);
-            display: flex; align-items: center; justify-content: center; gap: 2px; padding: 4px;
+            display: flex; align-items: center; justify-content: center; gap: 1px; padding: 2px;
+            flex-shrink: 0;
         }
         .tehai-tile {
-            width: calc(100% / 14 - 1px); max-width: 32px; aspect-ratio: 3 / 4;
+            width: calc(100% / 14 - 1px); max-width: 30px; aspect-ratio: 3 / 4;
             background: white; border-radius: 2px; display: flex; align-items: center; justify-content: center;
-            font-size: 1.15rem; font-weight: bold; box-shadow: 0 2px 0 #bbb; transition: transform 0.1s;
+            font-size: 1rem; font-weight: bold; box-shadow: 0 1px 0 #bbb; transition: transform 0.1s;
         }
         .tehai-tile.selectable { cursor: pointer; }
-        .tehai-tile.selectable:hover { transform: translateY(-6px); background: #fff0f0; border: 1px solid var(--main-red); }
+        .tehai-tile.selectable:hover { transform: translateY(-4px); background: #fff0f0; border: 1px solid var(--main-red); }
 
         .yaku-popup {
             position: absolute; top: 35%; left: 50%; transform: translate(-50%, -50%) scale(0);
-            width: 80%; background: rgba(255, 255, 255, 0.95); border: 3px solid var(--accent-gold); border-radius: 8px;
+            width: 85%; background: rgba(255, 255, 255, 0.95); border: 3px solid var(--accent-gold); border-radius: 8px;
             padding: 15px; text-align: center; z-index: 100; box-shadow: 0 10px 25px rgba(0,0,0,0.3);
             transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         .yaku-popup.active { transform: translate(-50%, -50%) scale(1); }
-        .yaku-name { font-size: 1.4rem; font-weight: bold; color: var(--main-red); margin-bottom: 5px; font-family: 'Kiwi Maru', serif; }
-        .yaku-points { font-size: 1.1rem; font-weight: bold; color: var(--dark-charcoal); }
+        .yaku-name { font-size: 1.2rem; font-weight: bold; color: var(--main-red); margin-bottom: 5px; font-family: 'Kiwi Maru', serif; }
+        .yaku-points { font-size: 1rem; font-weight: bold; color: var(--dark-charcoal); }
 
         .screen-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.85); display: flex; flex-direction: column;
             justify-content: center; align-items: center; z-index: 200; color: white; text-align: center; padding: 20px;
         }
-        .screen-title { font-family: 'Kiwi Maru', serif; font-size: 2rem; color: var(--accent-gold); margin-bottom: 10px; }
+        .screen-title { font-family: 'Kiwi Maru', serif; font-size: 1.8rem; color: var(--accent-gold); margin-bottom: 10px; }
         .mode-selector { display: flex; gap: 10px; margin: 15px 0; }
-        .mode-btn { background: #333; color: #fff; border: 1px solid var(--accent-gold); padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 0.85rem; }
+        .mode-btn { background: #333; color: #fff; border: 1px solid var(--accent-gold); padding: 6px 14px; border-radius: 20px; cursor: pointer; font-size: 0.8rem; }
         .mode-btn.selected { background: var(--main-red); font-weight: bold; box-shadow: 0 0 8px var(--accent-gold); }
-        .screen-btn { background: var(--main-red); color: white; border: 2px solid var(--accent-gold); padding: 10px 40px; font-size: 1rem; font-weight: bold; border-radius: 25px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .screen-btn { background: var(--main-red); color: white; border: 2px solid var(--accent-gold); padding: 8px 35px; font-size: 0.95rem; font-weight: bold; border-radius: 25px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
     </style>
 </head>
 <body>
@@ -214,13 +244,15 @@
 
     <div class="game-wrapper" id="stage-wrapper">
         <div class="search-tile-overlay" id="searchTileOverlay">
-            <div style="color:var(--accent-gold); font-weight:bold; font-size:0.9rem;">【自由ツモ】好きな牌を1枚選んでください</div>
+            <div style="color:var(--accent-gold); font-weight:bold; font-size:0.85rem;">【自由ツモ】好きな牌を選んでください</div>
             <div class="search-grid" id="searchGrid"></div>
         </div>
 
-        <canvas id="gameCanvas"></canvas>
-
         <div class="status-effect-bar" id="statusEffectBar" style="display: none;">効果なし</div>
+
+        <div class="canvas-container">
+            <canvas id="gameCanvas"></canvas>
+        </div>
 
         <div class="item-stock-panel">
             <div class="item-title-lbl">▼ 所持アイテム（タップで即時発動）</div>
@@ -233,10 +265,10 @@
         </div>
 
         <div class="action-bar" id="actionBar">
-            <div id="panel-idle" style="color: #aaa; font-size: 0.8rem;">牌ブロックを崩すと、ここにツモ牌が表示されます</div>
+            <div id="panel-idle" style="color: #aaa; font-size: 0.75rem; text-align: center;">牌ブロックを崩すと、ここにツモ牌が表示されます</div>
             
             <div id="panel-select" class="tsumo-display-area" style="display: none;">
-                <span style="color:var(--accent-gold); font-weight:bold;">ツモ：</span>
+                <span style="color:var(--accent-gold); font-weight:bold; font-size: 0.75rem;">ツモ：</span>
                 <div class="tsumo-box" id="tsumo-target">🀇</div>
                 <button class="action-btn btn-get" id="btn-incorporate" onclick="chooseIncorporate()">手牌に加える</button>
                 <button class="action-btn btn-cut" onclick="chooseDiscardTsumo()">ツモ切り</button>
@@ -254,12 +286,12 @@
 
         <div class="screen-overlay" id="overlayScreen">
             <div id="overlay-title" class="screen-title">麻雀ブロック崩し</div>
-            <div id="overlay-desc" style="font-size:0.85rem; line-height:1.5; max-width:320px; color:#ccc;">
+            <div id="overlay-desc" style="font-size:0.8rem; line-height:1.4; max-width:300px; color:#ccc;">
                 「ドラ表示牌」を破壊すると、全6種の超強力アイテムが確率でドロップ！<br>
                 アイテムは4つまでストックでき、任意のタイミングでタップして使用可能です。
             </div>
             
-            <div style="margin-top:15px; font-size:0.85rem; color:var(--accent-gold);">▼ 難易度（球のスピード）</div>
+            <div style="margin-top:12px; font-size:0.8rem; color:var(--accent-gold);">▼ 難易度（球のスピード）</div>
             <div class="mode-selector">
                 <button class="mode-btn selected" onclick="selectDifficulty('easy', this)">初級</button>
                 <button class="mode-btn" onclick="selectDifficulty('normal', this)">中級</button>
@@ -271,6 +303,15 @@
 </div>
 
 <script>
+    // iOS Safari等の100vhアサリ対策
+    function setFullHeight() {
+        let vh = window.innerHeight * 0.01;
+        document.documentElement.style.setProperty('--vh', `${vh}px`);
+    }
+    window.addEventListener('resize', setFullHeight);
+    window.addEventListener('orientationchange', setFullHeight);
+    setFullHeight();
+
     const TILE_ORDER = [
         '🀇','🀈','🀎','🀏', '🀐','🀑','🀗','🀘', '🀙','🀚','🀠','🀡',
         '🀀','🀁','🀂','🀃','🀆','🀅','🀄'
@@ -279,7 +320,6 @@
         man: TILE_ORDER.slice(0,4), sou: TILE_ORDER.slice(4,8), pin: TILE_ORDER.slice(8,12), ji: TILE_ORDER.slice(12)
     };
 
-    // アイテム定義
     const ITEM_LIST = [
         { id: 1, name: "① 盤面\nリセット", chance: 25 },
         { id: 2, name: "② 弾速\n低下", chance: 29 },
@@ -315,16 +355,16 @@
     let isDiscardPhase = false; 
     let unhittableFrames = 0;   
 
-    // アイテム関連ステート
-    let itemInventory = [null, null, null, null]; // 最大4つストック
-    let activeEffects = { speedDown: 0, paddleBig: 0, pierce: 0 }; // 残り持続秒タイマー
-    let isForcedYakuman = false; // 役満化チートが使われたか
+    let itemInventory = [null, null, null, null]; 
+    let activeEffects = { speedDown: 0, paddleBig: 0, pierce: 0 }; 
+    let isForcedYakuman = false; 
     
     let animationId = null;
     let isDragging = false;
     let speedMultiplier = 0.8;
     let lastTime = 0;
 
+    // 内部的な論理解像度は480x480に固定
     const cw = 480; const ch = 480;
     canvas.width = cw; canvas.height = ch;
 
@@ -334,7 +374,7 @@
 
     const rows = 4; const cols = 7;
     const blockWidth = 56; const blockHeight = 38;
-    const blockPadding = 6; const offsetTop = 20; const offsetLeft = 25;
+    const blockPadding = 6; const offsetTop = 25; const offsetLeft = 25;
 
     function selectDifficulty(mode, btnEl) {
         document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('selected'));
@@ -426,10 +466,8 @@
         animationId = requestAnimationFrame(loop);
     }
 
-    // ⏳ アイテムの効果時間を1秒きざみで更新
     function updateTimers(dt) {
         let effectTexts = [];
-        
         if (activeEffects.speedDown > 0) {
             activeEffects.speedDown -= dt;
             effectTexts.push(`🐢 弾速低下 (${Math.ceil(activeEffects.speedDown)}s)`);
@@ -456,7 +494,6 @@
 
     function drawBall() {
         ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI*2);
-        // 貫通弾発動中はボールが赤く燃える
         ctx.fillStyle = activeEffects.pierce > 0 ? "#ff3d00" : "#ffffff"; 
         ctx.fill(); ctx.closePath();
     }
@@ -472,7 +509,6 @@
             ctx.fillStyle = "#ffffff"; ctx.fillRect(b.x, b.y, b.w, b.h);
             ctx.strokeStyle = "#b5af9f"; ctx.strokeRect(b.x, b.y, b.w, b.h);
             
-            // ドラ対象牌の底をゴールドで縁取りして目立たせる
             ctx.fillStyle = (b.type === currentDora) ? "var(--accent-gold)" : "#0d3b1e";
             ctx.fillRect(b.x, b.y + b.h - 4, b.w, 4);
             
@@ -483,7 +519,6 @@
     }
 
     function moveBall() {
-        // 弾速低下アイテム効果時は、内部移動速度を半分に落とす
         let currentSpeedFactor = activeEffects.speedDown > 0 ? 0.5 : 1.0;
         ball.x += ball.vx * currentSpeedFactor; 
         ball.y += ball.vy * currentSpeedFactor;
@@ -517,7 +552,6 @@
                 
                 b.alive = false;
 
-                // 💡 貫通弾（アイテム④）発動中でない場合のみ、跳ね返り＆押し戻しを計算
                 if (!(activeEffects.pierce > 0)) {
                     let overlapLeft = (ball.x + ball.radius) - b.x;
                     let overlapRight = (b.x + b.w) - (ball.x - ball.radius);
@@ -532,41 +566,27 @@
                     else if (minOverlap === overlapBottom) { ball.vy = Math.abs(ball.vy); ball.y = b.y + b.h + ball.radius; }
                 }
 
-                // 🎁 【ドラ牌獲得の判定】
                 if (b.type === currentDora) {
                     rollItemLottery();
                 }
 
                 triggerTileChoice(b.type);
                 checkAndRefillBlocks();
-                
-                // 貫通弾効果中なら、1フレームで複数ブロックを突き抜けるため break しない
                 if (!(activeEffects.pierce > 0)) break; 
             }
         }
     }
 
-    // 🎁 ドラを崩した時のアイテム抽選確率ロジック
     function rollItemLottery() {
-        let rand = Math.floor(Math.random() * 100) + 1; // 1〜100
-        let sum = 0;
-        let selectedItem = null;
-
+        let rand = Math.floor(Math.random() * 100) + 1;
+        let sum = 0; let selectedItem = null;
         for (let it of ITEM_LIST) {
             sum += it.chance;
-            if (rand <= sum) {
-                selectedItem = it;
-                break;
-            }
+            if (rand <= sum) { selectedItem = it; break; }
         }
-
         if (selectedItem) {
-            // ポケットの空きスロットを探す
             let emptyIdx = itemInventory.indexOf(null);
-            if (emptyIdx !== -1) {
-                itemInventory[emptyIdx] = selectedItem;
-                updateItemUI();
-            }
+            if (emptyIdx !== -1) { itemInventory[emptyIdx] = selectedItem; updateItemUI(); }
         }
     }
 
@@ -577,51 +597,32 @@
                 slot.classList.add('filled');
                 slot.innerText = itemInventory[i].name;
             } else {
-                slot.classList.remove('filled');
-                slot.innerText = "（空）";
+                slot.classList.remove('filled'); slot.innerText = "（空）";
             }
         }
     }
 
-    // ⚡ アイテム使用処理
     function useItem(slotIdx) {
         let item = itemInventory[slotIdx];
         if (!item) return;
-
-        // アイテム⑤自由牌選択は、ゲーム中のみ発動可能
         if (item.id === 5 && (!isPlaying || isChoiceMode || isDiscardPhase)) return;
 
-        // 枠の消費
         itemInventory[slotIdx] = null;
         updateItemUI();
 
-        if (item.id === 1) {
-            // ① 盤面リセット
-            initBlocks();
-        } else if (item.id === 2) {
-            // ② 弾速低下 (10秒)
-            activeEffects.speedDown = 10;
-        } else if (item.id === 3) {
-            // ③ パドル2倍 (10秒)
-            activeEffects.paddleBig = 10;
-        } else if (item.id === 4) {
-            // ④ 貫通弾 (10秒)
-            activeEffects.pierce = 10;
-        } else if (item.id === 5) {
-            // ⑤ 好きな牌を選択して取得
-            searchTileOverlay.style.display = 'flex';
-        }
-        // 💡 ⑥ 役満化は、アガリ確定の選択画面でのみ使うため、ここでは何もしません
+        if (item.id === 1) { initBlocks(); } 
+        else if (item.id === 2) { activeEffects.speedDown = 10; } 
+        else if (item.id === 3) { activeEffects.paddleBig = 10; } 
+        else if (item.id === 4) { activeEffects.pierce = 10; } 
+        else if (item.id === 5) { searchTileOverlay.style.display = 'flex'; }
     }
 
-    // ⑤ 自由選択パネルのセットアップ
     function initSearchGrid() {
         const grid = document.getElementById('searchGrid');
         grid.innerHTML = "";
         TILE_ORDER.forEach(tile => {
             const b = document.createElement('div');
-            b.classList.add('search-btn-tile');
-            b.innerText = tile;
+            b.classList.add('search-btn-tile'); b.innerText = tile;
             if(TILE_TYPES.ji.includes(tile)) b.style.color = 'var(--main-red)';
             b.onclick = () => {
                 searchTileOverlay.style.display = 'none';
@@ -631,99 +632,67 @@
         });
     }
 
-    // ⑥ 役満化アイテム（チートアガリ）の発動ロジック
     function triggerYakumanCheat() {
-        // 所持品から役満化アイテムを1つ探して消去
         let itemIdx = itemInventory.findIndex(it => it && it.id === 6);
-        if (itemIdx === -1) return; // 持っていなければ発動不可
-
-        itemInventory[itemIdx] = null;
-        updateItemUI();
-
-        isForcedYakuman = true;
-        chooseWin(); // 強制ツモへ移行
+        if (itemIdx === -1) return;
+        itemInventory[itemIdx] = null; updateItemUI();
+        isForcedYakuman = true; chooseWin();
     }
 
     function triggerTileChoice(tileChar) {
-        isChoiceMode = true;
-        activeTsumoTile = tileChar;
-
-        panelIdle.style.display = 'none';
-        panelSelect.style.display = 'flex';
+        isChoiceMode = true; activeTsumoTile = tileChar;
+        panelIdle.style.display = 'none'; panelSelect.style.display = 'flex';
         tsumoTarget.innerText = tileChar;
         tsumoTarget.style.color = TILE_TYPES.ji.includes(tileChar) ? 'var(--main-red)' : 'var(--dark-charcoal)';
 
         if (gatheredHand.length === 13) {
-            btnIncorporate.innerText = "入れ替え";
-            btnWinDeclaration.style.display = 'inline-block';
-            
-            // 役満化アイテムをストックしている場合のみ、チート発動ボタンを出現させる
-            if (itemInventory.some(it => it && it.id === 6)) {
-                btnYakumanTrigger.style.display = 'inline-block';
-            } else {
-                btnYakumanTrigger.style.display = 'none';
-            }
+            btnIncorporate.innerText = "入れ替え"; btnWinDeclaration.style.display = 'inline-block';
+            btnYakumanTrigger.style.display = itemInventory.some(it => it && it.id === 6) ? 'inline-block' : 'none';
         } else {
             btnIncorporate.innerText = "手牌に加える";
-            btnWinDeclaration.style.display = 'none';
-            btnYakumanTrigger.style.display = 'none';
+            btnWinDeclaration.style.display = 'none'; btnYakumanTrigger.style.display = 'none';
         }
     }
 
     function resumeGameWithWeight() {
-        isChoiceMode = false;
-        isDiscardPhase = false;
-        unhittableFrames = 12; 
-        hideActionPanel();
-        lastTime = performance.now();
-        loop();
+        isChoiceMode = false; isDiscardPhase = false; unhittableFrames = 12; 
+        hideActionPanel(); lastTime = performance.now(); loop();
     }
 
     function hideActionPanel() {
-        panelSelect.style.display = 'none';
-        panelIdle.style.display = 'block';
+        panelSelect.style.display = 'none'; panelIdle.style.display = 'block';
         panelIdle.innerText = "牌ブロックを崩すと、ここにツモ牌が表示されます";
-        btnWinDeclaration.style.display = 'none';
-        btnYakumanTrigger.style.display = 'none';
+        btnWinDeclaration.style.display = 'none'; btnYakumanTrigger.style.display = 'none';
         activeTsumoTile = null;
     }
 
     function chooseIncorporate() {
         if (!isChoiceMode) return;
         if (gatheredHand.length < 13) {
-            gatheredHand.push(activeTsumoTile);
-            sortHand(); renderRack(); resumeGameWithWeight();
+            gatheredHand.push(activeTsumoTile); sortHand(); renderRack(); resumeGameWithWeight();
         } else {
             isChoiceMode = false; isDiscardPhase = true;
             panelSelect.style.display = 'none'; panelIdle.style.display = 'block';
-            panelIdle.innerHTML = "<span style='color:var(--accent-gold); font-weight:bold;'>【入れ替え】下の13枚から、捨てる牌を1枚クリックしてください</span>";
+            panelIdle.innerHTML = "<span style='color:var(--accent-gold); font-weight:bold; font-size:0.75rem;'>【入れ替え】下の13枚から捨てる牌を1枚選んでください</span>";
             renderRack();
         }
     }
 
-    function chooseDiscardTsumo() {
-        if (!isChoiceMode) return;
-        resumeGameWithWeight();
-    }
+    function chooseDiscardTsumo() { if (!isChoiceMode) return; resumeGameWithWeight(); }
 
     function chooseWin() {
         if (!isChoiceMode || gatheredHand.length !== 13) return;
-        isChoiceMode = false;
-        const finalHand = [...gatheredHand, activeTsumoTile];
-        hideActionPanel();
-        processYakuDecision(finalHand);
+        isChoiceMode = false; const finalHand = [...gatheredHand, activeTsumoTile];
+        hideActionPanel(); processYakuDecision(finalHand);
     }
 
     function discardFromHand(index) {
         if (!isDiscardPhase) return;
-        gatheredHand.splice(index, 1);
-        gatheredHand.push(activeTsumoTile);
+        gatheredHand.splice(index, 1); gatheredHand.push(activeTsumoTile);
         sortHand(); renderRack(); resumeGameWithWeight();
     }
 
-    function sortHand() {
-        gatheredHand.sort((a, b) => TILE_ORDER.indexOf(a) - TILE_ORDER.indexOf(b));
-    }
+    function sortHand() { gatheredHand.sort((a, b) => TILE_ORDER.indexOf(a) - TILE_ORDER.indexOf(b)); }
 
     function renderRack() {
         rack.innerHTML = "";
@@ -731,27 +700,18 @@
             const tEl = document.createElement('div');
             tEl.classList.add('tehai-tile'); tEl.innerText = tile;
             if(TILE_TYPES.ji.includes(tile)) tEl.style.color = 'var(--main-red)';
-            if (isDiscardPhase) {
-                tEl.classList.add('selectable');
-                tEl.onclick = () => discardFromHand(index);
-            }
+            if (isDiscardPhase) { tEl.classList.add('selectable'); tEl.onclick = () => discardFromHand(index); }
             rack.appendChild(tEl);
         });
     }
 
     function checkMentsuForm(hand) {
-        const counts = {};
-        hand.forEach(t => counts[t] = (counts[t] || 0) + 1);
-        const countValues = Object.values(counts);
-        if (countValues.filter(v => v === 2).length === 7) return true;
-
-        const tileCounts = Array(TILE_ORDER.length).fill(0);
-        hand.forEach(t => tileCounts[TILE_ORDER.indexOf(t)]++);
-
+        const counts = {}; hand.forEach(t => counts[t] = (counts[t] || 0) + 1);
+        if (Object.values(counts).filter(v => v === 2).length === 7) return true;
+        const tileCounts = Array(TILE_ORDER.length).fill(0); hand.forEach(t => tileCounts[TILE_ORDER.indexOf(t)]++);
         for (let i = 0; i < tileCounts.length; i++) {
             if (tileCounts[i] >= 2) {
-                const tempCounts = [...tileCounts];
-                tempCounts[i] -= 2;
+                const tempCounts = [...tileCounts]; tempCounts[i] -= 2;
                 if (validateMentsu(tempCounts, 0)) return true;
             }
         }
@@ -761,21 +721,12 @@
     function validateMentsu(counts, index) {
         while (index < counts.length && counts[index] === 0) index++;
         if (index === counts.length) return true;
-
-        if (counts[index] >= 3) {
-            counts[index] -= 3;
-            if (validateMentsu(counts, index)) return true;
-            counts[index] += 3;
-        }
-
+        if (counts[index] >= 3) { counts[index] -= 3; if (validateMentsu(counts, index)) return true; counts[index] += 3; }
         if (index < 12) { 
-            const currentTile = TILE_ORDER[index];
-            const next2 = TILE_ORDER[index + 2];
-            let sameGroup = false;
+            const currentTile = TILE_ORDER[index]; const next2 = TILE_ORDER[index + 2]; let sameGroup = false;
             if (TILE_TYPES.man.includes(currentTile) && TILE_TYPES.man.includes(next2)) sameGroup = true;
             if (TILE_TYPES.sou.includes(currentTile) && TILE_TYPES.sou.includes(next2)) sameGroup = true;
             if (TILE_TYPES.pin.includes(currentTile) && TILE_TYPES.pin.includes(next2)) sameGroup = true;
-
             if (sameGroup && counts[index + 1] > 0 && counts[index + 2] > 0) {
                 counts[index]--; counts[index + 1]--; counts[index + 2]--;
                 if (validateMentsu(counts, index)) return true;
@@ -786,23 +737,14 @@
     }
 
     function processYakuDecision(finalHand) {
-        isPlaying = false;
-        let yakuName = "";
-        let bonus = 0;
-
-        // ✨ 役満化アイテム（⑥）が発動されていた場合の確定処理
+        isPlaying = false; let yakuName = ""; let bonus = 0;
         if (isForcedYakuman) {
             const yakumanTitles = ["国士無双 (コクシ)", "大三元 (ダイサンゲン)", "四暗刻 (スーアンコウ)", "字一色 (ツーイーソー)"];
             yakuName = "✨奇跡の役満: " + yakumanTitles[Math.floor(Math.random() * yakumanTitles.length)];
-            bonus = 32000;
-            isForcedYakuman = false; // フラグリセット
+            bonus = 32000; isForcedYakuman = false;
         } else {
-            // 通常のアガリ判定
-            const isAgariForm = checkMentsuForm(finalHand);
-            if (!isAgariForm) {
-                yakuName = "不聴 (ノーテン)";
-                bonus = 0;
-            } else {
+            if (!checkMentsuForm(finalHand)) { yakuName = "不聴 (ノーテン)"; bonus = 0; } 
+            else {
                 const isMan = finalHand.every(t => TILE_TYPES.man.includes(t));
                 const isPin = finalHand.every(t => TILE_TYPES.pin.includes(t));
                 const isSou = finalHand.every(t => TILE_TYPES.sou.includes(t));
@@ -811,76 +753,50 @@
                 const hasPin = finalHand.some(t => TILE_TYPES.pin.includes(t));
                 const hasSou = finalHand.some(t => TILE_TYPES.sou.includes(t));
                 const hasJi = finalHand.some(t => TILE_TYPES.ji.includes(t));
-
-                const counts = {};
-                finalHand.forEach(t => counts[t] = (counts[t] || 0) + 1);
-                const countValues = Object.values(counts);
-                const pairsCount = countValues.filter(v => v === 2).length;
-                const tripletsCount = countValues.filter(v => v >= 3).length;
+                const counts = {}; finalHand.forEach(t => counts[t] = (counts[t] || 0) + 1);
+                const tripletsCount = Object.values(counts).filter(v => v >= 3).length;
                 const doraCount = counts[currentDora] || 0;
 
                 if (isAllJi) { yakuName = "字一色 (ツーイーソー)"; bonus = 12000; }
                 else if (isMan || isPin || isSou) { yakuName = "清一色 (チンイツ)"; bonus = 10000; }
                 else if (((hasMan?1:0)+(hasPin?1:0)+(hasSou?1:0) === 1) && hasJi) { yakuName = "混一色 (ホンイツ)"; bonus = 5000; }
                 else if (tripletsCount >= 4) { yakuName = "対々和 (トイトイ)"; bonus = 4000; }
-                else if (pairsCount === 7) { yakuName = "七対子 (チートイツ)"; bonus = 3000; }
-                else {
-                    yakuName = "自摸 (ツモ)";
-                    bonus = 1000;
-                }
-
-                if (doraCount > 0 && bonus > 0) {
-                    yakuName += ` + ドラ${doraCount}`;
-                    bonus += doraCount * 500;
-                }
+                else if (Object.values(counts).filter(v => v === 2).length === 7) { yakuName = "七対子 (チートイツ)"; bonus = 3000; }
+                else { yakuName = "自摸 (ツモ)"; bonus = 1000; }
+                if (doraCount > 0 && bonus > 0) { yakuName += ` + ドラ${doraCount}`; bonus += doraCount * 500; }
             }
         }
-
-        score += bonus;
-        document.getElementById('txt-score').innerText = score;
-
+        score += bonus; document.getElementById('txt-score').innerText = score;
         document.getElementById('popup-title').innerText = yakuName;
-        document.getElementById('popup-pts').innerText = bonus > 0 ? `+${bonus.toLocaleString()} 点！` : "0 点 (手牌リセット)";
-        popup.classList.add('active');
-
-        changeDora();
-
+        document.getElementById('popup-pts').innerText = bonus > 0 ? `+${bonus.toLocaleString()} 点！` : "0 点 (手牌リreset)";
+        popup.classList.add('active'); changeDora();
         setTimeout(() => {
-            popup.classList.remove('active');
-            gatheredHand = []; 
-            renderRack();
-
-            if (score >= targetScore) {
-                endGame(true);
-            } else {
-                isPlaying = true;
-                initBlocks();
-                resumeGameWithWeight();
-            }
+            popup.classList.remove('active'); gatheredHand = []; renderRack();
+            if (score >= targetScore) { endGame(true); } else { isPlaying = true; initBlocks(); resumeGameWithWeight(); }
         }, 2500);
     }
 
     function endGame(isClear) {
-        isPlaying = false;
-        if(animationId) cancelAnimationFrame(animationId);
+        isPlaying = false; if(animationId) cancelAnimationFrame(animationId);
         const overlay = document.getElementById('overlayScreen');
         const title = document.getElementById('overlay-title');
         overlay.style.display = 'flex';
         if (isClear) {
-            title.innerText = "🎉 GAME CLEAR !!";
-            title.style.color = "var(--accent-gold)";
+            title.innerText = "🎉 GAME CLEAR !!"; title.style.color = "var(--accent-gold)";
             document.getElementById('overlay-desc').innerHTML = `目標の ${targetScore.toLocaleString()} 点を突破しました！<br>スコア: <strong>${score.toLocaleString()} 点</strong>`;
         } else {
-            title.innerText = "❌ GAME OVER";
-            title.style.color = "var(--main-red)";
-            document.getElementById('overlay-desc').innerHTML = `球を落としてしまいました…<br>獲得スコア: <strong>${score.toLocaleString()} 点</strong>`;
+            title.innerText = "❌ GAME OVER"; title.style.color = "var(--main-red)";
+            document.getElementById('overlay-desc').innerHTML = `球を落としてしまいました…<br>スコア: <strong>${score.toLocaleString()} 点</strong>`;
         }
     }
 
+    // 📱 タッチ座標の計算もレスポンシブ用に正確に変換
     function updatePaddlePosition(clientX) {
-        const rect = stageWrapper.getBoundingClientRect();
-        let targetX = clientX - rect.left;
-        paddle.x = targetX - paddle.width / 2;
+        const rect = canvas.getBoundingClientRect();
+        // CSS縮小表示された横幅と、本来の内部解像度（cw=480）の比率を計算
+        let relativeX = (clientX - rect.left) / rect.width;
+        let targetLogicalX = relativeX * cw;
+        paddle.x = targetLogicalX - paddle.width / 2;
         if(paddle.x < 0) paddle.x = 0;
         if(paddle.x + paddle.width > cw) paddle.x = cw - paddle.width;
     }
