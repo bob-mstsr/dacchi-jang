@@ -273,7 +273,7 @@ main { padding: 16px; }
 </div>
 
 <script>
-const GAS_URL = "https://script.google.com/macros/s/AKfycbxkRY4YRvD8w3XFO5SZnv-Ei1Lm2OA5eMDtZFOJhkUkB-TFB9SP7IIdn2O6s93S54tNlA/exec";
+const GAS_URL = "ここに取得したGASのウェブアプリURLを貼り付けてください";
 
 let selectedImageBase64 = null;
 let globalPhotos = [];
@@ -451,6 +451,14 @@ function fetchPhotos() {
   document.body.appendChild(script);
 }
 
+// postedAtの値(ISO文字列・Dateオブジェクト・既に整形済みの文字列等)を「年/月/日」のみに整形する
+function formatDateOnly(value) {
+  if (!value) return '';
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return String(value); // 日付として解釈できない場合はそのまま表示
+  return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
+}
+
 function renderBoard() {
   const board = document.getElementById('corkboard');
   if (globalPhotos.length === 0) {
@@ -462,7 +470,7 @@ function renderBoard() {
       <div class="photo-pin"></div>
       <img src="${p.image}" alt="${p.caption || ''}">
       ${p.caption ? `<div class="photo-caption">${p.caption}</div>` : ''}
-      <div class="photo-author">by ${p.author}・${p.postedAt || ''}</div>
+      <div class="photo-author">by ${p.author}・${formatDateOnly(p.postedAt)}</div>
     </div>
   `).join('');
 }
