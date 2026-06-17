@@ -14,7 +14,8 @@
             --mat-green: #14532d;        
         }
 
-        * { box-shrink: 0; box-sizing: border-box; margin: 0; padding: 0; }
+        /* 💡 タイポを修正 */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         
         /* 💡 スマホの引っ張り更新（Pull-to-refresh）や画面端のバウンスを抑制 */
         html, body {
@@ -99,7 +100,7 @@
             justify-content: center;
         }
 
-        /* 💡 ゲームエリア全体: スマホ標準のタッチジェスチャー（スクロール等）を無効化 */
+        /* 💡 ゲームエリア全体: CSSでも標準のタッチジェスチャー（スクロール・ピンチ）を制限 */
         .game-wrapper {
             position: relative;
             background-color: var(--mat-green);
@@ -230,7 +231,7 @@
         .mode-btn.selected { background: var(--main-red); font-weight: bold; box-shadow: 0 0 8px var(--accent-gold); }
         .screen-btn { background: var(--main-red); color: white; border: 2px solid var(--accent-gold); padding: 8px 35px; font-size: 0.95rem; font-weight: bold; border-radius: 25px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
 
-        /* 💡 コレクション部分: ここは通常通りスワイプでスクロール可能 */
+        /* 💡 コレクション部分: ここは通常通り縦方向へのスワイプ・スクロールを許可 */
         .collection-section {
             background: #fff;
             padding: 15px;
@@ -356,14 +357,14 @@
         <div class="screen-overlay" id="overlayScreen">
             <div id="overlay-title" class="screen-title">麻雀ブロック崩し</div>
             <div id="overlay-desc" style="font-size:0.8rem; line-height:1.4; max-width:300px; color:#ccc;">
-                「ドラ表示牌」を破壊すると、全6種の超強力アイテムが確率でドロップ！<br>
-                目標の50,000点を目指して、大きな役を複合させてアガりましょう！
+                「ドラ表示牌」を破壊すると、全 6 種の超強力アイテムが確率でドロップ！<br>
+                目標の 50,000 点を目指して、大きな役を複合させてアガりましょう！
             </div>
             <div style="margin-top:12px; font-size:0.8rem; color:var(--accent-gold);">▼ 難易度（球のスピード）</div>
             <div class="mode-selector">
                 <button class="mode-btn selected" onclick="selectDifficulty('easy', this)">初級</button>
                 <button class="mode-btn" onclick="selectDifficulty('normal', this)">中級</button>
-                <button class="mode-btn" onclick="hardDifficulty('hard', this)">上級</button>
+                <button class="mode-btn" onclick="selectDifficulty('hard', this)">上級</button>
             </div>
             <button class="screen-btn" onclick="startGame()">ゲーム開始</button>
         </div>
@@ -521,10 +522,10 @@
     const blockWidth = 50; const blockHeight = 34;
     const blockPadding = 6; const offsetTop = 20; const offsetLeft = 25;
 
-    // 💡 【スクロール暴発防止】ゲーム画面内のタッチ移動時、ブラウザの標準スクロールを強制カット
+    // 💡 【スクロール暴発防止】ゲーム画面内のタッチ移動時、ブラウザの標準スクロールを「確実に」カット
     stageWrapper.addEventListener('touchmove', function(e) {
         e.preventDefault(); 
-    }, { passive: false });
+    }, { passive: false }); // 必ず passive: false に指定して preventDefault を有効化
 
     function loadSavedCollection() {
         let saved = localStorage.getItem('dacchi_yaku_collection');
@@ -1066,8 +1067,10 @@
     stageWrapper.addEventListener('mousedown', (e) => { if (isPlaying && !isChoiceMode && !isDiscardPhase) { isDragging = true; updatePaddlePosition(e.clientX); } });
     window.addEventListener('mousemove', (e) => { if (isDragging && isPlaying && !isChoiceMode && !isDiscardPhase) updatePaddlePosition(e.clientX); });
     window.addEventListener('mouseup', () => isDragging = false);
-    stageWrapper.addEventListener('touchstart', (e) => { if (isPlaying && !isChoiceMode && !isDiscardPhase) { isDragging = true; updatePaddlePosition(e.touches[0].clientX); } }, { passive: true });
-    window.addEventListener('touchmove', (e) => { if (isDragging && isPlaying && !isChoiceMode && !isDiscardPhase) updatePaddlePosition(e.touches[0].clientX); }, { passive: true });
+    
+    // 💡 【超重要】パドル操作のタッチイベント登録から { passive: true } を排除して挙動を最適化
+    stageWrapper.addEventListener('touchstart', (e) => { if (isPlaying && !isChoiceMode && !isDiscardPhase) { isDragging = true; updatePaddlePosition(e.touches[0].clientX); } });
+    window.addEventListener('touchmove', (e) => { if (isDragging && isPlaying && !isChoiceMode && !isDiscardPhase) updatePaddlePosition(e.touches[0].clientX); });
     window.addEventListener('touchend', () => isDragging = false);
 
     window.onload = () => { renderCollectionUI(); };
