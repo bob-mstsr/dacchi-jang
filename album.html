@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>アルバム - だっち雀</title>
+<link href="https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@500&family=Noto+Sans+JP:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-color: #f7f4eb;
+  --main-red: #9e1b1b;
+  --accent-gold: #d4af37;
+  --dark-charcoal: #1a1a1a;
+  --cork-1: #c89968;
+  --cork-2: #b07f4f;
+  --pin-red: #c82020;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Noto Sans JP', sans-serif;
+  background-color: var(--bg-color);
+  color: var(--dark-charcoal);
+  padding-bottom: 50px;
+}
+.app-container {
+  max-width: 500px;
+  margin: 0 auto;
+  background: #fffdf9;
+  min-height: 100vh;
+  box-shadow: 0 0 20px rgba(0,0,0,0.1);
+}
+header {
+  background: linear-gradient(135deg, var(--dark-charcoal) 0%, var(--main-red) 100%);
+  color: white;
+  padding: 20px;
+  text-align: center;
+  border-bottom: 4px solid var(--accent-gold);
+  position: relative;
+}
+header h1 {
+  font-family: 'Kiwi Maru', serif;
+  font-size: 1.5rem;
+  color: var(--accent-gold);
+}
+.back-btn {
+  position: absolute;
+  left: 15px; top: 22px;
+  color: var(--accent-gold);
+  text-decoration: none;
+  font-size: 0.9rem;
+  border: 1px solid var(--accent-gold);
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+main { padding: 16px; }
+
+.intro-box {
+  background: #ffffff;
+  border: 1px solid #e0dacf;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 18px;
+  font-size: 0.82rem;
+  color: #555;
+  text-align: center;
+}
+
+/* 投稿フォーム */
+.post-form {
+  background: white;
+  border: 2px solid #e0dacf;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 22px;
+}
+.post-form h2 {
+  font-size: 1rem;
+  border-left: 4px solid var(--main-red);
+  padding-left: 8px;
+  margin-bottom: 12px;
+}
+.form-row { margin-bottom: 10px; }
+.form-row label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: bold;
+  margin-bottom: 4px;
+  color: #555;
+}
+.form-row input[type="text"] {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.92rem;
+  font-family: 'Noto Sans JP', sans-serif;
+}
+
+.file-drop {
+  border: 2px dashed #c8bfa8;
+  border-radius: 8px;
+  background: #fbf8f2;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: #888;
+  position: relative;
+  overflow: hidden;
+}
+.file-drop input[type="file"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.file-drop.has-image { padding: 8px; border-style: solid; }
+#previewImg {
+  max-width: 100%;
+  max-height: 180px;
+  border-radius: 6px;
+  display: none;
+}
+
+.submit-btn {
+  width: 100%;
+  background: linear-gradient(135deg, var(--dark-charcoal), var(--main-red));
+  color: white;
+  border: none;
+  padding: 13px;
+  font-size: 1rem;
+  font-weight: bold;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: 'Noto Sans JP', sans-serif;
+  border-bottom: 3px solid var(--accent-gold);
+  margin-top: 6px;
+}
+.submit-btn:disabled { background: #ccc; border-bottom-color: #aaa; cursor: not-allowed; }
+
+/* コルクボード一覧 */
+.board-section h2 {
+  font-size: 1rem;
+  border-left: 4px solid var(--main-red);
+  padding-left: 8px;
+  margin-bottom: 14px;
+}
+
+.corkboard {
+  background:
+    radial-gradient(circle at 20% 30%, rgba(90,60,30,0.12) 0, transparent 2px),
+    radial-gradient(circle at 70% 60%, rgba(220,180,130,0.15) 0, transparent 2px),
+    radial-gradient(circle at 40% 80%, rgba(90,60,30,0.1) 0, transparent 2px),
+    linear-gradient(135deg, var(--cork-1), var(--cork-2));
+  background-size: 40px 40px, 35px 35px, 45px 45px, cover;
+  border: 10px solid #6b4423;
+  border-radius: 6px;
+  padding: 18px 14px;
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.25);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: center;
+  min-height: 200px;
+}
+
+.photo-card {
+  background: #fdfdfa;
+  padding: 8px 8px 22px 8px;
+  border-radius: 2px;
+  box-shadow: 2px 4px 10px rgba(0,0,0,0.35);
+  width: 140px;
+  position: relative;
+  transition: transform 0.15s;
+}
+.photo-card:nth-child(odd) { transform: rotate(-2deg); }
+.photo-card:nth-child(even) { transform: rotate(2deg); }
+.photo-card:active { transform: scale(1.04) rotate(0deg); z-index: 5; }
+
+.photo-card img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 1px;
+  display: block;
+}
+.photo-pin {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 14px;
+  height: 14px;
+  background: radial-gradient(circle at 30% 30%, #ff6b6b, var(--pin-red));
+  border-radius: 50%;
+  box-shadow: 0 2px 3px rgba(0,0,0,0.4);
+}
+.photo-caption {
+  font-size: 0.72rem;
+  color: #555;
+  text-align: center;
+  margin-top: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.photo-author {
+  font-size: 0.62rem;
+  color: #aaa;
+  text-align: center;
+}
+
+.empty-board {
+  width: 100%;
+  text-align: center;
+  color: rgba(255,255,255,0.7);
+  font-size: 0.85rem;
+  padding: 30px 0;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+.loading-msg {
+  width: 100%;
+  text-align: center;
+  color: rgba(255,255,255,0.7);
+  padding: 30px 0;
+  font-size: 0.85rem;
+}
+</style>
+</head>
+<body>
+
+<div class="app-container">
+  <header>
+    <a href="game.html" class="back-btn">◀ 戻る</a>
+    <h1>📌 アルバム</h1>
+  </header>
+
+  <main>
+    <div class="intro-box">
+      🖼 みんなの写真を貼り合うコルクボードです。<br>好きな1枚を投稿してみよう。
+    </div>
+
+    <div class="post-form">
+      <h2>写真を投稿する</h2>
+      <div class="form-row">
+        <label>投稿者の名前</label>
+        <input type="text" id="authorName" placeholder="例：長男">
+      </div>
+      <div class="form-row">
+        <label>ひとこと（任意）</label>
+        <input type="text" id="captionText" placeholder="例：おばあちゃん家にて">
+      </div>
+      <div class="form-row">
+        <label>写真を選択</label>
+        <div class="file-drop" id="fileDrop">
+          <span id="fileDropLabel">📷 タップして写真を選ぶ</span>
+          <img id="previewImg" alt="プレビュー">
+          <input type="file" id="fileInput" accept="image/*">
+        </div>
+      </div>
+      <button class="submit-btn" id="submitBtn" onclick="submitPhoto()" disabled>📌 ボードに貼る</button>
+    </div>
+
+    <div class="board-section">
+      <h2>みんなのコルクボード</h2>
+      <div class="corkboard" id="corkboard">
+        <div class="loading-msg">読み込み中...</div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+const GAS_URL = "https://script.google.com/macros/s/AKfycbxkRY4YRvD8w3XFO5SZnv-Ei1Lm2OA5eMDtZFOJhkUkB-TFB9SP7IIdn2O6s93S54tNlA/exec";
+
+let selectedImageBase64 = null;
+let globalPhotos = [];
+
+// ファイル選択プレビュー
+document.getElementById('fileInput').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) {
+    alert('画像ファイルを選んでください');
+    e.target.value = '';
+    return;
+  }
+
+  const dropLabel = document.getElementById('fileDropLabel');
+  dropLabel.innerText = '⏳ 画像を処理中...';
+  dropLabel.style.display = 'block';
+  document.getElementById('previewImg').style.display = 'none';
+
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    const tempImg = new Image();
+    tempImg.onload = function() {
+      resizeAndCompress(tempImg);
+    };
+    tempImg.onerror = function() {
+      alert('画像の読み込みに失敗しました');
+      e.target.value = '';
+      dropLabel.innerText = '📷 タップして写真を選ぶ';
+    };
+    tempImg.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+// 画像を最大辺800pxにリサイズし、JPEG圧縮してBase64化する
+function resizeAndCompress(img) {
+  const MAX_SIZE = 800;
+  let { width, height } = img;
+
+  if (width > MAX_SIZE || height > MAX_SIZE) {
+    if (width > height) {
+      height = Math.round(height * (MAX_SIZE / width));
+      width = MAX_SIZE;
+    } else {
+      width = Math.round(width * (MAX_SIZE / height));
+      height = MAX_SIZE;
+    }
+  }
+
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0, width, height);
+
+  // JPEG品質0.7で圧縮（透明部分があるPNGも白背景で出力される）
+  let quality = 0.7;
+  let dataUrl = canvas.toDataURL('image/jpeg', quality);
+
+  // スプレッドシートのセル上限（5万文字）を超えないよう、超える場合は品質をさらに下げる
+  while (dataUrl.length > 45000 && quality > 0.3) {
+    quality -= 0.1;
+    dataUrl = canvas.toDataURL('image/jpeg', quality);
+  }
+
+  if (dataUrl.length > 45000) {
+    alert('画像が大きすぎて圧縮しきれませんでした。別の写真をお試しください。');
+    document.getElementById('fileDropLabel').innerText = '📷 タップして写真を選ぶ';
+    return;
+  }
+
+  selectedImageBase64 = dataUrl;
+  const previewImg = document.getElementById('previewImg');
+  previewImg.src = selectedImageBase64;
+  previewImg.style.display = 'block';
+  document.getElementById('fileDropLabel').style.display = 'none';
+  document.getElementById('fileDrop').classList.add('has-image');
+  checkSubmitEnabled();
+}
+
+document.getElementById('authorName').addEventListener('input', checkSubmitEnabled);
+
+function checkSubmitEnabled() {
+  const name = document.getElementById('authorName').value.trim();
+  document.getElementById('submitBtn').disabled = !(name && selectedImageBase64);
+}
+
+// 投稿
+function submitPhoto() {
+  const author = document.getElementById('authorName').value.trim();
+  const caption = document.getElementById('captionText').value.trim();
+  if (!author || !selectedImageBase64) return;
+
+  if (GAS_URL.includes("ここに取得した")) {
+    alert("疑似モードです。GASのURLを設定してください。\n\n投稿者: " + author + "\nひとこと: " + caption);
+    return;
+  }
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.innerText = "投稿中...";
+
+  const payload = {
+    mode: "add_photo",
+    author: author,
+    caption: caption,
+    image: selectedImageBase64,
+    postedAt: new Intl.DateTimeFormat('ja-JP', {
+      year: 'numeric', month: 'numeric', day: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    }).format(new Date())
+  };
+
+  fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload), mode: 'no-cors' });
+
+  // レスポンスを待たず即座にフィードバック
+  btn.innerText = "✅ 貼り付け完了！";
+  alert("📌 コルクボードに貼りました！");
+  setTimeout(() => location.reload(), 500);
+}
+
+// 一覧取得
+function makeDummyPhoto(bgColor1, bgColor2, label) {
+  const c = document.createElement('canvas');
+  c.width = 200; c.height = 150;
+  const ctx = c.getContext('2d');
+  const g = ctx.createLinearGradient(0, 0, 200, 150);
+  g.addColorStop(0, bgColor1);
+  g.addColorStop(1, bgColor2);
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, 200, 150);
+  ctx.fillStyle = 'rgba(255,255,255,0.85)';
+  ctx.font = 'bold 28px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(label, 100, 75);
+  return c.toDataURL();
+}
+
+function fetchPhotos() {
+  if (GAS_URL.includes("ここに取得した")) {
+    globalPhotos = [
+      { image: makeDummyPhoto('#7ec8f0', '#cfe8c0', '🌳'), author: '長男', caption: '公園でピクニック', postedAt: '6/10 14:20' },
+      { image: makeDummyPhoto('#f0c8a0', '#e0906a', '🍰'), author: '長女', caption: '誕生日ケーキ', postedAt: '6/12 19:05' },
+      { image: makeDummyPhoto('#d8a0e0', '#9060c8', '🎆'), author: 'お母さん', caption: '花火大会の夜', postedAt: '6/14 20:30' },
+    ];
+    renderBoard();
+    return;
+  }
+  const cbName = 'albumInit_' + Date.now();
+  const script = document.createElement('script');
+  window[cbName] = function(data) {
+    globalPhotos = data.photos || [];
+    renderBoard();
+    delete window[cbName];
+    document.body.removeChild(script);
+  };
+  script.onerror = () => {
+    document.getElementById('corkboard').innerHTML = '<div class="empty-board">読み込みに失敗しました</div>';
+    delete window[cbName];
+  };
+  script.src = GAS_URL + '?action=fetch_photos&callback=' + cbName;
+  document.body.appendChild(script);
+}
+
+function renderBoard() {
+  const board = document.getElementById('corkboard');
+  if (globalPhotos.length === 0) {
+    board.innerHTML = '<div class="empty-board">📌 まだ写真が貼られていません<br>最初の1枚を投稿してみよう！</div>';
+    return;
+  }
+  board.innerHTML = [...globalPhotos].reverse().map(p => `
+    <div class="photo-card">
+      <div class="photo-pin"></div>
+      <img src="${p.image}" alt="${p.caption || ''}">
+      ${p.caption ? `<div class="photo-caption">${p.caption}</div>` : ''}
+      <div class="photo-author">by ${p.author}・${p.postedAt || ''}</div>
+    </div>
+  `).join('');
+}
+
+document.addEventListener('DOMContentLoaded', fetchPhotos);
+</script>
+</body>
+</html>

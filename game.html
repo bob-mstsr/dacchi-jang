@@ -347,29 +347,80 @@ wfMV.position.set(WALL_X + 0.2, WIN_Y, WIN_Z); scene.add(wfMV);
 const wfMH = makeBox(0.3, FT*0.6, WIN_W, 0xf2f2f2);
 wfMH.position.set(WALL_X + 0.2, WIN_Y, WIN_Z); scene.add(wfMH);
 
-// ========== 樺の木壁画（左奥） ==========
+// ========== コルクボード（写真アルバム） ==========
 const artCanvas = document.createElement('canvas');
 artCanvas.width = 256; artCanvas.height = 256;
 const artCtx = artCanvas.getContext('2d');
-// 空
-artCtx.fillStyle = '#87ceeb';
+
+// コルク地（茶色のまだら質感）
+const corkGrad = artCtx.createLinearGradient(0, 0, 256, 256);
+corkGrad.addColorStop(0, '#c89968');
+corkGrad.addColorStop(1, '#b07f4f');
+artCtx.fillStyle = corkGrad;
 artCtx.fillRect(0, 0, 256, 256);
-// 樺の木幹（白っぽい）
-for (let i = 0; i < 5; i++) {
-  const x = 20 + i * 46;
-  artCtx.fillStyle = '#e8e8e0';
-  artCtx.fillRect(x, 0, 18, 256);
-  // 黒い節
-  for (let j = 0; j < 5; j++) {
-    artCtx.fillStyle = 'rgba(0,0,0,0.3)';
-    artCtx.fillRect(x + 4, 20 + j * 50 + Math.random() * 10, 10, 6);
+// コルクの粒状ノイズ
+for (let i = 0; i < 700; i++) {
+  const x = Math.random() * 256, y = Math.random() * 256;
+  const v = Math.random();
+  artCtx.fillStyle = v > 0.5 ? 'rgba(90,60,30,0.18)' : 'rgba(220,180,130,0.18)';
+  artCtx.beginPath();
+  artCtx.arc(x, y, 1 + Math.random() * 1.5, 0, Math.PI * 2);
+  artCtx.fill();
+}
+
+// 写真を描くヘルパー（白枠＋簡易な写真柄＋ピン＋少しの回転）
+function drawPhoto(cx, cy, w, h, rot, photoType) {
+  artCtx.save();
+  artCtx.translate(cx, cy);
+  artCtx.rotate(rot);
+  // 影
+  artCtx.fillStyle = 'rgba(0,0,0,0.25)';
+  artCtx.fillRect(-w/2 + 2, -h/2 + 3, w, h);
+  // 白枠（フォトフレーム風）
+  artCtx.fillStyle = '#fdfdfa';
+  artCtx.fillRect(-w/2, -h/2, w, h);
+  // 写真本体
+  const pad = 4;
+  const pw = w - pad * 2, ph = h - pad * 2 - 8;
+  if (photoType === 'sky') {
+    const g = artCtx.createLinearGradient(0, -ph/2, 0, ph/2);
+    g.addColorStop(0, '#7ec8f0'); g.addColorStop(1, '#cfe8c0');
+    artCtx.fillStyle = g;
+    artCtx.fillRect(-pw/2, -ph/2 - 4, pw, ph);
+  } else if (photoType === 'people') {
+    artCtx.fillStyle = '#f0d9b5';
+    artCtx.fillRect(-pw/2, -ph/2 - 4, pw, ph);
+    artCtx.fillStyle = '#5a4a3a';
+    artCtx.beginPath(); artCtx.arc(-8, -2, 8, 0, Math.PI*2); artCtx.fill();
+    artCtx.beginPath(); artCtx.arc(8, -2, 8, 0, Math.PI*2); artCtx.fill();
+  } else if (photoType === 'food') {
+    artCtx.fillStyle = '#fff3da';
+    artCtx.fillRect(-pw/2, -ph/2 - 4, pw, ph);
+    artCtx.fillStyle = '#c8702a';
+    artCtx.beginPath(); artCtx.arc(0, 0, Math.min(pw,ph)/3, 0, Math.PI*2); artCtx.fill();
+  } else {
+    artCtx.fillStyle = '#d8e8d0';
+    artCtx.fillRect(-pw/2, -ph/2 - 4, pw, ph);
+    artCtx.fillStyle = '#4a7a3a';
+    artCtx.fillRect(-pw/2, ph/2 - 18, pw, 14);
   }
+  // ピン（赤い丸）
+  artCtx.fillStyle = '#c82020';
+  artCtx.beginPath();
+  artCtx.arc(0, -h/2 + 4, 3.5, 0, Math.PI * 2);
+  artCtx.fill();
+  artCtx.restore();
 }
-// 葉（緑）
-artCtx.fillStyle = 'rgba(60,140,60,0.6)';
-for (let i = 0; i < 20; i++) {
-  artCtx.fillRect(Math.random()*220, Math.random()*150, 16, 16);
-}
+
+// 複数の写真をランダムっぽく貼る（同サイズ枠内に収まるよう配置）
+drawPhoto(60, 60, 70, 60, -0.08, 'sky');
+drawPhoto(150, 50, 64, 58, 0.06, 'people');
+drawPhoto(205, 110, 60, 64, -0.05, 'food');
+drawPhoto(70, 150, 66, 60, 0.07, 'people');
+drawPhoto(160, 175, 72, 62, -0.04, 'sky');
+drawPhoto(55, 220, 60, 50, 0.05, 'food');
+drawPhoto(180, 230, 64, 50, -0.06, 'people');
+
 const artTex = new THREE.CanvasTexture(artCanvas);
 const artMesh = new THREE.Mesh(
   new THREE.BoxGeometry(3.5, 4, 0.15),
@@ -379,8 +430,8 @@ artMesh.position.set(-5.5, 4.5, -6.8);
 artMesh.userData.clickable = 'art';
 scene.add(artMesh);
 
-// 壁画フレーム（artMeshより奥に配置）
-const frameM = makeBox(3.8, 4.3, 0.1, 0x333333);
+// コルクボードのフレーム（木製の縁）
+const frameM = makeBox(3.8, 4.3, 0.1, 0x6b4423);
 frameM.position.set(-5.5, 4.5, -6.92);
 scene.add(frameM);
 
@@ -851,10 +902,13 @@ function clickFurniture(name) {
     document.getElementById('gameOverlay').classList.add('show');
     return;
   }
+  if (name === 'art') {
+    window.location.href = 'album.html';
+    return;
+  }
   const msg = {
     piano: '🎹 将来ここに音楽ページが繋がります',
     sofa:  '🛋 将来ここにくつろぎコンテンツが繋がります',
-    art:   '🖼 将来ここにギャラリーページが繋がります',
   };
   alert(msg[name] || '準備中です');
 }
