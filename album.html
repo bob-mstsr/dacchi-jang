@@ -273,7 +273,7 @@ main { padding: 16px; }
 </div>
 
 <script>
-const GAS_URL = "https://script.google.com/macros/s/AKfycbxkRY4YRvD8w3XFO5SZnv-Ei1Lm2OA5eMDtZFOJhkUkB-TFB9SP7IIdn2O6s93S54tNlA/exec";
+const GAS_URL = "ここに取得したGASのウェブアプリURLを貼り付けてください";
 
 let selectedImageBase64 = null;
 let globalPhotos = [];
@@ -309,38 +309,50 @@ document.getElementById('fileInput').addEventListener('change', function(e) {
   reader.readAsDataURL(file);
 });
 
-// 画像を最大辺800pxにリサイズし、JPEG圧縮してBase64化する
+// 画像をリサイズし、JPEG圧縮してBase64化する（スプレッドシートのセル上限に収まるまで段階的に縮小）
 function resizeAndCompress(img) {
-  const MAX_SIZE = 800;
-  let { width, height } = img;
+  const CELL_LIMIT = 45000; // スプレッドシートのセル上限(5万文字)に余裕を持たせた目標値
+  let maxSize = 600; // 最初の最大辺サイズ
+  let dataUrl = null;
 
-  if (width > MAX_SIZE || height > MAX_SIZE) {
-    if (width > height) {
-      height = Math.round(height * (MAX_SIZE / width));
-      width = MAX_SIZE;
-    } else {
-      width = Math.round(width * (MAX_SIZE / height));
-      height = MAX_SIZE;
+  // maxSizeを段階的に縮小しながら、各サイズで品質を下げて試す
+  while (maxSize >= 150) {
+    let { width, height } = img;
+    if (width > maxSize || height > maxSize) {
+      if (width > height) {
+        height = Math.round(height * (maxSize / width));
+        width = maxSize;
+      } else {
+        width = Math.round(width * (maxSize / height));
+        height = maxSize;
+      }
     }
-  }
 
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(img, 0, 0, width, height);
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    // JPEGは透過がないため白背景を敷く（PNG等の透明部分が黒くならないように）
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, width, height);
+    ctx.drawImage(img, 0, 0, width, height);
 
-  // JPEG品質0.7で圧縮（透明部分があるPNGも白背景で出力される）
-  let quality = 0.7;
-  let dataUrl = canvas.toDataURL('image/jpeg', quality);
-
-  // スプレッドシートのセル上限（5万文字）を超えないよう、超える場合は品質をさらに下げる
-  while (dataUrl.length > 45000 && quality > 0.3) {
-    quality -= 0.1;
+    let quality = 0.75;
     dataUrl = canvas.toDataURL('image/jpeg', quality);
+
+    while (dataUrl.length > CELL_LIMIT && quality > 0.12) {
+      quality -= 0.08;
+      dataUrl = canvas.toDataURL('image/jpeg', quality);
+    }
+
+    if (dataUrl.length <= CELL_LIMIT) {
+      break; // 収まったのでこのサイズで確定
+    }
+    // まだ大きい場合はサイズを縮めて再トライ
+    maxSize -= 100;
   }
 
-  if (dataUrl.length > 45000) {
+  if (!dataUrl || dataUrl.length > CELL_LIMIT) {
     alert('画像が大きすぎて圧縮しきれませんでした。別の写真をお試しください。');
     document.getElementById('fileDropLabel').innerText = '📷 タップして写真を選ぶ';
     return;
@@ -383,8 +395,7 @@ function submitPhoto() {
     caption: caption,
     image: selectedImageBase64,
     postedAt: new Intl.DateTimeFormat('ja-JP', {
-      year: 'numeric', month: 'numeric', day: 'numeric',
-      hour: '2-digit', minute: '2-digit'
+      year: 'numeric', month: 'numeric', day: 'numeric'
     }).format(new Date())
   };
 
@@ -417,9 +428,9 @@ function makeDummyPhoto(bgColor1, bgColor2, label) {
 function fetchPhotos() {
   if (GAS_URL.includes("ここに取得した")) {
     globalPhotos = [
-      { image: makeDummyPhoto('#7ec8f0', '#cfe8c0', '🌳'), author: '長男', caption: '公園でピクニック', postedAt: '6/10 14:20' },
-      { image: makeDummyPhoto('#f0c8a0', '#e0906a', '🍰'), author: '長女', caption: '誕生日ケーキ', postedAt: '6/12 19:05' },
-      { image: makeDummyPhoto('#d8a0e0', '#9060c8', '🎆'), author: 'お母さん', caption: '花火大会の夜', postedAt: '6/14 20:30' },
+      { image: makeDummyPhoto('#7ec8f0', '#cfe8c0', '🌳'), author: '長男', caption: '公園でピクニック', postedAt: '2026/6/10' },
+      { image: makeDummyPhoto('#f0c8a0', '#e0906a', '🍰'), author: '長女', caption: '誕生日ケーキ', postedAt: '2026/6/12' },
+      { image: makeDummyPhoto('#d8a0e0', '#9060c8', '🎆'), author: 'お母さん', caption: '花火大会の夜', postedAt: '2026/6/14' },
     ];
     renderBoard();
     return;
