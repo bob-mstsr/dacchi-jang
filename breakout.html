@@ -15,13 +15,12 @@
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Noto Sans JP', sans-serif;
+        
+        html, body {
             background-color: var(--bg-color);
             color: var(--dark-charcoal);
-            overflow-x: hidden;
-            user-select: none;
-            -webkit-user-select: none;
+            font-family: 'Noto Sans JP', sans-serif;
+            overscroll-behavior-y: none; 
         }
 
         .app-container {
@@ -59,7 +58,6 @@
             border-radius: 4px;
         }
 
-        /* 情報パネル */
         .info-panel {
             display: grid;
             grid-template-columns: 1fr 100px 85px 1fr;
@@ -80,7 +78,6 @@
             flex-direction: column;
             align-items: center;
         }
-        /* 💡 ラベルを簡素に修正、文字溢れ防止でフォントサイズを微調整 */
         .dora-label { font-size: 0.55rem; color: var(--main-red); font-weight: bold; margin-bottom: 1px; }
         .life-label { font-size: 0.6rem; color: var(--main-red); font-weight: bold; margin-bottom: 1px; }
         .dora-tile {
@@ -108,6 +105,9 @@
             overflow: hidden;
             height: auto; 
             padding-bottom: 5px;
+            touch-action: none; 
+            user-select: none;
+            -webkit-user-select: none;
         }
 
         .canvas-container {
@@ -231,6 +231,7 @@
             background: #fff;
             padding: 15px;
             border-top: 3px solid var(--accent-gold);
+            touch-action: pan-y; 
         }
         .collection-header {
             display: flex;
@@ -337,7 +338,6 @@
     <div class="info-panel">
         <div class="info-box">現在の得点<span id="txt-score" class="score">0</span></div>
         <div class="dora-container">
-            <!-- 💡 ① ラベル部分に簡素な表現を追記 -->
             <div class="dora-label">ドラ表示(一致でアイテム取得)</div>
             <div class="dora-tile" id="dora-box">🀀</div>
         </div>
@@ -352,8 +352,8 @@
         <div class="screen-overlay" id="overlayScreen">
             <div id="overlay-title" class="screen-title">麻雀ブロック崩し</div>
             <div id="overlay-desc" style="font-size:0.8rem; line-height:1.4; max-width:300px; color:#ccc;">
-                「ドラ表示牌」を破壊すると、全6種の超強力アイテムが確率でドロップ！<br>
-                目標の50,000点を目指して、大きな役を複合させてアガりましょう！
+                「ドラ表示牌」を破壊すると、全 6 種の超強力アイテムが確率でドロップ！<br>
+                目標の 50,000 点を目指して、大きな役を複合させてアガりましょう！
             </div>
             <div style="margin-top:12px; font-size:0.8rem; color:var(--accent-gold);">▼ 難易度（球のスピード）</div>
             <div class="mode-selector">
@@ -495,27 +495,31 @@
     let isPlaying = false;
     let isChoiceMode = false;   
     let isDiscardPhase = false; 
-    let unhittableFrames = 0;   
 
     let itemInventory = [null, null, null, null]; 
-    let activeEffects = { speedDown: 0, paddleBig: 0, pierce: 0 }; 
+    let activeEffects = { speedDown: 0, paddleBig: 0, blockPierce: 0 }; 
     let isForcedYakuman = false; 
     
     let animationId = null;
     let isDragging = false;
-    let speedMultiplier = 0.8;
+    let speedMultiplier = 1.0;
     let lastTime = 0;
 
     const cw = 440; const ch = 440;
     canvas.width = cw; canvas.height = ch;
 
-    let ball = { x: cw/2, y: ch - 80, vx: 4, vy: -5, radius: 8 };
+    // 💡 初期半径をやや大きくし、めり込みからのワープを防ぐ
+    let ball = { x: cw/2, y: ch - 120, vx: 4, vy: -5, radius: 9 };
     let paddle = { x: cw/2 - 50, y: ch - 25, width: 100, height: 12, defaultWidth: 100 };
     let blocks = [];
 
     const rows = 4; const cols = 7;
     const blockWidth = 50; const blockHeight = 34;
     const blockPadding = 6; const offsetTop = 20; const offsetLeft = 25;
+
+    stageWrapper.addEventListener('touchmove', function(e) {
+        e.preventDefault(); 
+    }, { passive: false });
 
     function loadSavedCollection() {
         let saved = localStorage.getItem('dacchi_yaku_collection');
@@ -577,9 +581,9 @@
     function selectDifficulty(mode, btnEl) {
         document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('selected'));
         btnEl.classList.add('selected');
-        if(mode === 'easy') speedMultiplier = 0.8;
-        if(mode === 'normal') speedMultiplier = 1.3;
-        if(mode === 'hard') speedMultiplier = 1.9;
+        if(mode === 'easy') speedMultiplier = 1.0;
+        if(mode === 'normal') speedMultiplier = 1.5;
+        if(mode === 'hard') speedMultiplier = 2.2;
     }
 
     function changeDora() {
@@ -631,9 +635,9 @@
 
     function startGame() {
         score = 0; gatheredHand = []; activeTsumoTile = null;
-        isChoiceMode = false; isDiscardPhase = false; unhittableFrames = 0;
+        isChoiceMode = false; isDiscardPhase = false;
         itemInventory = [null, null, null, null];
-        activeEffects = { speedDown: 0, paddleBig: 0, pierce: 0 };
+        activeEffects = { speedDown: 0, paddleBig: 0, blockPierce: 0 };
         isForcedYakuman = false;
         
         lives = 3;
@@ -647,9 +651,9 @@
         updateItemUI();
         document.getElementById('overlayScreen').style.display = 'none';
         
-        resetBallAndPaddle();
         initBlocks();
         initSearchGrids();
+        resetBallAndPaddle();
         isPlaying = true;
         lastTime = performance.now();
         if(animationId) cancelAnimationFrame(animationId);
@@ -658,11 +662,15 @@
 
     function resetBallAndPaddle() {
         paddle.x = cw / 2 - paddle.width / 2;
+        // 💡 一投目のすり抜けを防ぐため、パドルから完全に離れた「安全な中央やや下」に配置
         ball.x = cw / 2; 
-        ball.y = ch - 80;
-        ball.vx = (Math.random() > 0.5 ? 3 : -3) * speedMultiplier * 1.2;
-        ball.vy = -5 * speedMultiplier * 1.2;
-        unhittableFrames = 30;
+        ball.y = ch - 120; 
+        
+        // 初速計算
+        let angle = (Math.random() * 40 + 70) * Math.PI / 180; // 70度〜110度の角度（真上気味）に制限
+        let baseSpeed = 6.5 * speedMultiplier;
+        ball.vx = Math.cos(angle) * baseSpeed;
+        ball.vy = -Math.sin(angle) * baseSpeed;
     }
 
     function loop() {
@@ -670,28 +678,110 @@
         const now = performance.now();
         const dt = (now - lastTime) / 1000;
         lastTime = now;
+        
         updateTimers(dt);
         ctx.clearRect(0, 0, cw, ch);
-        if (unhittableFrames > 0) unhittableFrames--; 
-        moveBall();
-        checkCollisions();
+        
+        let factor = activeEffects.speedDown > 0 ? 0.5 : 1.0;
+        let moveX = ball.vx * factor;
+        let moveY = ball.vy * factor;
+        let distance = Math.sqrt(moveX * moveX + moveY * moveY);
+        
+        // 💡 【超重要】1ステップの移動量を最大2ピクセルに制限（どれだけ高速でも絶対にすり抜けない解像度）
+        let steps = Math.ceil(distance / 2); 
+
+        if (steps > 0) {
+            let stepX = moveX / steps;
+            let stepY = moveY / steps;
+            
+            for (let s = 0; s < steps; s++) {
+                ball.x += stepX;
+                ball.y += stepY;
+                
+                // 1. 左右・天井の壁判定（めり込みを即時座標補正）
+                if (ball.x - ball.radius < 0) { ball.vx = Math.abs(ball.vx); ball.x = ball.radius; }
+                if (ball.x + ball.radius > cw) { ball.vx = -Math.abs(ball.vx); ball.x = cw - ball.radius; }
+                if (ball.y - ball.radius < 0) { ball.vy = Math.abs(ball.vy); ball.y = ball.radius; }
+                
+                // 2. パドルの衝突判定（上方向への侵入時のみ、めり込みを強制リセット）
+                if (ball.y + ball.radius >= paddle.y && ball.y - ball.radius <= paddle.y + paddle.height) {
+                    if (ball.x + ball.radius >= paddle.x && ball.x - ball.radius <= paddle.x + paddle.width) {
+                        if (ball.vy > 0) { // 球が落下している時のみ反射
+                            let hitPos = (ball.x - (paddle.x + paddle.width / 2)) / (paddle.width / 2);
+                            // 角度の急変を抑えつつ滑らかに反射
+                            ball.vx = hitPos * 5.0 * speedMultiplier;
+                            ball.vy = -Math.abs(ball.vy);
+                            ball.y = paddle.y - ball.radius; // パドルの真上に強制補正
+                        }
+                    }
+                }
+                
+                // 3. 精密なブロック衝突判定
+                checkBlockCollisionsStep();
+            }
+        }
+        
+        // 落下判定
+        if (ball.y - ball.radius > ch) {
+            lives--;
+            updateLifeUI();
+            if (lives > 0) {
+                resetBallAndPaddle();
+            } else {
+                endGame(false);
+            }
+        }
+
         drawBlocks();
         drawPaddle();
         drawBall();
         animationId = requestAnimationFrame(loop);
     }
 
+    // 分割ステップ内用の精密ブロック当たり判定（無敵時間を廃止したため1投目から完璧に動作）
+    function checkBlockCollisionsStep() {
+        for (let idx = 0; idx < blocks.length; idx++) {
+            const b = blocks[idx]; if (!b.alive) continue;
+            
+            if (ball.x + ball.radius > b.x && ball.x - ball.radius < b.x + b.w && 
+                ball.y + ball.radius > b.y && ball.y - ball.radius < b.y + b.h) {
+                
+                b.alive = false;
+                
+                // 貫通弾エフェクトが有効でない場合は反射ベクトル計算＆位置補正
+                if (!(activeEffects.blockPierce > 0)) {
+                    let overlapLeft = (ball.x + ball.radius) - b.x; 
+                    let overlapRight = (b.x + b.w) - (ball.x - ball.radius);
+                    let overlapTop = (ball.y + ball.radius) - b.y; 
+                    let overlapBottom = (b.y + b.h) - (ball.y - ball.radius);
+                    let minOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
+                    
+                    if (minOverlap === overlapLeft) { ball.vx = -Math.abs(ball.vx); ball.x = b.x - ball.radius; } 
+                    else if (minOverlap === overlapRight) { ball.vx = Math.abs(ball.vx); ball.x = b.x + b.w + ball.radius; } 
+                    else if (minOverlap === overlapTop) { ball.vy = -Math.abs(ball.vy); ball.y = b.y - ball.radius; } 
+                    else if (minOverlap === overlapBottom) { ball.vy = Math.abs(ball.vy); ball.y = b.y + b.h + ball.radius; }
+                }
+                
+                if (b.type === currentDora) rollItemLottery();
+                triggerTileChoice(b.type); 
+                checkAndRefillBlocks();
+                
+                if (!(activeEffects.blockPierce > 0)) break; // 貫通でなければこのステップのループ終了
+            }
+        }
+    }
+
     function updateTimers(dt) {
         let effectTexts = [];
         if (activeEffects.speedDown > 0) { activeEffects.speedDown -= dt; effectTexts.push(`🐢 弾速低下 (${Math.ceil(activeEffects.speedDown)}s)`); }
         if (activeEffects.paddleBig > 0) { activeEffects.paddleBig -= dt; paddle.width = paddle.defaultWidth * 2; effectTexts.push(`↔️ パドル2倍 (${Math.ceil(activeEffects.paddleBig)}s)`); } else { paddle.width = paddle.defaultWidth; }
-        if (activeEffects.pierce > 0) { activeEffects.pierce -= dt; effectTexts.push(`🔥 貫通弾 (${Math.ceil(activeEffects.pierce)}s)`); }
+        if (activeEffects.blockPierce > 0) { activeEffects.blockPierce -= dt; effectTexts.push(`🔥 貫通弾 (${Math.ceil(activeEffects.blockPierce)}s)`); }
         if (effectTexts.length > 0) { statusEffectBar.style.display = 'block'; statusEffectBar.innerText = "効果中: " + effectTexts.join(" | "); } else { statusEffectBar.style.display = 'none'; }
     }
 
     function drawBall() {
         ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI*2);
-        ctx.fillStyle = activeEffects.pierce > 0 ? "#ff3d00" : "#ffffff"; 
+        ctx.fillStyle = activeEffects.blockPierce > 0 ? "#ff3d00" : "#ffffff"; 
         ctx.fill(); ctx.closePath();
     }
 
@@ -711,51 +801,6 @@
             ctx.font = "20px 'Noto Sans JP'"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
             ctx.fillText(b.type, b.x + b.w/2, b.y + b.h/2);
         });
-    }
-
-    function moveBall() {
-        let currentSpeedFactor = activeEffects.speedDown > 0 ? 0.5 : 1.0;
-        ball.x += ball.vx * currentSpeedFactor; ball.y += ball.vy * currentSpeedFactor;
-        if(ball.x - ball.radius < 0 || ball.x + ball.radius > cw) { ball.vx = -ball.vx; ball.x = ball.x - ball.radius < 0 ? ball.radius : cw - ball.radius; }
-        if(ball.y - ball.radius < 0) { ball.vy = -ball.vy; ball.y = ball.radius; }
-        if(ball.y + ball.radius >= paddle.y && ball.y - ball.radius <= paddle.y + paddle.height) {
-            if(ball.x >= paddle.x && ball.x <= paddle.x + paddle.width) {
-                let hitPos = (ball.x - (paddle.x + paddle.width/2)) / (paddle.width/2);
-                ball.vx = hitPos * 5 * speedMultiplier; ball.vy = -Math.abs(ball.vy); ball.y = paddle.y - ball.radius;
-            }
-        }
-        
-        if(ball.y > ch) {
-            lives--;
-            updateLifeUI();
-            if (lives > 0) {
-                resetBallAndPaddle();
-            } else {
-                endGame(false);
-            }
-        }
-    }
-
-    function checkCollisions() {
-        if (isChoiceMode || isDiscardPhase || unhittableFrames > 0) return;
-        for (let idx = 0; idx < blocks.length; idx++) {
-            const b = blocks[idx]; if (!b.alive) continue;
-            if (ball.x + ball.radius > b.x && ball.x - ball.radius < b.x + b.w && ball.y + ball.radius > b.y && ball.y - ball.radius < b.y + b.h) {
-                b.alive = false;
-                if (!(activeEffects.pierce > 0)) {
-                    let overlapLeft = (ball.x + ball.radius) - b.x; let overlapRight = (b.x + b.w) - (ball.x - ball.radius);
-                    let overlapTop = (ball.y + ball.radius) - b.y; let overlapBottom = (b.y + b.h) - (ball.y - ball.radius);
-                    let minOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
-                    if (minOverlap === overlapLeft) { ball.vx = -Math.abs(ball.vx); ball.x = b.x - ball.radius; } 
-                    else if (minOverlap === overlapRight) { ball.vx = Math.abs(ball.vx); ball.x = b.x + b.w + ball.radius; } 
-                    else if (minOverlap === overlapTop) { ball.vy = -Math.abs(ball.vy); ball.y = b.y - ball.radius; } 
-                    else if (minOverlap === overlapBottom) { ball.vy = Math.abs(ball.vy); ball.y = b.y + b.h + ball.radius; }
-                }
-                if (b.type === currentDora) rollItemLottery();
-                triggerTileChoice(b.type); checkAndRefillBlocks();
-                if (!(activeEffects.pierce > 0)) break; 
-            }
-        }
     }
 
     function rollItemLottery() {
@@ -779,7 +824,7 @@
         if (item.id === 1) { initBlocks(); } 
         else if (item.id === 2) { activeEffects.speedDown = 10; } 
         else if (item.id === 3) { activeEffects.paddleBig = 10; } 
-        else if (item.id === 4) { activeEffects.pierce = 10; } 
+        else if (item.id === 4) { activeEffects.blockPierce = 10; } 
         else if (item.id === 5) { searchTileOverlay.style.display = 'flex'; }
     }
 
@@ -815,7 +860,7 @@
         }
     }
 
-    function resumeGameWithWeight() { isChoiceMode = false; isDiscardPhase = false; unhittableFrames = 12; hideActionPanel(); lastTime = performance.now(); loop(); }
+    function resumeGameWithWeight() { isChoiceMode = false; isDiscardPhase = false; hideActionPanel(); lastTime = performance.now(); loop(); }
     function hideActionPanel() { panelSelect.style.display = 'none'; panelIdle.style.display = 'block'; panelIdle.innerText = "牌ブロックを崩すと、ここにツモ牌が表示されます"; btnWinDeclaration.style.display = 'none'; btnYakumanTrigger.style.display = 'none'; activeTsumoTile = null; }
 
     function chooseIncorporate() {
@@ -1009,7 +1054,6 @@
         }
 
         let doraCount = finalHand.filter(t => t === currentDora).length;
-        // 💡 ② 手役にドラが含まれていた場合、1枚あたり1000点の加点に変更
         if (doraCount > 0 && totalGain > 0) {
             detectedYakuList.push({ name: `ドラ ${doraCount}`, key: null, pts: doraCount * 1000 });
             totalGain += doraCount * 1000;
@@ -1058,6 +1102,7 @@
     stageWrapper.addEventListener('mousedown', (e) => { if (isPlaying && !isChoiceMode && !isDiscardPhase) { isDragging = true; updatePaddlePosition(e.clientX); } });
     window.addEventListener('mousemove', (e) => { if (isDragging && isPlaying && !isChoiceMode && !isDiscardPhase) updatePaddlePosition(e.clientX); });
     window.addEventListener('mouseup', () => isDragging = false);
+    
     stageWrapper.addEventListener('touchstart', (e) => { if (isPlaying && !isChoiceMode && !isDiscardPhase) { isDragging = true; updatePaddlePosition(e.touches[0].clientX); } }, { passive: true });
     window.addEventListener('touchmove', (e) => { if (isDragging && isPlaying && !isChoiceMode && !isDiscardPhase) updatePaddlePosition(e.touches[0].clientX); }, { passive: true });
     window.addEventListener('touchend', () => isDragging = false);
