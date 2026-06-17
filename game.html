@@ -18,6 +18,14 @@ header {
 header h1 { font-family: 'Kiwi Maru', serif; color: #d4af37; font-size: 1.2rem; letter-spacing: 3px; }
 .back-btn { color: #d4af37; text-decoration: none; font-size: 0.82rem; border: 1px solid #d4af37; padding: 4px 10px; border-radius: 4px; }
 #canvas-container { flex: 1; position: relative; }
+.hint {
+  text-align: center;
+  font-size: 0.68rem;
+  color: rgba(212,175,55,0.8);
+  background: rgba(0,0,0,0.4);
+  padding: 5px 0;
+  flex-shrink: 0;
+}
 canvas { display: block; width: 100% !important; height: 100% !important; }
 
 /* オーバーレイ */
@@ -71,6 +79,7 @@ canvas { display: block; width: 100% !important; height: 100% !important; }
   <h1>娯楽室</h1>
   <div style="width:60px"></div>
 </header>
+<div class="hint">🖐 ドラッグで見回す・ピンチで拡大縮小・家具をタップ</div>
 
 <div id="canvas-container">
   <canvas id="c"></canvas>
@@ -119,8 +128,29 @@ scene.fog = new THREE.Fog(0x0a0a1a, 30, 60);
 
 // カメラ（斜め上から見下ろす等角的視点）
 const camera = new THREE.PerspectiveCamera(45, W / H, 0.1, 100);
-camera.position.set(10, 13, 14);
-camera.lookAt(0, 2.5, 0);
+// カメラ：球面座標で管理（ドラッグ回転・ピンチズーム対応）
+const camState = {
+  radius: 20,       // カメラと注視点の距離
+  theta: Math.atan2(10, 14),  // 水平角
+  phi: Math.atan2(13, Math.sqrt(10*10+14*14)) + Math.PI/2 - Math.PI/2, // 後で再計算
+  targetY: 2.5
+};
+// 初期値を実際の見た目に近い角度で再設定
+camState.radius = 21;
+camState.azimuth = 0.62;   // 水平回転角（ラジアン）
+camState.polar = 1.05;     // 垂直角（0=真上, PI/2=水平）
+
+function updateCameraFromState() {
+  const r = camState.radius;
+  const az = camState.azimuth;
+  const pol = camState.polar;
+  const x = r * Math.sin(pol) * Math.sin(az);
+  const y = r * Math.cos(pol);
+  const z = r * Math.sin(pol) * Math.cos(az);
+  camera.position.set(x, y + camState.targetY, z);
+  camera.lookAt(0, camState.targetY, 0);
+}
+updateCameraFromState();
 
 // ========== ライト ==========
 const ambient = new THREE.AmbientLight(0xffffff, 0.5);
@@ -697,11 +727,9 @@ function updateLabels() {
   });
 }
 
-function onTap(event) {
+function onTap(clientX, clientY) {
   if (document.getElementById('gameOverlay').classList.contains('show')) return;
   const rect = canvas.getBoundingClientRect();
-  const clientX = event.touches ? event.touches[0].clientX : event.clientX;
-  const clientY = event.touches ? event.touches[0].clientY : event.clientY;
   mouse.x = ((clientX - rect.left) / rect.width) * 2 - 1;
   mouse.y = -((clientY - rect.top) / rect.height) * 2 + 1;
   raycaster.setFromCamera(mouse, camera);
@@ -715,8 +743,97 @@ function onTap(event) {
     }
   }
 }
-canvas.addEventListener('click', onTap);
-canvas.addEventListener('touchend', e => { e.preventDefault(); onTap(e); }, { passive: false });
+
+// ===== カメラ操作（ドラッグ回転・ピンチズーム・タップ判定の統合） =====
+let dragState = null;     // { startX, startY, moved, lastX, lastY, pointers }
+let pinchStartDist = null;
+let pinchStartRadius = null;
+const DRAG_THRESHOLD = 8; // pxを超えたら「ドラッグ」とみなしタップ判定をキャンセル
+
+function getTouchDist(touches) {
+  const dx = touches[0].clientX - touches[1].clientX;
+  const dy = touches[0].clientY - touches[1].clientY;
+  return Math.sqrt(dx*dx + dy*dy);
+}
+
+// --- マウス操作 ---
+canvas.addEventListener('mousedown', e => {
+  dragState = { startX: e.clientX, startY: e.clientY, lastX: e.clientX, lastY: e.clientY, moved: false };
+});
+window.addEventListener('mousemove', e => {
+  if (!dragState) return;
+  const dx = e.clientX - dragState.lastX;
+  const dy = e.clientY - dragState.lastY;
+  if (Math.abs(e.clientX - dragState.startX) > DRAG_THRESHOLD || Math.abs(e.clientY - dragState.startY) > DRAG_THRESHOLD) {
+    dragState.moved = true;
+  }
+  if (dragState.moved) {
+    camState.azimuth -= dx * 0.006;
+    camState.polar = Math.max(0.25, Math.min(1.5, camState.polar - dy * 0.006));
+    updateCameraFromState();
+  }
+  dragState.lastX = e.clientX;
+  dragState.lastY = e.clientY;
+});
+window.addEventListener('mouseup', e => {
+  if (dragState && !dragState.moved) onTap(e.clientX, e.clientY);
+  dragState = null;
+});
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  camState.radius = Math.max(8, Math.min(34, camState.radius + e.deltaY * 0.02));
+  updateCameraFromState();
+}, { passive: false });
+
+// --- タッチ操作（1本指=回転/タップ、2本指=ピンチズーム） ---
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  if (e.touches.length === 1) {
+    const t = e.touches[0];
+    dragState = { startX: t.clientX, startY: t.clientY, lastX: t.clientX, lastY: t.clientY, moved: false };
+    pinchStartDist = null;
+  } else if (e.touches.length === 2) {
+    dragState = null;
+    pinchStartDist = getTouchDist(e.touches);
+    pinchStartRadius = camState.radius;
+  }
+}, { passive: false });
+
+canvas.addEventListener('touchmove', e => {
+  if (e.touches.length === 1 && dragState) {
+    e.preventDefault();
+    const t = e.touches[0];
+    const dx = t.clientX - dragState.lastX;
+    const dy = t.clientY - dragState.lastY;
+    if (Math.abs(t.clientX - dragState.startX) > DRAG_THRESHOLD || Math.abs(t.clientY - dragState.startY) > DRAG_THRESHOLD) {
+      dragState.moved = true;
+    }
+    if (dragState.moved) {
+      camState.azimuth -= dx * 0.006;
+      camState.polar = Math.max(0.25, Math.min(1.5, camState.polar - dy * 0.006));
+      updateCameraFromState();
+    }
+    dragState.lastX = t.clientX;
+    dragState.lastY = t.clientY;
+  } else if (e.touches.length === 2 && pinchStartDist !== null) {
+    e.preventDefault();
+    const dist = getTouchDist(e.touches);
+    const scale = pinchStartDist / dist;
+    camState.radius = Math.max(8, Math.min(34, pinchStartRadius * scale));
+    updateCameraFromState();
+  }
+}, { passive: false });
+
+canvas.addEventListener('touchend', e => {
+  e.preventDefault();
+  if (dragState && !dragState.moved && e.changedTouches.length > 0) {
+    onTap(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+  }
+  if (e.touches.length === 0) {
+    dragState = null;
+    pinchStartDist = null;
+  }
+}, { passive: false });
 
 // ========== アクション ==========
 function clickFurniture(name) {
