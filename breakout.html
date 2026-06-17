@@ -19,7 +19,7 @@
             font-family: 'Noto Sans JP', sans-serif;
             background-color: var(--bg-color);
             color: var(--dark-charcoal);
-            overflow: hidden;
+            overflow-x: hidden;
             user-select: none;
             -webkit-user-select: none;
         }
@@ -28,13 +28,10 @@
             max-width: 500px;
             margin: 0 auto;
             background-color: #fffdf9;
-            height: 100vh;
-            /* iOSのSafari対策 */
-            height: calc(var(--vh, 1vh) * 100);
+            min-height: 100vh;
             box-shadow: 0 0 20px rgba(0,0,0,0.1);
             display: flex;
             flex-direction: column;
-            overflow: hidden;
         }
 
         header {
@@ -62,10 +59,11 @@
             border-radius: 4px;
         }
 
+        /* 情報パネル */
         .info-panel {
             display: grid;
-            grid-template-columns: 1fr 90px 1fr;
-            gap: 5px;
+            grid-template-columns: 1fr 100px 85px 1fr;
+            gap: 4px;
             padding: 6px;
             background: #fff;
             border-bottom: 1px solid #e0dacf;
@@ -73,69 +71,75 @@
             align-items: center;
             flex-shrink: 0;
         }
-        .info-box { font-size: 0.7rem; color: #666; }
-        .info-box span { display: block; font-size: 1rem; font-weight: bold; color: var(--dark-charcoal); }
+        .info-box { font-size: 0.65rem; color: #666; }
+        .info-box span { display: block; font-size: 0.9rem; font-weight: bold; color: var(--dark-charcoal); }
         .info-box span.score { color: var(--main-red); }
         
-        .dora-container {
+        .dora-container, .life-container {
             display: flex;
             flex-direction: column;
             align-items: center;
         }
-        .dora-label { font-size: 0.6rem; color: var(--main-red); font-weight: bold; margin-bottom: 1px; }
+        /* 💡 ラベルを簡素に修正、文字溢れ防止でフォントサイズを微調整 */
+        .dora-label { font-size: 0.55rem; color: var(--main-red); font-weight: bold; margin-bottom: 1px; }
+        .life-label { font-size: 0.6rem; color: var(--main-red); font-weight: bold; margin-bottom: 1px; }
         .dora-tile {
-            width: 28px; height: 36px;
+            width: 26px; height: 34px;
             background: white; border: 1px solid #b5af9f; border-radius: 2px;
-            box-shadow: 0 2px 0 #bbb; font-size: 1.1rem; font-weight: bold;
+            box-shadow: 0 2px 0 #bbb; font-size: 1rem; font-weight: bold;
             display: flex; align-items: center; justify-content: center;
         }
+        .life-display {
+            font-size: 1rem;
+            color: var(--main-red);
+            font-weight: bold;
+            letter-spacing: 1px;
+            height: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-        /* 📱 画面全体にフィットさせるゲーム領域 */
         .game-wrapper {
-            flex-grow: 1;
             position: relative;
             background-color: var(--mat-green);
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
             overflow: hidden;
+            height: auto; 
+            padding-bottom: 5px;
         }
 
-        /* Canvas自体の表示サイズを親要素に追従させ、はみ出しを防ぐ */
         .canvas-container {
-            flex-grow: 1;
-            position: relative;
             width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
+            aspect-ratio: 1 / 1;
+            max-width: 440px;
+            max-height: 440px;
+            margin: 0 auto;
+            position: relative;
             background: transparent;
         }
         canvas {
-            max-width: 100%;
-            max-height: 100%;
-            aspect-ratio: 1 / 1;
-            background: transparent;
+            width: 100%;
+            height: 100%;
             display: block;
         }
 
-        /* 🎁 アイテムストックエリア */
         .item-stock-panel {
             background: rgba(0,0,0,0.6);
-            padding: 4px;
+            padding: 6px 4px;
             border-top: 1px solid rgba(255,255,255,0.1);
             border-bottom: 1px solid var(--accent-gold);
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 2px;
+            gap: 3px;
             flex-shrink: 0;
         }
-        .item-title-lbl { font-size: 0.6rem; color: var(--accent-gold); font-weight: bold; }
-        .item-slots { display: flex; gap: 6px; justify-content: center; width: 100%; }
+        .item-title-lbl { font-size: 0.65rem; color: var(--accent-gold); font-weight: bold; }
+        .item-slots { display: flex; gap: 6px; justify-content: center; width: 100%; padding: 0 5px; }
         .item-slot {
-            width: 22%; height: 30px; background: rgba(255,255,255,0.15);
+            width: 22%; height: 34px; background: rgba(255,255,255,0.15);
             border: 1px dashed #aaa; border-radius: 4px;
             display: flex; align-items: center; justify-content: center;
             font-size: 0.6rem; color: #ccc; font-weight: bold; cursor: pointer;
@@ -147,7 +151,6 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
 
-        /* 効果中バッジ */
         .status-effect-bar {
             position: absolute; top: 0; left: 0; width: 100%;
             height: 18px; background: rgba(0,0,0,0.5); text-align: center;
@@ -156,43 +159,43 @@
         }
 
         .action-bar {
-            height: 50px; background: rgba(0,0,0,0.85);
+            height: 60px; background: rgba(0,0,0,0.9);
             display: flex; align-items: center; justify-content: center;
             color: #fff; font-size: 0.8rem; border-top: 1px solid rgba(255,255,255,0.2);
-            padding: 4px; gap: 6px; position: relative;
+            padding: 4px 8px; position: relative;
             flex-shrink: 0;
         }
-        .tsumo-display-area { display: flex; align-items: center; gap: 6px; }
+        .tsumo-display-area { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; }
         .tsumo-box {
-            width: 26px; height: 36px; background: white; border-radius: 2px;
-            color: var(--dark-charcoal); font-size: 1.1rem; font-weight: bold;
+            width: 28px; height: 38px; background: white; border-radius: 2px;
+            color: var(--dark-charcoal); font-size: 1.2rem; font-weight: bold;
             display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 2px 0 #bbb;
+            box-shadow: 0 2px 0 #bbb; flex-shrink: 0;
         }
-        .action-btn { padding: 5px 8px; border-radius: 4px; border: none; font-weight: bold; cursor: pointer; font-size: 0.75rem; }
+        .action-btn { padding: 6px 10px; border-radius: 4px; border: none; font-weight: bold; cursor: pointer; font-size: 0.75rem; }
         .btn-get { background: var(--accent-gold); color: #1a1a1a; }
         .btn-cut { background: #666; color: white; }
-        .btn-win { background: #e53935; color: white; animation: pulse 0.8s infinite alternate; font-size: 0.75rem; padding: 5px 12px; }
-        .btn-yakuman { background: #6a1b9a; color: #fff; border: 2px solid var(--accent-gold); font-size: 0.75rem; padding: 5px 8px; }
+        .btn-win { background: #e53935; color: white; animation: pulse 0.8s infinite alternate; font-size: 0.75rem; padding: 6px 14px; }
+        .btn-yakuman { background: #6a1b9a; color: #fff; border: 2px solid var(--accent-gold); font-size: 0.75rem; padding: 6px 8px; }
 
-        /* ⑤ 自由牌選択パネル用ポップアップ */
         .search-tile-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); display: none; flex-direction: column;
-            justify-content: center; align-items: center; z-index: 150; padding: 10px;
+            background: rgba(0,0,0,0.95); display: none; flex-direction: column;
+            justify-content: flex-start; align-items: center; z-index: 150; padding: 10px; overflow-y: auto;
         }
-        .search-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; width: 100%; max-width: 320px; margin-top: 8px; }
+        .search-row-label { color: var(--accent-gold); font-size: 0.65rem; font-weight: bold; margin-top: 6px; width: 100%; max-width: 340px; text-align: left; }
+        .search-grid { display: grid; grid-template-columns: repeat(9, 1fr); gap: 3px; width: 100%; max-width: 340px; margin-top: 2px; }
+        .search-grid.ji-grid { grid-template-columns: repeat(7, 1fr); max-width: 264px; }
         .search-btn-tile {
-            aspect-ratio: 3/4; background: white; border-radius: 3px; font-size: 1.2rem; font-weight: bold;
-            display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 0 #bbb;
+            aspect-ratio: 3/4; background: white; border-radius: 2px; font-size: 0.95rem; font-weight: bold;
+            display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 0 #bbb;
             color: var(--dark-charcoal);
         }
 
-        /* 🀄 手牌コンテナ（スマホでも絶対にはみ出さない） */
         .tehai-container {
-            height: 52px; background: rgba(0, 0, 0, 0.4);
+            height: 56px; background: rgba(0, 0, 0, 0.5);
             border-top: 1px solid rgba(255,255,255,0.2);
-            display: flex; align-items: center; justify-content: center; gap: 1px; padding: 2px;
+            display: flex; align-items: center; justify-content: center; gap: 1px; padding: 4px 2px;
             flex-shrink: 0;
         }
         .tehai-tile {
@@ -210,8 +213,8 @@
             transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         .yaku-popup.active { transform: translate(-50%, -50%) scale(1); }
-        .yaku-name { font-size: 1.2rem; font-weight: bold; color: var(--main-red); margin-bottom: 5px; font-family: 'Kiwi Maru', serif; }
-        .yaku-points { font-size: 1rem; font-weight: bold; color: var(--dark-charcoal); }
+        .yaku-name { font-size: 1.1rem; font-weight: bold; color: var(--main-red); margin-bottom: 5px; font-family: 'Kiwi Maru', serif; white-space: pre-line; line-height: 1.3; }
+        .yaku-points { font-size: 1.1rem; font-weight: bold; color: var(--dark-charcoal); }
 
         .screen-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -223,6 +226,104 @@
         .mode-btn { background: #333; color: #fff; border: 1px solid var(--accent-gold); padding: 6px 14px; border-radius: 20px; cursor: pointer; font-size: 0.8rem; }
         .mode-btn.selected { background: var(--main-red); font-weight: bold; box-shadow: 0 0 8px var(--accent-gold); }
         .screen-btn { background: var(--main-red); color: white; border: 2px solid var(--accent-gold); padding: 8px 35px; font-size: 0.95rem; font-weight: bold; border-radius: 25px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+
+        .collection-section {
+            background: #fff;
+            padding: 15px;
+            border-top: 3px solid var(--accent-gold);
+        }
+        .collection-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .collection-title {
+            font-family: 'Kiwi Maru', serif;
+            font-size: 1rem;
+            color: var(--main-red);
+            font-weight: bold;
+        }
+        .progress-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.75rem;
+            color: #555;
+            width: 100%;
+            margin-bottom: 15px;
+            background: #f0ede4;
+            padding: 6px 10px;
+            border-radius: 6px;
+        }
+        .progress-bar-bg {
+            flex-grow: 1;
+            height: 8px;
+            background: #ddd7cd;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--accent-gold), var(--main-red));
+            transition: width 0.5s ease;
+        }
+        .collection-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+        .yaku-card {
+            border: 1px solid #e0dacf;
+            background: #fbf9f5;
+            padding: 8px;
+            border-radius: 6px;
+            text-align: center;
+            position: relative;
+            transition: all 0.3s;
+        }
+        .yaku-card.locked {
+            opacity: 0.45;
+            background: #f0ede6;
+        }
+        .yaku-card.unlocked {
+            border: 1px solid var(--accent-gold);
+            background: #fffdf2;
+            box-shadow: 0 2px 5px rgba(212,175,55,0.15);
+        }
+        .yaku-card-name {
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #444;
+        }
+        .yaku-card.unlocked .yaku-card-name {
+            color: var(--main-red);
+        }
+        .yaku-card-pts {
+            font-size: 0.65rem;
+            color: #777;
+            margin-top: 2px;
+        }
+        .yaku-card.unlocked .yaku-card-pts {
+            color: var(--accent-gold);
+            font-weight: bold;
+        }
+        .yaku-badge {
+            position: absolute; top: -4px; right: -4px;
+            background: var(--accent-gold); color: white;
+            font-size: 0.5rem; padding: 1px 4px; border-radius: 8px;
+            font-weight: bold; display: none;
+        }
+        .yaku-card.unlocked .yaku-badge { display: block; }
+        .yaku-card.yakuman-style {
+            grid-column: span 2;
+            border: 1px dashed #ccc;
+        }
+        .yaku-card.unlocked.yakuman-style {
+            border: 2px solid var(--accent-gold);
+            background: linear-gradient(135deg, #fffdf0 0%, #fff9d6 100%);
+        }
     </style>
 </head>
 <body>
@@ -236,16 +337,44 @@
     <div class="info-panel">
         <div class="info-box">現在の得点<span id="txt-score" class="score">0</span></div>
         <div class="dora-container">
-            <div class="dora-label">ドラ表示牌</div>
+            <!-- 💡 ① ラベル部分に簡素な表現を追記 -->
+            <div class="dora-label">ドラ表示(一致でアイテム取得)</div>
             <div class="dora-tile" id="dora-box">🀀</div>
         </div>
-        <div class="info-box">目標クリア点<span class="target">15,000</span></div>
+        <div class="life-container">
+            <div class="life-label">持ち機</div>
+            <div class="life-display" id="life-box">🀆🀆🀆</div>
+        </div>
+        <div class="info-box">目標点<span class="target">50,000</span></div>
     </div>
 
     <div class="game-wrapper" id="stage-wrapper">
+        <div class="screen-overlay" id="overlayScreen">
+            <div id="overlay-title" class="screen-title">麻雀ブロック崩し</div>
+            <div id="overlay-desc" style="font-size:0.8rem; line-height:1.4; max-width:300px; color:#ccc;">
+                「ドラ表示牌」を破壊すると、全6種の超強力アイテムが確率でドロップ！<br>
+                目標の50,000点を目指して、大きな役を複合させてアガりましょう！
+            </div>
+            <div style="margin-top:12px; font-size:0.8rem; color:var(--accent-gold);">▼ 難易度（球のスピード）</div>
+            <div class="mode-selector">
+                <button class="mode-btn selected" onclick="selectDifficulty('easy', this)">初級</button>
+                <button class="mode-btn" onclick="selectDifficulty('normal', this)">中級</button>
+                <button class="mode-btn" onclick="selectDifficulty('hard', this)">上級</button>
+            </div>
+            <button class="screen-btn" onclick="startGame()">ゲーム開始</button>
+        </div>
+
         <div class="search-tile-overlay" id="searchTileOverlay">
-            <div style="color:var(--accent-gold); font-weight:bold; font-size:0.85rem;">【自由ツモ】好きな牌を選んでください</div>
-            <div class="search-grid" id="searchGrid"></div>
+            <div style="color:var(--accent-gold); font-weight:bold; font-size:0.85rem; margin-bottom:5px;">【自由ツモ】好きな牌を選んでください</div>
+            <div class="search-row-label">萬子（マンズ）</div>
+            <div class="search-grid" id="grid-man"></div>
+            <div class="search-row-label">筒子（ピンズ）</div>
+            <div class="search-grid" id="grid-pin"></div>
+            <div class="search-row-label">索子（ソーズ）</div>
+            <div class="search-grid" id="grid-sou"></div>
+            <div class="search-row-label">字牌（ジハイ）</div>
+            <div class="search-grid ji-grid" id="grid-ji"></div>
+            <button class="action-btn btn-cut" style="margin-top:15px; width:100px;" onclick="document.getElementById('searchTileOverlay').style.display='none'">戻る</button>
         </div>
 
         <div class="status-effect-bar" id="statusEffectBar" style="display: none;">効果なし</div>
@@ -266,7 +395,6 @@
 
         <div class="action-bar" id="actionBar">
             <div id="panel-idle" style="color: #aaa; font-size: 0.75rem; text-align: center;">牌ブロックを崩すと、ここにツモ牌が表示されます</div>
-            
             <div id="panel-select" class="tsumo-display-area" style="display: none;">
                 <span style="color:var(--accent-gold); font-weight:bold; font-size: 0.75rem;">ツモ：</span>
                 <div class="tsumo-box" id="tsumo-target">🀇</div>
@@ -281,44 +409,32 @@
 
         <div class="yaku-popup" id="yakuPopup">
             <div id="popup-title" class="yaku-name">清一色</div>
-            <div id="popup-pts" class="yaku-points">+10,000点！</div>
+            <div id="popup-pts" class="yaku-points">+12,000点！</div>
         </div>
+    </div>
 
-        <div class="screen-overlay" id="overlayScreen">
-            <div id="overlay-title" class="screen-title">麻雀ブロック崩し</div>
-            <div id="overlay-desc" style="font-size:0.8rem; line-height:1.4; max-width:300px; color:#ccc;">
-                「ドラ表示牌」を破壊すると、全6種の超強力アイテムが確率でドロップ！<br>
-                アイテムは4つまでストックでき、任意のタイミングでタップして使用可能です。
-            </div>
-            
-            <div style="margin-top:12px; font-size:0.8rem; color:var(--accent-gold);">▼ 難易度（球のスピード）</div>
-            <div class="mode-selector">
-                <button class="mode-btn selected" onclick="selectDifficulty('easy', this)">初級</button>
-                <button class="mode-btn" onclick="selectDifficulty('normal', this)">中級</button>
-                <button class="mode-btn" onclick="selectDifficulty('hard', this)">上級</button>
-            </div>
-            <button class="screen-btn" onclick="startGame()">ゲーム開始</button>
+    <div class="collection-section">
+        <div class="collection-header">
+            <div class="collection-title" id="lbl-collection-title" style="cursor: pointer;">🏆 作成した役コレクション</div>
         </div>
+        <div class="progress-container">
+            <span>達成率:</span>
+            <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-fill"></div></div>
+            <span id="txt-progress-ratio">0% (0/0)</span>
+        </div>
+        <div class="collection-grid" id="collection-box-grid"></div>
     </div>
 </div>
 
 <script>
-    // iOS Safari等の100vhアサリ対策
-    function setFullHeight() {
-        let vh = window.innerHeight * 0.01;
-        document.documentElement.style.setProperty('--vh', `${vh}px`);
-    }
-    window.addEventListener('resize', setFullHeight);
-    window.addEventListener('orientationchange', setFullHeight);
-    setFullHeight();
-
-    const TILE_ORDER = [
-        '🀇','🀈','🀎','🀏', '🀐','🀑','🀗','🀘', '🀙','🀚','🀠','🀡',
-        '🀀','🀁','🀂','🀃','🀆','🀅','🀄'
-    ];
     const TILE_TYPES = {
-        man: TILE_ORDER.slice(0,4), sou: TILE_ORDER.slice(4,8), pin: TILE_ORDER.slice(8,12), ji: TILE_ORDER.slice(12)
+        man: ['🀇','🀈','🀉','🀊','🀋','🀌','🀍','🀎','🀏'], 
+        pin: ['🀙','🀚','🀛','🀜','🀝','🀞','🀟','🀠','🀡'], 
+        sou: ['🀐','🀑','🀒','🀓','🀔','🀕','🀖','🀗','🀘'], 
+        ji:  ['🀀','🀁','🀂','🀃','🀆','🀅','🀄']  
     };
+    const TILE_ORDER = [...TILE_TYPES.man, ...TILE_TYPES.pin, ...TILE_TYPES.sou, ...TILE_TYPES.ji];
+    const KOKUSHI_TILES = ['🀇','🀏','🀙','🀡','🀐','🀘','🀀','🀁','🀂','🀃','🀆','🀅','🀄'];
 
     const ITEM_LIST = [
         { id: 1, name: "① 盤面\nリセット", chance: 25 },
@@ -327,6 +443,31 @@
         { id: 4, name: "④ 貫通弾", chance: 10 },
         { id: 5, name: "⑤ 牌選択\n(自由)", chance: 10 },
         { id: 6, name: "⑥ 役満化\n(ロマン)", chance: 1 }
+    ];
+
+    const ALL_YAKU_MASTER = [
+        { key: "役無し和了", name: "役無し和了", pts: "1,000点", isYakuman: false },
+        { key: "断幺九", name: "断幺九 (タンヤオ)", pts: "2,000点", isYakuman: false },
+        { key: "平和", name: "平和 (ピンフ)", pts: "2,000点", isYakuman: false },
+        { key: "役牌:白", name: "役牌: 白", pts: "2,000点", isYakuman: false },
+        { key: "役牌:發", name: "役牌: 發", pts: "2,000点", isYakuman: false },
+        { key: "役牌:中", name: "役牌: 中", pts: "2,000点", isYakuman: false },
+        { key: "一盃口", name: "一盃口 (イーペーコー)", pts: "2,000点", isYakuman: false },
+        { key: "七対子", name: "七対子 (チートイツ)", pts: "3,000点", isYakuman: false },
+        { key: "三色同順", name: "三色同順", pts: "3,000点", isYakuman: false },
+        { key: "三色同刻", name: "三色同刻", pts: "3,000点", isYakuman: false },
+        { key: "一気通貫", name: "一気通貫 (イッツー)", pts: "3,000点", isYakuman: false },
+        { key: "混全帯幺九", name: "混全帯幺九 (チャンタ)", pts: "3,000点", isYakuman: false },
+        { key: "三暗刻", name: "三暗刻 (サンアンコウ)", pts: "3,000点", isYakuman: false },
+        { key: "混一色", name: "混一色 (ホンイツ)", pts: "6,000点", isYakuman: false },
+        { key: "純全帯幺九", name: "純全帯幺九 (ジュンチャン)", pts: "6,000点", isYakuman: false },
+        { key: "清一色", name: "清一色 (チンイツ)", pts: "12,000点", isYakuman: false },
+        { key: "国士無双", name: "👑 国士無双", pts: "48,000点", isYakuman: true },
+        { key: "四暗刻", name: "👑 四暗刻", pts: "48,000点", isYakuman: true },
+        { key: "大三元", name: "👑 大三元", pts: "48,000点", isYakuman: true },
+        { key: "字一色", name: "👑 字一色", pts: "48,000点", isYakuman: true },
+        { key: "緑一色", name: "👑 緑一色", pts: "48,000点", isYakuman: true },
+        { key: "清老頭", name: "👑 清老頭", pts: "48,000点", isYakuman: true }
     ];
 
     const canvas = document.getElementById('gameCanvas');
@@ -345,11 +486,12 @@
     const searchTileOverlay = document.getElementById('searchTileOverlay');
 
     let score = 0;
-    const targetScore = 15000;
+    const targetScore = 50000;
     let gatheredHand = []; 
     let activeTsumoTile = null; 
     let currentDora = '🀀';
-    
+    let lives = 3;
+
     let isPlaying = false;
     let isChoiceMode = false;   
     let isDiscardPhase = false; 
@@ -364,17 +506,73 @@
     let speedMultiplier = 0.8;
     let lastTime = 0;
 
-    // 内部的な論理解像度は480x480に固定
-    const cw = 480; const ch = 480;
+    const cw = 440; const ch = 440;
     canvas.width = cw; canvas.height = ch;
 
-    let ball = { x: cw/2, y: ch - 50, vx: 4, vy: -5, radius: 8 };
+    let ball = { x: cw/2, y: ch - 80, vx: 4, vy: -5, radius: 8 };
     let paddle = { x: cw/2 - 50, y: ch - 25, width: 100, height: 12, defaultWidth: 100 };
     let blocks = [];
 
     const rows = 4; const cols = 7;
-    const blockWidth = 56; const blockHeight = 38;
-    const blockPadding = 6; const offsetTop = 25; const offsetLeft = 25;
+    const blockWidth = 50; const blockHeight = 34;
+    const blockPadding = 6; const offsetTop = 20; const offsetLeft = 25;
+
+    function loadSavedCollection() {
+        let saved = localStorage.getItem('dacchi_yaku_collection');
+        if (saved) { try { return JSON.parse(saved); } catch(e) { return {}; } }
+        return {};
+    }
+
+    function saveYakuAchievement(yakuKey) {
+        let collection = loadSavedCollection();
+        collection[yakuKey] = true;
+        localStorage.setItem('dacchi_yaku_collection', JSON.stringify(collection));
+        renderCollectionUI();
+    }
+
+    function renderCollectionUI() {
+        const collection = loadSavedCollection();
+        const grid = document.getElementById('collection-box-grid');
+        grid.innerHTML = "";
+        let unlockedCount = 0;
+        ALL_YAKU_MASTER.forEach(yaku => {
+            const isUnlocked = !!collection[yaku.key];
+            if (isUnlocked) unlockedCount++;
+            const card = document.createElement('div');
+            card.classList.add('yaku-card');
+            card.classList.add(isUnlocked ? 'unlocked' : 'locked');
+            if (yaku.isYakuman) card.classList.add('yakuman-style');
+            card.innerHTML = `
+                <div class="yaku-badge">済</div>
+                <div class="yaku-card-name">${yaku.name}</div>
+                <div class="yaku-card-pts">${yaku.pts}</div>
+            `;
+            grid.appendChild(card);
+        });
+        const total = ALL_YAKU_MASTER.length;
+        const ratio = Math.floor((unlockedCount / total) * 100);
+        document.getElementById('progress-fill').style.width = `${ratio}%`;
+        document.getElementById('txt-progress-ratio').innerText = `${ratio}% (${unlockedCount} / ${total}種)`;
+    }
+
+    let debugClickCount = 0;
+    document.getElementById('lbl-collection-title').onclick = () => {
+        debugClickCount++;
+        if (debugClickCount >= 3) {
+            debugClickCount = 0;
+            let collection = loadSavedCollection();
+            if (Object.keys(collection).length === ALL_YAKU_MASTER.length) {
+                localStorage.removeItem('dacchi_yaku_collection');
+                alert("【デバッグ】コレクション実績を初期化しました。");
+            } else {
+                let fullHouse = {};
+                ALL_YAKU_MASTER.forEach(y => fullHouse[y.key] = true);
+                localStorage.setItem('dacchi_yaku_collection', JSON.stringify(fullHouse));
+                alert("【デバッグ】全ての役実績を強制解放しました！");
+            }
+            renderCollectionUI();
+        }
+    };
 
     function selectDifficulty(mode, btnEl) {
         document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('selected'));
@@ -389,6 +587,17 @@
         const doraBox = document.getElementById('dora-box');
         doraBox.innerText = currentDora;
         doraBox.style.color = TILE_TYPES.ji.includes(currentDora) ? 'var(--main-red)' : 'var(--dark-charcoal)';
+    }
+
+    function updateLifeUI() {
+        const lifeBox = document.getElementById('life-box');
+        if (lives > 0) {
+            lifeBox.innerText = '🀆'.repeat(lives);
+            lifeBox.style.color = 'var(--main-red)';
+        } else {
+            lifeBox.innerText = 'なし';
+            lifeBox.style.color = '#999';
+        }
     }
 
     function generateNewBlock(r, c) {
@@ -426,6 +635,10 @@
         itemInventory = [null, null, null, null];
         activeEffects = { speedDown: 0, paddleBig: 0, pierce: 0 };
         isForcedYakuman = false;
+        
+        lives = 3;
+        updateLifeUI();
+
         document.getElementById('txt-score').innerText = score;
         
         hideActionPanel();
@@ -434,30 +647,32 @@
         updateItemUI();
         document.getElementById('overlayScreen').style.display = 'none';
         
-        ball.x = cw / 2; ball.y = ch - 80;
-        ball.vx = (Math.random() > 0.5 ? 3 : -3) * speedMultiplier * 1.2;
-        ball.vy = -5 * speedMultiplier * 1.2;
-        
+        resetBallAndPaddle();
         initBlocks();
-        initSearchGrid();
+        initSearchGrids();
         isPlaying = true;
         lastTime = performance.now();
         if(animationId) cancelAnimationFrame(animationId);
         loop();
     }
 
+    function resetBallAndPaddle() {
+        paddle.x = cw / 2 - paddle.width / 2;
+        ball.x = cw / 2; 
+        ball.y = ch - 80;
+        ball.vx = (Math.random() > 0.5 ? 3 : -3) * speedMultiplier * 1.2;
+        ball.vy = -5 * speedMultiplier * 1.2;
+        unhittableFrames = 30;
+    }
+
     function loop() {
         if (!isPlaying || isChoiceMode || isDiscardPhase) return;
-        
         const now = performance.now();
         const dt = (now - lastTime) / 1000;
         lastTime = now;
-
         updateTimers(dt);
-
         ctx.clearRect(0, 0, cw, ch);
         if (unhittableFrames > 0) unhittableFrames--; 
-        
         moveBall();
         checkCollisions();
         drawBlocks();
@@ -468,28 +683,10 @@
 
     function updateTimers(dt) {
         let effectTexts = [];
-        if (activeEffects.speedDown > 0) {
-            activeEffects.speedDown -= dt;
-            effectTexts.push(`🐢 弾速低下 (${Math.ceil(activeEffects.speedDown)}s)`);
-        }
-        if (activeEffects.paddleBig > 0) {
-            activeEffects.paddleBig -= dt;
-            paddle.width = paddle.defaultWidth * 2;
-            effectTexts.push(`↔️ パドル2倍 (${Math.ceil(activeEffects.paddleBig)}s)`);
-        } else {
-            paddle.width = paddle.defaultWidth;
-        }
-        if (activeEffects.pierce > 0) {
-            activeEffects.pierce -= dt;
-            effectTexts.push(`🔥 貫通弾 (${Math.ceil(activeEffects.pierce)}s)`);
-        }
-
-        if (effectTexts.length > 0) {
-            statusEffectBar.style.display = 'block';
-            statusEffectBar.innerText = "効果中: " + effectTexts.join(" | ");
-        } else {
-            statusEffectBar.style.display = 'none';
-        }
+        if (activeEffects.speedDown > 0) { activeEffects.speedDown -= dt; effectTexts.push(`🐢 弾速低下 (${Math.ceil(activeEffects.speedDown)}s)`); }
+        if (activeEffects.paddleBig > 0) { activeEffects.paddleBig -= dt; paddle.width = paddle.defaultWidth * 2; effectTexts.push(`↔️ パドル2倍 (${Math.ceil(activeEffects.paddleBig)}s)`); } else { paddle.width = paddle.defaultWidth; }
+        if (activeEffects.pierce > 0) { activeEffects.pierce -= dt; effectTexts.push(`🔥 貫通弾 (${Math.ceil(activeEffects.pierce)}s)`); }
+        if (effectTexts.length > 0) { statusEffectBar.style.display = 'block'; statusEffectBar.innerText = "効果中: " + effectTexts.join(" | "); } else { statusEffectBar.style.display = 'none'; }
     }
 
     function drawBall() {
@@ -508,108 +705,77 @@
             if(!b.alive) return;
             ctx.fillStyle = "#ffffff"; ctx.fillRect(b.x, b.y, b.w, b.h);
             ctx.strokeStyle = "#b5af9f"; ctx.strokeRect(b.x, b.y, b.w, b.h);
-            
             ctx.fillStyle = (b.type === currentDora) ? "var(--accent-gold)" : "#0d3b1e";
             ctx.fillRect(b.x, b.y + b.h - 4, b.w, 4);
-            
             ctx.fillStyle = TILE_TYPES.ji.includes(b.type) ? "var(--main-red)" : "#1a1a1a";
-            ctx.font = "26px 'Noto Sans JP'"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+            ctx.font = "20px 'Noto Sans JP'"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
             ctx.fillText(b.type, b.x + b.w/2, b.y + b.h/2);
         });
     }
 
     function moveBall() {
         let currentSpeedFactor = activeEffects.speedDown > 0 ? 0.5 : 1.0;
-        ball.x += ball.vx * currentSpeedFactor; 
-        ball.y += ball.vy * currentSpeedFactor;
-
-        if(ball.x - ball.radius < 0 || ball.x + ball.radius > cw) {
-            ball.vx = -ball.vx;
-            ball.x = ball.x - ball.radius < 0 ? ball.radius : cw - ball.radius;
-        }
+        ball.x += ball.vx * currentSpeedFactor; ball.y += ball.vy * currentSpeedFactor;
+        if(ball.x - ball.radius < 0 || ball.x + ball.radius > cw) { ball.vx = -ball.vx; ball.x = ball.x - ball.radius < 0 ? ball.radius : cw - ball.radius; }
         if(ball.y - ball.radius < 0) { ball.vy = -ball.vy; ball.y = ball.radius; }
-
         if(ball.y + ball.radius >= paddle.y && ball.y - ball.radius <= paddle.y + paddle.height) {
             if(ball.x >= paddle.x && ball.x <= paddle.x + paddle.width) {
                 let hitPos = (ball.x - (paddle.x + paddle.width/2)) / (paddle.width/2);
-                ball.vx = hitPos * 5 * speedMultiplier;
-                ball.vy = -Math.abs(ball.vy);
-                ball.y = paddle.y - ball.radius;
+                ball.vx = hitPos * 5 * speedMultiplier; ball.vy = -Math.abs(ball.vy); ball.y = paddle.y - ball.radius;
             }
         }
-        if(ball.y > ch) endGame(false);
+        
+        if(ball.y > ch) {
+            lives--;
+            updateLifeUI();
+            if (lives > 0) {
+                resetBallAndPaddle();
+            } else {
+                endGame(false);
+            }
+        }
     }
 
     function checkCollisions() {
         if (isChoiceMode || isDiscardPhase || unhittableFrames > 0) return;
-
         for (let idx = 0; idx < blocks.length; idx++) {
-            const b = blocks[idx];
-            if (!b.alive) continue;
-
-            if (ball.x + ball.radius > b.x && ball.x - ball.radius < b.x + b.w &&
-                ball.y + ball.radius > b.y && ball.y - ball.radius < b.y + b.h) {
-                
+            const b = blocks[idx]; if (!b.alive) continue;
+            if (ball.x + ball.radius > b.x && ball.x - ball.radius < b.x + b.w && ball.y + ball.radius > b.y && ball.y - ball.radius < b.y + b.h) {
                 b.alive = false;
-
                 if (!(activeEffects.pierce > 0)) {
-                    let overlapLeft = (ball.x + ball.radius) - b.x;
-                    let overlapRight = (b.x + b.w) - (ball.x - ball.radius);
-                    let overlapTop = (ball.y + ball.radius) - b.y;
-                    let overlapBottom = (b.y + b.h) - (ball.y - ball.radius);
-
+                    let overlapLeft = (ball.x + ball.radius) - b.x; let overlapRight = (b.x + b.w) - (ball.x - ball.radius);
+                    let overlapTop = (ball.y + ball.radius) - b.y; let overlapBottom = (b.y + b.h) - (ball.y - ball.radius);
                     let minOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
-
                     if (minOverlap === overlapLeft) { ball.vx = -Math.abs(ball.vx); ball.x = b.x - ball.radius; } 
                     else if (minOverlap === overlapRight) { ball.vx = Math.abs(ball.vx); ball.x = b.x + b.w + ball.radius; } 
                     else if (minOverlap === overlapTop) { ball.vy = -Math.abs(ball.vy); ball.y = b.y - ball.radius; } 
                     else if (minOverlap === overlapBottom) { ball.vy = Math.abs(ball.vy); ball.y = b.y + b.h + ball.radius; }
                 }
-
-                if (b.type === currentDora) {
-                    rollItemLottery();
-                }
-
-                triggerTileChoice(b.type);
-                checkAndRefillBlocks();
+                if (b.type === currentDora) rollItemLottery();
+                triggerTileChoice(b.type); checkAndRefillBlocks();
                 if (!(activeEffects.pierce > 0)) break; 
             }
         }
     }
 
     function rollItemLottery() {
-        let rand = Math.floor(Math.random() * 100) + 1;
-        let sum = 0; let selectedItem = null;
-        for (let it of ITEM_LIST) {
-            sum += it.chance;
-            if (rand <= sum) { selectedItem = it; break; }
-        }
-        if (selectedItem) {
-            let emptyIdx = itemInventory.indexOf(null);
-            if (emptyIdx !== -1) { itemInventory[emptyIdx] = selectedItem; updateItemUI(); }
-        }
+        let rand = Math.floor(Math.random() * 100) + 1; let sum = 0; let selectedItem = null;
+        for (let it of ITEM_LIST) { sum += it.chance; if (rand <= sum) { selectedItem = it; break; } }
+        if (selectedItem) { let emptyIdx = itemInventory.indexOf(null); if (emptyIdx !== -1) { itemInventory[emptyIdx] = selectedItem; updateItemUI(); } }
     }
 
     function updateItemUI() {
         for (let i = 0; i < 4; i++) {
             const slot = document.getElementById(`item-${i}`);
-            if (itemInventory[i]) {
-                slot.classList.add('filled');
-                slot.innerText = itemInventory[i].name;
-            } else {
-                slot.classList.remove('filled'); slot.innerText = "（空）";
-            }
+            if (itemInventory[i]) { slot.classList.add('filled'); slot.innerText = itemInventory[i].name; } 
+            else { slot.classList.remove('filled'); slot.innerText = "（空）"; }
         }
     }
 
     function useItem(slotIdx) {
-        let item = itemInventory[slotIdx];
-        if (!item) return;
+        let item = itemInventory[slotIdx]; if (!item) return;
         if (item.id === 5 && (!isPlaying || isChoiceMode || isDiscardPhase)) return;
-
-        itemInventory[slotIdx] = null;
-        updateItemUI();
-
+        itemInventory[slotIdx] = null; updateItemUI();
         if (item.id === 1) { initBlocks(); } 
         else if (item.id === 2) { activeEffects.speedDown = 10; } 
         else if (item.id === 3) { activeEffects.paddleBig = 10; } 
@@ -617,26 +783,23 @@
         else if (item.id === 5) { searchTileOverlay.style.display = 'flex'; }
     }
 
-    function initSearchGrid() {
-        const grid = document.getElementById('searchGrid');
-        grid.innerHTML = "";
-        TILE_ORDER.forEach(tile => {
-            const b = document.createElement('div');
-            b.classList.add('search-btn-tile'); b.innerText = tile;
-            if(TILE_TYPES.ji.includes(tile)) b.style.color = 'var(--main-red)';
-            b.onclick = () => {
-                searchTileOverlay.style.display = 'none';
-                triggerTileChoice(tile);
-            };
-            grid.appendChild(b);
-        });
+    function initSearchGrids() {
+        const createGridItems = (targetGridId, tileArray) => {
+            const container = document.getElementById(targetGridId); container.innerHTML = "";
+            tileArray.forEach(tile => {
+                const b = document.createElement('div'); b.classList.add('search-btn-tile'); b.innerText = tile;
+                if(TILE_TYPES.ji.includes(tile)) b.style.color = 'var(--main-red)';
+                b.onclick = () => { searchTileOverlay.style.display = 'none'; triggerTileChoice(tile); };
+                container.appendChild(b);
+            });
+        };
+        createGridItems('grid-man', TILE_TYPES.man); createGridItems('grid-pin', TILE_TYPES.pin);
+        createGridItems('grid-sou', TILE_TYPES.sou); createGridItems('grid-ji', TILE_TYPES.ji);
     }
 
     function triggerYakumanCheat() {
-        let itemIdx = itemInventory.findIndex(it => it && it.id === 6);
-        if (itemIdx === -1) return;
-        itemInventory[itemIdx] = null; updateItemUI();
-        isForcedYakuman = true; chooseWin();
+        let itemIdx = itemInventory.findIndex(it => it && it.id === 6); if (itemIdx === -1) return;
+        itemInventory[itemIdx] = null; updateItemUI(); isForcedYakuman = true; chooseWin();
     }
 
     function triggerTileChoice(tileChar) {
@@ -644,136 +807,229 @@
         panelIdle.style.display = 'none'; panelSelect.style.display = 'flex';
         tsumoTarget.innerText = tileChar;
         tsumoTarget.style.color = TILE_TYPES.ji.includes(tileChar) ? 'var(--main-red)' : 'var(--dark-charcoal)';
-
         if (gatheredHand.length === 13) {
             btnIncorporate.innerText = "入れ替え"; btnWinDeclaration.style.display = 'inline-block';
             btnYakumanTrigger.style.display = itemInventory.some(it => it && it.id === 6) ? 'inline-block' : 'none';
         } else {
-            btnIncorporate.innerText = "手牌に加える";
-            btnWinDeclaration.style.display = 'none'; btnYakumanTrigger.style.display = 'none';
+            btnIncorporate.innerText = "手牌に加える"; btnWinDeclaration.style.display = 'none'; btnYakumanTrigger.style.display = 'none';
         }
     }
 
-    function resumeGameWithWeight() {
-        isChoiceMode = false; isDiscardPhase = false; unhittableFrames = 12; 
-        hideActionPanel(); lastTime = performance.now(); loop();
-    }
-
-    function hideActionPanel() {
-        panelSelect.style.display = 'none'; panelIdle.style.display = 'block';
-        panelIdle.innerText = "牌ブロックを崩すと、ここにツモ牌が表示されます";
-        btnWinDeclaration.style.display = 'none'; btnYakumanTrigger.style.display = 'none';
-        activeTsumoTile = null;
-    }
+    function resumeGameWithWeight() { isChoiceMode = false; isDiscardPhase = false; unhittableFrames = 12; hideActionPanel(); lastTime = performance.now(); loop(); }
+    function hideActionPanel() { panelSelect.style.display = 'none'; panelIdle.style.display = 'block'; panelIdle.innerText = "牌ブロックを崩すと、ここにツモ牌が表示されます"; btnWinDeclaration.style.display = 'none'; btnYakumanTrigger.style.display = 'none'; activeTsumoTile = null; }
 
     function chooseIncorporate() {
         if (!isChoiceMode) return;
-        if (gatheredHand.length < 13) {
-            gatheredHand.push(activeTsumoTile); sortHand(); renderRack(); resumeGameWithWeight();
-        } else {
-            isChoiceMode = false; isDiscardPhase = true;
-            panelSelect.style.display = 'none'; panelIdle.style.display = 'block';
+        if (gatheredHand.length < 13) { gatheredHand.push(activeTsumoTile); sortHand(); renderRack(); resumeGameWithWeight(); } 
+        else {
+            isChoiceMode = false; isDiscardPhase = true; panelSelect.style.display = 'none'; panelIdle.style.display = 'block';
             panelIdle.innerHTML = "<span style='color:var(--accent-gold); font-weight:bold; font-size:0.75rem;'>【入れ替え】下の13枚から捨てる牌を1枚選んでください</span>";
             renderRack();
         }
     }
-
     function chooseDiscardTsumo() { if (!isChoiceMode) return; resumeGameWithWeight(); }
-
-    function chooseWin() {
-        if (!isChoiceMode || gatheredHand.length !== 13) return;
-        isChoiceMode = false; const finalHand = [...gatheredHand, activeTsumoTile];
-        hideActionPanel(); processYakuDecision(finalHand);
-    }
-
-    function discardFromHand(index) {
-        if (!isDiscardPhase) return;
-        gatheredHand.splice(index, 1); gatheredHand.push(activeTsumoTile);
-        sortHand(); renderRack(); resumeGameWithWeight();
-    }
-
+    function chooseWin() { if (!isChoiceMode || gatheredHand.length !== 13) return; isChoiceMode = false; const finalHand = [...gatheredHand, activeTsumoTile]; hideActionPanel(); processYakuDecision(finalHand); }
+    function discardFromHand(index) { if (!isDiscardPhase) return; gatheredHand.splice(index, 1); gatheredHand.push(activeTsumoTile); sortHand(); renderRack(); resumeGameWithWeight(); }
     function sortHand() { gatheredHand.sort((a, b) => TILE_ORDER.indexOf(a) - TILE_ORDER.indexOf(b)); }
 
     function renderRack() {
         rack.innerHTML = "";
         gatheredHand.forEach((tile, index) => {
-            const tEl = document.createElement('div');
-            tEl.classList.add('tehai-tile'); tEl.innerText = tile;
+            const tEl = document.createElement('div'); tEl.classList.add('tehai-tile'); tEl.innerText = tile;
             if(TILE_TYPES.ji.includes(tile)) tEl.style.color = 'var(--main-red)';
             if (isDiscardPhase) { tEl.classList.add('selectable'); tEl.onclick = () => discardFromHand(index); }
             rack.appendChild(tEl);
         });
     }
 
-    function checkMentsuForm(hand) {
+    function checkKokushiMusou(hand) {
+        if (hand.length !== 14) return false;
+        if (!hand.every(t => KOKUSHI_TILES.includes(t))) return false;
+        return new Set(hand).size === 13;
+    }
+
+    function checkChitoitsu(hand) {
         const counts = {}; hand.forEach(t => counts[t] = (counts[t] || 0) + 1);
-        if (Object.values(counts).filter(v => v === 2).length === 7) return true;
-        const tileCounts = Array(TILE_ORDER.length).fill(0); hand.forEach(t => tileCounts[TILE_ORDER.indexOf(t)]++);
+        const pairs = Object.values(counts).filter(v => v === 2).length;
+        return pairs === 7;
+    }
+
+    function findAllDecompositions(hand) {
+        const tileCounts = Array(TILE_ORDER.length).fill(0);
+        hand.forEach(t => tileCounts[TILE_ORDER.indexOf(t)]++);
+        const results = [];
         for (let i = 0; i < tileCounts.length; i++) {
             if (tileCounts[i] >= 2) {
                 const tempCounts = [...tileCounts]; tempCounts[i] -= 2;
-                if (validateMentsu(tempCounts, 0)) return true;
+                const currentMentsu = [];
+                backtrackMentsu(tempCounts, 0, currentMentsu, TILE_ORDER[i], results);
             }
         }
-        return false;
+        return results;
     }
 
-    function validateMentsu(counts, index) {
+    function backtrackMentsu(counts, index, currentMentsu, jantou, results) {
         while (index < counts.length && counts[index] === 0) index++;
-        if (index === counts.length) return true;
-        if (counts[index] >= 3) { counts[index] -= 3; if (validateMentsu(counts, index)) return true; counts[index] += 3; }
-        if (index < 12) { 
-            const currentTile = TILE_ORDER[index]; const next2 = TILE_ORDER[index + 2]; let sameGroup = false;
-            if (TILE_TYPES.man.includes(currentTile) && TILE_TYPES.man.includes(next2)) sameGroup = true;
-            if (TILE_TYPES.sou.includes(currentTile) && TILE_TYPES.sou.includes(next2)) sameGroup = true;
-            if (TILE_TYPES.pin.includes(currentTile) && TILE_TYPES.pin.includes(next2)) sameGroup = true;
-            if (sameGroup && counts[index + 1] > 0 && counts[index + 2] > 0) {
-                counts[index]--; counts[index + 1]--; counts[index + 2]--;
-                if (validateMentsu(counts, index)) return true;
-                counts[index]++; counts[index + 1]++; counts[index + 2]++;
+        if (index === counts.length) {
+            if (currentMentsu.length === 4) results.push({ jantou: jantou, mentsu: [...currentMentsu] });
+            return;
+        }
+        if (counts[index] >= 3) {
+            counts[index] -= 3; currentMentsu.push({ type: 'kotsu', tile: TILE_ORDER[index] });
+            backtrackMentsu(counts, index, currentMentsu, jantou, results);
+            currentMentsu.pop(); counts[index] += 3;
+        }
+        if (index < 27) {
+            const currentTile = TILE_ORDER[index]; let canSeq = false;
+            if (TILE_TYPES.man.includes(currentTile) && TILE_TYPES.man.includes(TILE_ORDER[index+2])) canSeq = true;
+            if (TILE_TYPES.pin.includes(currentTile) && TILE_TYPES.pin.includes(TILE_ORDER[index+2])) canSeq = true;
+            if (TILE_TYPES.sou.includes(currentTile) && TILE_TYPES.sou.includes(TILE_ORDER[index+2])) canSeq = true;
+            if (canSeq && counts[index+1] > 0 && counts[index+2] > 0) {
+                counts[index]--; counts[index+1]--; counts[index+2]--;
+                currentMentsu.push({ type: 'shuntsu', tile: currentTile });
+                backtrackMentsu(counts, index, currentMentsu, jantou, results);
+                currentMentsu.pop(); counts[index]++; counts[index+1]++; counts[index+2]++;
             }
         }
-        return false;
     }
 
     function processYakuDecision(finalHand) {
-        isPlaying = false; let yakuName = ""; let bonus = 0;
-        if (isForcedYakuman) {
-            const yakumanTitles = ["国士無双 (コクシ)", "大三元 (ダイサンゲン)", "四暗刻 (スーアンコウ)", "字一色 (ツーイーソー)"];
-            yakuName = "✨奇跡の役満: " + yakumanTitles[Math.floor(Math.random() * yakumanTitles.length)];
-            bonus = 32000; isForcedYakuman = false;
-        } else {
-            if (!checkMentsuForm(finalHand)) { yakuName = "不聴 (ノーテン)"; bonus = 0; } 
-            else {
-                const isMan = finalHand.every(t => TILE_TYPES.man.includes(t));
-                const isPin = finalHand.every(t => TILE_TYPES.pin.includes(t));
-                const isSou = finalHand.every(t => TILE_TYPES.sou.includes(t));
-                const isAllJi = finalHand.every(t => TILE_TYPES.ji.includes(t));
-                const hasMan = finalHand.some(t => TILE_TYPES.man.includes(t));
-                const hasPin = finalHand.some(t => TILE_TYPES.pin.includes(t));
-                const hasSou = finalHand.some(t => TILE_TYPES.sou.includes(t));
-                const hasJi = finalHand.some(t => TILE_TYPES.ji.includes(t));
-                const counts = {}; finalHand.forEach(t => counts[t] = (counts[t] || 0) + 1);
-                const tripletsCount = Object.values(counts).filter(v => v >= 3).length;
-                const doraCount = counts[currentDora] || 0;
+        isPlaying = false;
+        let detectedYakuList = [];
+        let totalGain = 0;
 
-                if (isAllJi) { yakuName = "字一色 (ツーイーソー)"; bonus = 12000; }
-                else if (isMan || isPin || isSou) { yakuName = "清一色 (チンイツ)"; bonus = 10000; }
-                else if (((hasMan?1:0)+(hasPin?1:0)+(hasSou?1:0) === 1) && hasJi) { yakuName = "混一色 (ホンイツ)"; bonus = 5000; }
-                else if (tripletsCount >= 4) { yakuName = "対々和 (トイトイ)"; bonus = 4000; }
-                else if (Object.values(counts).filter(v => v === 2).length === 7) { yakuName = "七対子 (チートイツ)"; bonus = 3000; }
-                else { yakuName = "自摸 (ツモ)"; bonus = 1000; }
-                if (doraCount > 0 && bonus > 0) { yakuName += ` + ドラ${doraCount}`; bonus += doraCount * 500; }
+        if (isForcedYakuman) {
+            const titles = ["国士無双", "大三元", "四暗刻", "字一色"];
+            let chosen = titles[Math.floor(Math.random() * titles.length)];
+            detectedYakuList.push({ name: "✨奇跡の役満: " + chosen, key: chosen, pts: 48000 });
+            totalGain = 48000;
+            isForcedYakuman = false;
+        } else if (checkKokushiMusou(finalHand)) {
+            detectedYakuList.push({ name: "国士無双", key: "国士無双", pts: 48000 });
+            totalGain = 48000;
+        } else {
+            const decompositions = findAllDecompositions(finalHand);
+            let isChitoi = checkChitoitsu(finalHand);
+            
+            if (decompositions.length === 0 && !isChitoi) {
+                detectedYakuList.push({ name: "不聴 (ノーテン)", key: null, pts: 0 });
+                totalGain = 0;
+            } else {
+                let bestScore = -1; let bestYakuSet = [];
+
+                if (isChitoi) {
+                    let chitoiYaku = [{ name: "七対子", key: "七対子", pts: 3000 }];
+                    let ptsSum = 3000;
+                    const isAllJi = finalHand.every(t => TILE_TYPES.ji.includes(t));
+                    const isMan = finalHand.every(t => TILE_TYPES.man.includes(t));
+                    const isPin = finalHand.every(t => TILE_TYPES.pin.includes(t));
+                    const isSou = finalHand.every(t => TILE_TYPES.sou.includes(t));
+                    const hasJi = finalHand.some(t => TILE_TYPES.ji.includes(t));
+                    const noYaichu = finalHand.every(t => !['🀇','🀏','🀙','🀡','🀐','🀘',...TILE_TYPES.ji].includes(t));
+
+                    if (isAllJi) { chitoiYaku.push({ name: "字一色", key: "字一色", pts: 48000 }); ptsSum += 48000; }
+                    else if (isMan || isPin || isSou) { chitoiYaku.push({ name: "清一色", key: "清一色", pts: 12000 }); ptsSum += 12000; }
+                    else if ((isMan||isPin||isSou||hasJi) && ((finalHand.some(t=>TILE_TYPES.man.includes(t))?1:0)+(finalHand.some(t=>TILE_TYPES.pin.includes(t))?1:0)+(finalHand.some(t=>TILE_TYPES.sou.includes(t))?1:0)===1) && hasJi) { chitoiYaku.push({ name: "混一色", key: "混一色", pts: 6000 }); ptsSum += 6000; }
+                    if (noYaichu) { chitoiYaku.push({ name: "断幺九", key: "断幺九", pts: 2000 }); ptsSum += 2000; }
+
+                    bestScore = ptsSum; bestYakuSet = chitoiYaku;
+                }
+
+                decompositions.forEach(dec => {
+                    let currentYaku = []; let pts = 0;
+                    const kotsuList = dec.mentsu.filter(m => m.type === 'kotsu').map(m => m.tile);
+                    const shuntsuList = dec.mentsu.filter(m => m.type === 'shuntsu').map(m => m.tile);
+                    
+                    const isAllJi = finalHand.every(t => TILE_TYPES.ji.includes(t));
+                    const isMan = finalHand.every(t => TILE_TYPES.man.includes(t));
+                    const isPin = finalHand.every(t => TILE_TYPES.pin.includes(t));
+                    const isSou = finalHand.every(t => TILE_TYPES.sou.includes(t));
+                    const hasJi = finalHand.some(t => TILE_TYPES.ji.includes(t));
+                    const noYaichu = finalHand.every(t => !['🀇','🀏','🀙','🀡','🀐','🀘',...TILE_TYPES.ji].includes(t));
+
+                    let hasYakuman = false;
+                    if (kotsuList.length === 4) { currentYaku.push({ name: "四暗刻", key: "四暗刻", pts: 48000 }); pts += 48000; hasYakuman = true; }
+                    if (['🀆','🀅','🀄'].every(t => kotsuList.includes(t))) { currentYaku.push({ name: "大三元", key: "大三元", pts: 48000 }); pts += 48000; hasYakuman = true; }
+                    if (isAllJi) { currentYaku.push({ name: "字一色", key: "字一色", pts: 48000 }); pts += 48000; hasYakuman = true; }
+                    if (finalHand.every(t => ['🀑','🀒','🀓','🀕','🀗','🀅'].includes(t))) { currentYaku.push({ name: "緑一色", key: "緑一色", pts: 48000 }); pts += 48000; hasYakuman = true; }
+                    if (finalHand.every(t => ['🀇','🀏','🀙','🀡','🀐','🀘'].includes(t))) { currentYaku.push({ name: "清老頭", key: "清老頭", pts: 48000 }); pts += 48000; hasYakuman = true; }
+
+                    if (!hasYakuman) {
+                        if (noYaichu) { currentYaku.push({ name: "断幺九", key: "断幺九", pts: 2000 }); pts += 2000; }
+                        if (isMan || isPin || isSou) { currentYaku.push({ name: "清一色", key: "清一色", pts: 12000 }); pts += 12000; }
+                        else if (hasJi && ((finalHand.some(t=>TILE_TYPES.man.includes(t))?1:0)+(finalHand.some(t=>TILE_TYPES.pin.includes(t))?1:0)+(finalHand.some(t=>TILE_TYPES.sou.includes(t))?1:0)===1)) { currentYaku.push({ name: "混一色", key: "混一色", pts: 6000 }); pts += 6000; }
+                        if (shuntsuList.length === 4 && !['🀆','🀅','🀄'].includes(dec.jantou)) { currentYaku.push({ name: "平和", key: "平和", pts: 2000 }); pts += 2000; }
+                        if (kotsuList.includes('🀆')) { currentYaku.push({ name: "役牌:白", key: "役牌:白", pts: 2000 }); pts += 2000; }
+                        if (kotsuList.includes('🀅')) { currentYaku.push({ name: "役牌:發", key: "役牌:發", pts: 2000 }); pts += 2000; }
+                        if (kotsuList.includes('🀄')) { currentYaku.push({ name: "役牌:中", key: "役牌:中", pts: 2000 }); pts += 2000; }
+
+                        let iipeikoCount = 0; const sCounts = {}; shuntsuList.forEach(t => sCounts[t] = (sCounts[t] || 0) + 1);
+                        Object.values(sCounts).forEach(v => { if (v >= 2) iipeikoCount++; });
+                        if (iipeikoCount === 1) { currentYaku.push({ name: "一盃口", key: "一盃口", pts: 2000 }); pts += 2000; }
+
+                        let hasSanshokuShuntsu = false; let hasSanshokuKotsu = false;
+                        for(let num=1; num<=9; num++) {
+                            let mTile = TILE_TYPES.man[num-1]; let pTile = TILE_TYPES.pin[num-1]; let sTile = TILE_TYPES.sou[num-1];
+                            if (shuntsuList.includes(mTile) && shuntsuList.includes(pTile) && shuntsuList.includes(sTile)) hasSanshokuShuntsu = true;
+                            if (kotsuList.includes(mTile) && kotsuList.includes(pTile) && kotsuList.includes(sTile)) hasSanshokuKotsu = true;
+                        }
+                        if (hasSanshokuShuntsu) { currentYaku.push({ name: "三色同順", key: "三色同順", pts: 3000 }); pts += 3000; }
+                        if (hasSanshokuKotsu) { currentYaku.push({ name: "三色同刻", key: "三色同刻", pts: 3000 }); pts += 3000; }
+
+                        ['🀇','🀙','🀐'].forEach(startTile => {
+                            let idx = TILE_ORDER.indexOf(startTile);
+                            if (shuntsuList.includes(startTile) && shuntsuList.includes(TILE_ORDER[idx+3]) && shuntsuList.includes(TILE_ORDER[idx+6])) {
+                                currentYaku.push({ name: "一気通貫", key: "一気通貫", pts: 3000 }); pts += 3000;
+                            }
+                        });
+
+                        const yaochuList = ['🀇','🀏','🀙','🀡','🀐','🀘',...TILE_TYPES.ji];
+                        let isJunchan = true; let isChanta = true;
+                        if (!yaochuList.includes(dec.jantou)) { isChanta = false; isJunchan = false; }
+                        if (TILE_TYPES.ji.includes(dec.jantou)) isJunchan = false;
+                        dec.mentsu.forEach(m => {
+                            if (m.type === 'kotsu') {
+                                if (!yaochuList.includes(m.tile)) { isChanta = false; isJunchan = false; }
+                                if (TILE_TYPES.ji.includes(m.tile)) isJunchan = false;
+                            } else {
+                                let idx = TILE_ORDER.indexOf(m.tile); if (!(idx%9 === 0 || idx%9 === 6)) { isChanta = false; isJunchan = false; }
+                            }
+                        });
+                        if (isJunchan) { currentYaku.push({ name: "純全帯幺九", key: "純全帯幺九", pts: 6000 }); pts += 6000; }
+                        else if (isChanta) { currentYaku.push({ name: "混全帯幺九", key: "混全帯幺九", pts: 3000 }); pts += 3000; }
+                        if (kotsuList.length === 3) { currentYaku.push({ name: "三暗刻", key: "三暗刻", pts: 3000 }); pts += 3000; }
+                    }
+
+                    if (currentYaku.length === 0) { currentYaku.push({ name: "役無し和了", key: "役無し和了", pts: 1000 }); pts = 1000; }
+                    if (pts > bestScore) { bestScore = pts; bestYakuSet = currentYaku; }
+                });
+                detectedYakuList = bestYakuSet;
+                totalGain = bestScore === -1 ? 0 : bestScore;
             }
         }
-        score += bonus; document.getElementById('txt-score').innerText = score;
-        document.getElementById('popup-title').innerText = yakuName;
-        document.getElementById('popup-pts').innerText = bonus > 0 ? `+${bonus.toLocaleString()} 点！` : "0 点 (手牌リreset)";
-        popup.classList.add('active'); changeDora();
+
+        let doraCount = finalHand.filter(t => t === currentDora).length;
+        // 💡 ② 手役にドラが含まれていた場合、1枚あたり1000点の加点に変更
+        if (doraCount > 0 && totalGain > 0) {
+            detectedYakuList.push({ name: `ドラ ${doraCount}`, key: null, pts: doraCount * 1000 });
+            totalGain += doraCount * 1000;
+        }
+
+        detectedYakuList.forEach(yaku => { if (yaku.key) saveYakuAchievement(yaku.key); });
+        score += totalGain;
+        document.getElementById('txt-score').innerText = score;
+        
+        let nameString = detectedYakuList.map(y => `${y.name} (${y.pts > 0 ? '+' + y.pts.toLocaleString() : '0'})`).join("\n");
+        document.getElementById('popup-title').innerText = nameString;
+        document.getElementById('popup-pts').innerText = totalGain > 0 ? `合計 +${totalGain.toLocaleString()} 点！` : "0 点 (手牌リセット)";
+        
+        popup.classList.add('active');
+        changeDora();
+
         setTimeout(() => {
             popup.classList.remove('active'); gatheredHand = []; renderRack();
             if (score >= targetScore) { endGame(true); } else { isPlaying = true; initBlocks(); resumeGameWithWeight(); }
-        }, 2500);
+        }, 3000);
     }
 
     function endGame(isClear) {
@@ -783,17 +1039,15 @@
         overlay.style.display = 'flex';
         if (isClear) {
             title.innerText = "🎉 GAME CLEAR !!"; title.style.color = "var(--accent-gold)";
-            document.getElementById('overlay-desc').innerHTML = `目標の ${targetScore.toLocaleString()} 点を突破しました！<br>スコア: <strong>${score.toLocaleString()} 点</strong>`;
+            document.getElementById('overlay-desc').innerHTML = `クリア目標の ${targetScore.toLocaleString()} 点を突破しました！<br>最終スコア: <strong>${score.toLocaleString()} 点</strong>`;
         } else {
             title.innerText = "❌ GAME OVER"; title.style.color = "var(--main-red)";
-            document.getElementById('overlay-desc').innerHTML = `球を落としてしまいました…<br>スコア: <strong>${score.toLocaleString()} 点</strong>`;
+            document.getElementById('overlay-desc').innerHTML = `すべての持ち機を失ってしまいました…<br>最終スコア: <strong>${score.toLocaleString()} 点</strong>`;
         }
     }
 
-    // 📱 タッチ座標の計算もレスポンシブ用に正確に変換
     function updatePaddlePosition(clientX) {
         const rect = canvas.getBoundingClientRect();
-        // CSS縮小表示された横幅と、本来の内部解像度（cw=480）の比率を計算
         let relativeX = (clientX - rect.left) / rect.width;
         let targetLogicalX = relativeX * cw;
         paddle.x = targetLogicalX - paddle.width / 2;
@@ -807,6 +1061,8 @@
     stageWrapper.addEventListener('touchstart', (e) => { if (isPlaying && !isChoiceMode && !isDiscardPhase) { isDragging = true; updatePaddlePosition(e.touches[0].clientX); } }, { passive: true });
     window.addEventListener('touchmove', (e) => { if (isDragging && isPlaying && !isChoiceMode && !isDiscardPhase) updatePaddlePosition(e.touches[0].clientX); }, { passive: true });
     window.addEventListener('touchend', () => isDragging = false);
+
+    window.onload = () => { renderCollectionUI(); };
 </script>
 
 </body>
