@@ -1,945 +1,1077 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>娯楽室 - だっち雀</title>
-<link href="https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@500&family=Noto+Sans+JP:wght@500;700&display=swap" rel="stylesheet">
-<style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: #0a0a1a; font-family: 'Noto Sans JP', sans-serif; overflow: hidden; width: 100vw; height: 100vh; display: flex; flex-direction: column; }
-header {
-  background: linear-gradient(135deg, #1a1a1a, #9e1b1b);
-  border-bottom: 3px solid #d4af37;
-  padding: 10px 16px;
-  display: flex; align-items: center; justify-content: space-between;
-  z-index: 10; flex-shrink: 0;
-}
-header h1 { font-family: 'Kiwi Maru', serif; color: #d4af37; font-size: 1.2rem; letter-spacing: 3px; }
-.back-btn { color: #d4af37; text-decoration: none; font-size: 0.82rem; border: 1px solid #d4af37; padding: 4px 10px; border-radius: 4px; }
-#canvas-container { flex: 1; position: relative; }
-.hint {
-  text-align: center;
-  font-size: 0.68rem;
-  color: rgba(212,175,55,0.8);
-  background: rgba(0,0,0,0.4);
-  padding: 5px 0;
-  flex-shrink: 0;
-}
-canvas { display: block; width: 100% !important; height: 100% !important; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>娯楽室：だっち雀 ブロック崩し</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@500&family=Noto+Sans+JP:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f7f4eb;         
+            --main-red: #9e1b1b;         
+            --accent-gold: #d4af37;      
+            --dark-charcoal: #1a1a1a;    
+            --mat-green: #14532d;        
+        }
 
-/* オーバーレイ */
-.overlay {
-  display: none; position: fixed; inset: 0;
-  background: rgba(0,0,0,0.8); z-index: 100;
-  align-items: center; justify-content: center;
-  backdrop-filter: blur(6px);
-}
-.overlay.show { display: flex; }
-.game-menu {
-  background: linear-gradient(135deg, #0d0d1a, #1a0a2e);
-  border: 2px solid #b44fff; border-radius: 14px;
-  padding: 28px 22px; width: 300px;
-  box-shadow: 0 0 40px rgba(180,79,255,0.5), 0 0 80px rgba(0,212,255,0.2);
-  animation: menuAppear 0.3s cubic-bezier(0.34,1.56,0.64,1);
-}
-@keyframes menuAppear {
-  from { transform: scale(0.8) translateY(20px); opacity: 0; }
-  to   { transform: scale(1) translateY(0); opacity: 1; }
-}
-.game-menu h2 { font-family: 'Kiwi Maru', serif; color: #00d4ff; text-align: center; font-size: 1.1rem; margin-bottom: 4px; text-shadow: 0 0 10px #00d4ff; }
-.game-menu .sub { text-align: center; color: rgba(255,255,255,0.4); font-size: 0.72rem; margin-bottom: 20px; }
-.menu-item {
-  display: flex; align-items: center; gap: 12px;
-  width: 100%; padding: 14px 16px; margin-bottom: 12px;
-  background: rgba(255,255,255,0.04); border: 1px solid rgba(180,79,255,0.4);
-  border-radius: 10px; color: white; text-decoration: none;
-  font-family: 'Noto Sans JP', sans-serif; font-size: 0.9rem; font-weight: bold;
-  transition: all 0.2s;
-}
-.menu-item:active { background: rgba(180,79,255,0.2); border-color: #b44fff; box-shadow: 0 0 12px rgba(180,79,255,0.4); }
-.menu-item .ico { font-size: 1.4rem; width: 36px; text-align: center; }
-.menu-item .inf .ttl { font-size: 0.88rem; }
-.menu-item .inf .dsc { font-size: 0.68rem; color: rgba(255,255,255,0.45); margin-top: 2px; }
-.menu-close { width: 100%; padding: 10px; background: none; border: 1px dashed rgba(255,255,255,0.2); border-radius: 8px; color: rgba(255,255,255,0.4); font-family: 'Noto Sans JP', sans-serif; font-size: 0.82rem; cursor: pointer; margin-top: 4px; }
-.tap-label {
-  position: absolute; background: rgba(0,0,0,0.75); color: #d4af37;
-  font-size: 0.65rem; padding: 3px 8px; border-radius: 20px;
-  border: 1px solid rgba(212,175,55,0.5); pointer-events: none;
-  transform: translateX(-50%); white-space: nowrap;
-  animation: labelFloat 2s ease-in-out infinite;
-}
-@keyframes labelFloat { 0%,100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-4px); } }
-</style>
+        * { box-shrink: 0; box-sizing: border-box; margin: 0; padding: 0; }
+        
+        /* 💡 スマホの引っ張り更新（Pull-to-refresh）や画面端のバウンスを抑制 */
+        html, body {
+            background-color: var(--bg-color);
+            color: var(--dark-charcoal);
+            font-family: 'Noto Sans JP', sans-serif;
+            overscroll-behavior-y: none; 
+        }
+
+        .app-container {
+            max-width: 500px;
+            margin: 0 auto;
+            background-color: #fffdf9;
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--dark-charcoal) 0%, var(--main-red) 100%);
+            color: white;
+            padding: 10px;
+            text-align: center;
+            border-bottom: 4px solid var(--accent-gold);
+            position: relative;
+            flex-shrink: 0;
+        }
+        header h1 {
+            font-family: 'Kiwi Maru', serif;
+            font-size: 1.1rem;
+            color: var(--accent-gold);
+        }
+        .back-btn {
+            position: absolute;
+            left: 10px; top: 11px;
+            color: var(--accent-gold);
+            text-decoration: none;
+            font-size: 0.75rem;
+            border: 1px solid var(--accent-gold);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        /* 情報パネル */
+        .info-panel {
+            display: grid;
+            grid-template-columns: 1fr 100px 85px 1fr;
+            gap: 4px;
+            padding: 6px;
+            background: #fff;
+            border-bottom: 1px solid #e0dacf;
+            text-align: center;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        .info-box { font-size: 0.65rem; color: #666; }
+        .info-box span { display: block; font-size: 0.9rem; font-weight: bold; color: var(--dark-charcoal); }
+        .info-box span.score { color: var(--main-red); }
+        
+        .dora-container, .life-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .dora-label { font-size: 0.55rem; color: var(--main-red); font-weight: bold; margin-bottom: 1px; }
+        .life-label { font-size: 0.6rem; color: var(--main-red); font-weight: bold; margin-bottom: 1px; }
+        .dora-tile {
+            width: 26px; height: 34px;
+            background: white; border: 1px solid #b5af9f; border-radius: 2px;
+            box-shadow: 0 2px 0 #bbb; font-size: 1rem; font-weight: bold;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .life-display {
+            font-size: 1rem;
+            color: var(--main-red);
+            font-weight: bold;
+            letter-spacing: 1px;
+            height: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 💡 ゲームエリア全体: スマホ標準のタッチジェスチャー（スクロール等）を無効化 */
+        .game-wrapper {
+            position: relative;
+            background-color: var(--mat-green);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            height: auto; 
+            padding-bottom: 5px;
+            touch-action: none; 
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .canvas-container {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            max-width: 440px;
+            max-height: 440px;
+            margin: 0 auto;
+            position: relative;
+            background: transparent;
+        }
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .item-stock-panel {
+            background: rgba(0,0,0,0.6);
+            padding: 6px 4px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            border-bottom: 1px solid var(--accent-gold);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            flex-shrink: 0;
+        }
+        .item-title-lbl { font-size: 0.65rem; color: var(--accent-gold); font-weight: bold; }
+        .item-slots { display: flex; gap: 6px; justify-content: center; width: 100%; padding: 0 5px; }
+        .item-slot {
+            width: 22%; height: 34px; background: rgba(255,255,255,0.15);
+            border: 1px dashed #aaa; border-radius: 4px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.6rem; color: #ccc; font-weight: bold; cursor: pointer;
+            transition: all 0.2s; text-align: center; line-height: 1.1;
+        }
+        .item-slot.filled {
+            background: linear-gradient(135deg, #fff 0%, #e6dfd3 100%);
+            border: 1px solid var(--accent-gold); color: var(--dark-charcoal);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .status-effect-bar {
+            position: absolute; top: 0; left: 0; width: 100%;
+            height: 18px; background: rgba(0,0,0,0.5); text-align: center;
+            font-size: 0.65rem; color: #fff; line-height: 18px; font-weight: bold;
+            z-index: 10;
+        }
+
+        .action-bar {
+            height: 60px; background: rgba(0,0,0,0.9);
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-size: 0.8rem; border-top: 1px solid rgba(255,255,255,0.2);
+            padding: 4px 8px; position: relative;
+            flex-shrink: 0;
+        }
+        .tsumo-display-area { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; }
+        .tsumo-box {
+            width: 28px; height: 38px; background: white; border-radius: 2px;
+            color: var(--dark-charcoal); font-size: 1.2rem; font-weight: bold;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 2px 0 #bbb; flex-shrink: 0;
+        }
+        .action-btn { padding: 6px 10px; border-radius: 4px; border: none; font-weight: bold; cursor: pointer; font-size: 0.75rem; }
+        .btn-get { background: var(--accent-gold); color: #1a1a1a; }
+        .btn-cut { background: #666; color: white; }
+        .btn-win { background: #e53935; color: white; animation: pulse 0.8s infinite alternate; font-size: 0.75rem; padding: 6px 14px; }
+        .btn-yakuman { background: #6a1b9a; color: #fff; border: 2px solid var(--accent-gold); font-size: 0.75rem; padding: 6px 8px; }
+
+        .search-tile-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); display: none; flex-direction: column;
+            justify-content: flex-start; align-items: center; z-index: 150; padding: 10px; overflow-y: auto;
+        }
+        .search-row-label { color: var(--accent-gold); font-size: 0.65rem; font-weight: bold; margin-top: 6px; width: 100%; max-width: 340px; text-align: left; }
+        .search-grid { display: grid; grid-template-columns: repeat(9, 1fr); gap: 3px; width: 100%; max-width: 340px; margin-top: 2px; }
+        .search-grid.ji-grid { grid-template-columns: repeat(7, 1fr); max-width: 264px; }
+        .search-btn-tile {
+            aspect-ratio: 3/4; background: white; border-radius: 2px; font-size: 0.95rem; font-weight: bold;
+            display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 0 #bbb;
+            color: var(--dark-charcoal);
+        }
+
+        .tehai-container {
+            height: 56px; background: rgba(0, 0, 0, 0.5);
+            border-top: 1px solid rgba(255,255,255,0.2);
+            display: flex; align-items: center; justify-content: center; gap: 1px; padding: 4px 2px;
+            flex-shrink: 0;
+        }
+        .tehai-tile {
+            width: calc(100% / 14 - 1px); max-width: 30px; aspect-ratio: 3 / 4;
+            background: white; border-radius: 2px; display: flex; align-items: center; justify-content: center;
+            font-size: 1rem; font-weight: bold; box-shadow: 0 1px 0 #bbb; transition: transform 0.1s;
+        }
+        .tehai-tile.selectable { cursor: pointer; }
+        .tehai-tile.selectable:hover { transform: translateY(-4px); background: #fff0f0; border: 1px solid var(--main-red); }
+
+        .yaku-popup {
+            position: absolute; top: 35%; left: 50%; transform: translate(-50%, -50%) scale(0);
+            width: 85%; background: rgba(255, 255, 255, 0.95); border: 3px solid var(--accent-gold); border-radius: 8px;
+            padding: 15px; text-align: center; z-index: 100; box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .yaku-popup.active { transform: translate(-50%, -50%) scale(1); }
+        .yaku-name { font-size: 1.1rem; font-weight: bold; color: var(--main-red); margin-bottom: 5px; font-family: 'Kiwi Maru', serif; white-space: pre-line; line-height: 1.3; }
+        .yaku-points { font-size: 1.1rem; font-weight: bold; color: var(--dark-charcoal); }
+
+        .screen-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85); display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 200; color: white; text-align: center; padding: 20px;
+        }
+        .screen-title { font-family: 'Kiwi Maru', serif; font-size: 1.8rem; color: var(--accent-gold); margin-bottom: 10px; }
+        .mode-selector { display: flex; gap: 10px; margin: 15px 0; }
+        .mode-btn { background: #333; color: #fff; border: 1px solid var(--accent-gold); padding: 6px 14px; border-radius: 20px; cursor: pointer; font-size: 0.8rem; }
+        .mode-btn.selected { background: var(--main-red); font-weight: bold; box-shadow: 0 0 8px var(--accent-gold); }
+        .screen-btn { background: var(--main-red); color: white; border: 2px solid var(--accent-gold); padding: 8px 35px; font-size: 0.95rem; font-weight: bold; border-radius: 25px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+
+        /* 💡 コレクション部分: ここは通常通りスワイプでスクロール可能 */
+        .collection-section {
+            background: #fff;
+            padding: 15px;
+            border-top: 3px solid var(--accent-gold);
+            touch-action: pan-y; 
+        }
+        .collection-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .collection-title {
+            font-family: 'Kiwi Maru', serif;
+            font-size: 1rem;
+            color: var(--main-red);
+            font-weight: bold;
+        }
+        .progress-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.75rem;
+            color: #555;
+            width: 100%;
+            margin-bottom: 15px;
+            background: #f0ede4;
+            padding: 6px 10px;
+            border-radius: 6px;
+        }
+        .progress-bar-bg {
+            flex-grow: 1;
+            height: 8px;
+            background: #ddd7cd;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--accent-gold), var(--main-red));
+            transition: width 0.5s ease;
+        }
+        .collection-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+        .yaku-card {
+            border: 1px solid #e0dacf;
+            background: #fbf9f5;
+            padding: 8px;
+            border-radius: 6px;
+            text-align: center;
+            position: relative;
+            transition: all 0.3s;
+        }
+        .yaku-card.locked {
+            opacity: 0.45;
+            background: #f0ede6;
+        }
+        .yaku-card.unlocked {
+            border: 1px solid var(--accent-gold);
+            background: #fffdf2;
+            box-shadow: 0 2px 5px rgba(212,175,55,0.15);
+        }
+        .yaku-card-name {
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #444;
+        }
+        .yaku-card.unlocked .yaku-card-name {
+            color: var(--main-red);
+        }
+        .yaku-card-pts {
+            font-size: 0.65rem;
+            color: #777;
+            margin-top: 2px;
+        }
+        .yaku-card.unlocked .yaku-card-pts {
+            color: var(--accent-gold);
+            font-weight: bold;
+        }
+        .yaku-badge {
+            position: absolute; top: -4px; right: -4px;
+            background: var(--accent-gold); color: white;
+            font-size: 0.5rem; padding: 1px 4px; border-radius: 8px;
+            font-weight: bold; display: none;
+        }
+        .yaku-card.unlocked .yaku-badge { display: block; }
+        .yaku-card.yakuman-style {
+            grid-column: span 2;
+            border: 1px dashed #ccc;
+        }
+        .yaku-card.unlocked.yakuman-style {
+            border: 2px solid var(--accent-gold);
+            background: linear-gradient(135deg, #fffdf0 0%, #fff9d6 100%);
+        }
+    </style>
 </head>
 <body>
 
-<header>
-  <a href="index.html" class="back-btn">◀ 戻る</a>
-  <h1>娯楽室</h1>
-  <div style="width:60px"></div>
-</header>
-<div class="hint">🖐 ドラッグで見回す・ピンチで拡大縮小・家具をタップ</div>
+<div class="app-container">
+    <header>
+        <a href="game.html" class="back-btn">◀ 娯楽室</a>
+        <h1>だっち雀 麻雀ブロック崩し</h1>
+    </header>
 
-<div id="canvas-container">
-  <canvas id="c"></canvas>
+    <div class="info-panel">
+        <div class="info-box">現在の得点<span id="txt-score" class="score">0</span></div>
+        <div class="dora-container">
+            <div class="dora-label">ドラ表示(一致でアイテム取得)</div>
+            <div class="dora-tile" id="dora-box">🀀</div>
+        </div>
+        <div class="life-container">
+            <div class="life-label">持ち機</div>
+            <div class="life-display" id="life-box">🀆🀆🀆</div>
+        </div>
+        <div class="info-box">目標点<span class="target">50,000</span></div>
+    </div>
+
+    <div class="game-wrapper" id="stage-wrapper">
+        <div class="screen-overlay" id="overlayScreen">
+            <div id="overlay-title" class="screen-title">麻雀ブロック崩し</div>
+            <div id="overlay-desc" style="font-size:0.8rem; line-height:1.4; max-width:300px; color:#ccc;">
+                「ドラ表示牌」を破壊すると、全6種の超強力アイテムが確率でドロップ！<br>
+                目標の50,000点を目指して、大きな役を複合させてアガりましょう！
+            </div>
+            <div style="margin-top:12px; font-size:0.8rem; color:var(--accent-gold);">▼ 難易度（球のスピード）</div>
+            <div class="mode-selector">
+                <button class="mode-btn selected" onclick="selectDifficulty('easy', this)">初級</button>
+                <button class="mode-btn" onclick="selectDifficulty('normal', this)">中級</button>
+                <button class="mode-btn" onclick="hardDifficulty('hard', this)">上級</button>
+            </div>
+            <button class="screen-btn" onclick="startGame()">ゲーム開始</button>
+        </div>
+
+        <div class="search-tile-overlay" id="searchTileOverlay">
+            <div style="color:var(--accent-gold); font-weight:bold; font-size:0.85rem; margin-bottom:5px;">【自由ツモ】好きな牌を選んでください</div>
+            <div class="search-row-label">萬子（マンズ）</div>
+            <div class="search-grid" id="grid-man"></div>
+            <div class="search-row-label">筒子（ピンズ）</div>
+            <div class="search-grid" id="grid-pin"></div>
+            <div class="search-row-label">索子（ソーズ）</div>
+            <div class="search-grid" id="grid-sou"></div>
+            <div class="search-row-label">字牌（ジハイ）</div>
+            <div class="search-grid ji-grid" id="grid-ji"></div>
+            <button class="action-btn btn-cut" style="margin-top:15px; width:100px;" onclick="document.getElementById('searchTileOverlay').style.display='none'">戻る</button>
+        </div>
+
+        <div class="status-effect-bar" id="statusEffectBar" style="display: none;">効果なし</div>
+
+        <div class="canvas-container">
+            <canvas id="gameCanvas"></canvas>
+        </div>
+
+        <div class="item-stock-panel">
+            <div class="item-title-lbl">▼ 所持アイテム（タップで即時発動）</div>
+            <div class="item-slots">
+                <div class="item-slot" id="item-0" onclick="useItem(0)">（空）</div>
+                <div class="item-slot" id="item-1" onclick="useItem(1)">（空）</div>
+                <div class="item-slot" id="item-2" onclick="useItem(2)">（空）</div>
+                <div class="item-slot" id="item-3" onclick="useItem(3)">（空）</div>
+            </div>
+        </div>
+
+        <div class="action-bar" id="actionBar">
+            <div id="panel-idle" style="color: #aaa; font-size: 0.75rem; text-align: center;">牌ブロックを崩すと、ここにツモ牌が表示されます</div>
+            <div id="panel-select" class="tsumo-display-area" style="display: none;">
+                <span style="color:var(--accent-gold); font-weight:bold; font-size: 0.75rem;">ツモ：</span>
+                <div class="tsumo-box" id="tsumo-target">🀇</div>
+                <button class="action-btn btn-get" id="btn-incorporate" onclick="chooseIncorporate()">手牌に加える</button>
+                <button class="action-btn btn-cut" onclick="chooseDiscardTsumo()">ツモ切り</button>
+                <button class="action-btn btn-win" id="btn-win-declaration" onclick="chooseWin()" style="display: none;">ツモ和了！</button>
+                <button class="action-btn btn-yakuman" id="btn-yakuman-trigger" onclick="triggerYakumanCheat()" style="display: none;">✨ 役満化</button>
+            </div>
+        </div>
+
+        <div class="tehai-container" id="tehai-rack"></div>
+
+        <div class="yaku-popup" id="yakuPopup">
+            <div id="popup-title" class="yaku-name">清一色</div>
+            <div id="popup-pts" class="yaku-points">+12,000点！</div>
+        </div>
+    </div>
+
+    <div class="collection-section">
+        <div class="collection-header">
+            <div class="collection-title" id="lbl-collection-title" style="cursor: pointer;">🏆 作成した役コレクション</div>
+        </div>
+        <div class="progress-container">
+            <span>達成率:</span>
+            <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-fill"></div></div>
+            <span id="txt-progress-ratio">0% (0/0)</span>
+        </div>
+        <div class="collection-grid" id="collection-box-grid"></div>
+    </div>
 </div>
 
-<!-- ゲームメニュー -->
-<div class="overlay" id="gameOverlay" onclick="closeMenu(event)">
-  <div class="game-menu">
-    <h2>🎮 ゲームセレクト</h2>
-    <div class="sub">モニターから遊ぶゲームを選択</div>
-    <a href="https://mahjongsoul.com/" class="menu-item">
-      <div class="ico">🔥</div>
-      <div class="inf"><div class="ttl">雀魂</div><div class="dsc">中国産のオンライン麻雀（外部リンク）</div></div>
-      <span style="color:rgba(255,255,255,0.3)">▶</span>
-    </a>
-    <a href="mahjong2048.html" class="menu-item">
-      <div class="ico">🧩</div>
-      <div class="inf"><div class="ttl">だっち雀2048</div><div class="dsc">麻雀牌で遊ぶ2048パズル</div></div>
-      <span style="color:rgba(255,255,255,0.3)">▶</span>
-    </a>
-    <a href="breakout.html" class="menu-item">
-      <div class="ico">🚀</div>
-      <div class="inf"><div class="ttl">雀牌崩し</div><div class="dsc">ブロック崩しで役を作れ</div></div>
-      <span style="color:rgba(255,255,255,0.3)">▶</span>
-    </a>
-    <a href="shanghai.html" class="menu-item">
-      <div class="ico">🐼</div>
-      <div class="inf"><div class="ttl">上海</div><div class="dsc">同じ牌をペアで取り除くパズル</div></div>
-      <span style="color:rgba(255,255,255,0.3)">▶</span>
-    </a>
-    <a href="shisensho.html" class="menu-item">
-      <div class="ico">🐉</div>
-      <div class="inf"><div class="ttl">四川省</div><div class="dsc">線で繋げて消す牌パズル</div></div>
-      <span style="color:rgba(255,255,255,0.3)">▶</span>
-    </a>
-    <button class="menu-close" onclick="closeMenu()">✕ 閉じる</button>
-  </div>
-</div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-// ========== Three.js セットアップ ==========
-const container = document.getElementById('canvas-container');
-const canvas = document.getElementById('c');
-const W = container.clientWidth, H = container.clientHeight;
+    const TILE_TYPES = {
+        man: ['🀇','🀈','🀉','🀊','🀋','🀌','🀍','🀎','🀏'], 
+        pin: ['🀙','🀚','🀛','🀜','🀝','🀞','🀟','🀠','🀡'], 
+        sou: ['🀐','🀑','🀒','🀓','🀔','🀕','🀖','🀗','🀘'], 
+        ji:  ['🀀','🀁','🀂','🀃','🀆','🀅','🀄']  
+    };
+    const TILE_ORDER = [...TILE_TYPES.man, ...TILE_TYPES.pin, ...TILE_TYPES.sou, ...TILE_TYPES.ji];
+    const KOKUSHI_TILES = ['🀇','🀏','🀙','🀡','🀐','🀘','🀀','🀁','🀂','🀃','🀆','🀅','🀄'];
 
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-renderer.setSize(W, H);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.setClearColor(0x0a0a1a);
+    const ITEM_LIST = [
+        { id: 1, name: "① 盤面\nリセット", chance: 25 },
+        { id: 2, name: "② 弾速\n低下", chance: 29 },
+        { id: 3, name: "③ パドル\n2倍", chance: 25 },
+        { id: 4, name: "④ 貫通弾", chance: 10 },
+        { id: 5, name: "⑤ 牌選択\n(自由)", chance: 10 },
+        { id: 6, name: "⑥ 役満化\n(ロマン)", chance: 1 }
+    ];
 
-const scene = new THREE.Scene();
-scene.fog = new THREE.Fog(0x0a0a1a, 30, 60);
+    const ALL_YAKU_MASTER = [
+        { key: "役無し和了", name: "役無し和了", pts: "1,000点", isYakuman: false },
+        { key: "断幺九", name: "断幺九 (タンヤオ)", pts: "2,000点", isYakuman: false },
+        { key: "平和", name: "平和 (ピンフ)", pts: "2,000点", isYakuman: false },
+        { key: "役牌:白", name: "役牌: 白", pts: "2,000点", isYakuman: false },
+        { key: "役牌:發", name: "役牌: 發", pts: "2,000点", isYakuman: false },
+        { key: "役牌:中", name: "役牌: 中", pts: "2,000点", isYakuman: false },
+        { key: "一盃口", name: "一盃口 (イーペーコー)", pts: "2,000点", isYakuman: false },
+        { key: "七対子", name: "七対子 (チートイツ)", pts: "3,000点", isYakuman: false },
+        { key: "三色同順", name: "三色同順", pts: "3,000点", isYakuman: false },
+        { key: "三色同刻", name: "三色同刻", pts: "3,000点", isYakuman: false },
+        { key: "一気通貫", name: "一気通貫 (イッツー)", pts: "3,000点", isYakuman: false },
+        { key: "混全帯幺九", name: "混全帯幺九 (チャンタ)", pts: "3,000点", isYakuman: false },
+        { key: "三暗刻", name: "三暗刻 (サンアンコウ)", pts: "3,000点", isYakuman: false },
+        { key: "混一色", name: "混一色 (ホンイツ)", pts: "6,000点", isYakuman: false },
+        { key: "純全帯幺九", name: "純全帯幺九 (ジュンチャン)", pts: "6,000点", isYakuman: false },
+        { key: "清一色", name: "清一色 (チンイツ)", pts: "12,000点", isYakuman: false },
+        { key: "国士無双", name: "👑 国士無双", pts: "48,000点", isYakuman: true },
+        { key: "四暗刻", name: "👑 四暗刻", pts: "48,000点", isYakuman: true },
+        { key: "大三元", name: "👑 大三元", pts: "48,000点", isYakuman: true },
+        { key: "字一色", name: "👑 字一色", pts: "48,000点", isYakuman: true },
+        { key: "緑一色", name: "👑 緑一色", pts: "48,000点", isYakuman: true },
+        { key: "清老頭", name: "👑 清老頭", pts: "48,000点", isYakuman: true }
+    ];
 
-// カメラ（斜め上から見下ろす等角的視点）
-const camera = new THREE.PerspectiveCamera(45, W / H, 0.1, 100);
-// カメラ：球面座標で管理（ドラッグ回転・ピンチズーム対応）
-const camState = {
-  radius: 20,       // カメラと注視点の距離
-  theta: Math.atan2(10, 14),  // 水平角
-  phi: Math.atan2(13, Math.sqrt(10*10+14*14)) + Math.PI/2 - Math.PI/2, // 後で再計算
-  targetY: 2.5
-};
-// 初期値を実際の見た目に近い角度で再設定
-camState.radius = 21;
-camState.azimuth = 0.62;   // 水平回転角（ラジアン）
-camState.polar = 1.05;     // 垂直角（0=真上, PI/2=水平）
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const rack = document.getElementById('tehai-rack');
+    const popup = document.getElementById('yakuPopup');
+    const stageWrapper = document.getElementById('stage-wrapper');
+    
+    const panelIdle = document.getElementById('panel-idle');
+    const panelSelect = document.getElementById('panel-select');
+    const tsumoTarget = document.getElementById('tsumo-target');
+    const btnIncorporate = document.getElementById('btn-incorporate');
+    const btnWinDeclaration = document.getElementById('btn-win-declaration');
+    const btnYakumanTrigger = document.getElementById('btn-yakuman-trigger');
+    const statusEffectBar = document.getElementById('statusEffectBar');
+    const searchTileOverlay = document.getElementById('searchTileOverlay');
 
-function updateCameraFromState() {
-  const r = camState.radius;
-  const az = camState.azimuth;
-  const pol = camState.polar;
-  const x = r * Math.sin(pol) * Math.sin(az);
-  const y = r * Math.cos(pol);
-  const z = r * Math.sin(pol) * Math.cos(az);
-  camera.position.set(x, y + camState.targetY, z);
-  camera.lookAt(0, camState.targetY, 0);
-}
-updateCameraFromState();
+    let score = 0;
+    const targetScore = 50000;
+    let gatheredHand = []; 
+    let activeTsumoTile = null; 
+    let currentDora = '🀀';
+    let lives = 3;
 
-// ========== ライト ==========
-const ambient = new THREE.AmbientLight(0xffffff, 0.5);
-scene.add(ambient);
+    let isPlaying = false;
+    let isChoiceMode = false;   
+    let isDiscardPhase = false; 
+    let unhittableFrames = 0;   
 
-const sun = new THREE.DirectionalLight(0xffffff, 0.8);
-sun.position.set(5, 15, 8);
-sun.castShadow = true;
-sun.shadow.mapSize.width = 1024;
-sun.shadow.mapSize.height = 1024;
-sun.shadow.camera.near = 0.5;
-sun.shadow.camera.far = 50;
-sun.shadow.camera.left = -15;
-sun.shadow.camera.right = 15;
-sun.shadow.camera.top = 15;
-sun.shadow.camera.bottom = -15;
-scene.add(sun);
+    let itemInventory = [null, null, null, null]; 
+    let activeEffects = { speedDown: 0, paddleBig: 0, pierce: 0 }; 
+    let isForcedYakuman = false; 
+    
+    let animationId = null;
+    let isDragging = false;
+    let speedMultiplier = 0.8;
+    let lastTime = 0;
 
-// ネオン点光源（モニター周辺）
-const neonPurple = new THREE.PointLight(0xb44fff, 2, 6);
-neonPurple.position.set(5, 3, -3);
-scene.add(neonPurple);
-const neonBlue = new THREE.PointLight(0x00d4ff, 1.5, 5);
-neonBlue.position.set(5, 4, -3);
-scene.add(neonBlue);
+    const cw = 440; const ch = 440;
+    canvas.width = cw; canvas.height = ch;
 
-// ========== ブロック生成ヘルパー ==========
-function makeBox(w, h, d, color, options = {}) {
-  const geo = new THREE.BoxGeometry(w, h, d);
-  const mat = new THREE.MeshLambertMaterial({ color, ...options });
-  const mesh = new THREE.Mesh(geo, mat);
-  mesh.castShadow = true;
-  mesh.receiveShadow = true;
-  return mesh;
-}
+    let ball = { x: cw/2, y: ch - 80, vx: 4, vy: -5, radius: 8 };
+    let paddle = { x: cw/2 - 50, y: ch - 25, width: 100, height: 12, defaultWidth: 100 };
+    let blocks = [];
 
-function makeBoxMultiMat(w, h, d, colors) {
-  const geo = new THREE.BoxGeometry(w, h, d);
-  const mats = colors.map(c => new THREE.MeshLambertMaterial({ color: c }));
-  const mesh = new THREE.Mesh(geo, mats);
-  mesh.castShadow = true;
-  mesh.receiveShadow = true;
-  return mesh;
-}
+    const rows = 4; const cols = 7;
+    const blockWidth = 50; const blockHeight = 34;
+    const blockPadding = 6; const offsetTop = 20; const offsetLeft = 25;
 
-// ブロックをシーンに追加（底面基準のy座標）
-function addBlock(mesh, x, yBottom, z) {
-  const h = mesh.geometry.parameters.height;
-  mesh.position.set(x, yBottom + h / 2, z);
-  scene.add(mesh);
-  return mesh;
-}
+    // 💡 【スクロール暴発防止】ゲーム画面内のタッチ移動時、ブラウザの標準スクロールを強制カット
+    stageWrapper.addEventListener('touchmove', function(e) {
+        e.preventDefault(); 
+    }, { passive: false });
 
-// ========== 床 ==========
-const floorGeo = new THREE.PlaneGeometry(16, 14);
-// マイクラ風グレー床テクスチャ（Canvas）
-const floorCanvas = document.createElement('canvas');
-floorCanvas.width = 512; floorCanvas.height = 512;
-const fc = floorCanvas.getContext('2d');
-for (let y = 0; y < 16; y++) {
-  for (let x = 0; x < 16; x++) {
-    const v = 130 + Math.random() * 30;
-    fc.fillStyle = `rgb(${v},${v},${v})`;
-    fc.fillRect(x * 32, y * 32, 32, 32);
-    fc.strokeStyle = 'rgba(0,0,0,0.15)';
-    fc.strokeRect(x * 32, y * 32, 32, 32);
-  }
-}
-const floorTex = new THREE.CanvasTexture(floorCanvas);
-const floorMat = new THREE.MeshLambertMaterial({ map: floorTex });
-const floor = new THREE.Mesh(floorGeo, floorMat);
-floor.rotation.x = -Math.PI / 2;
-floor.receiveShadow = true;
-scene.add(floor);
-
-// ========== 壁 ==========
-function makeBrickWall() {
-  const wc = document.createElement('canvas');
-  wc.width = 512; wc.height = 512;
-  const ctx = wc.getContext('2d');
-  // 目地（グレー背景）
-  ctx.fillStyle = '#aaaaaa';
-  ctx.fillRect(0, 0, 512, 512);
-  const bw = 64, bh = 28;
-  for (let row = 0; row < wc.height / bh + 1; row++) {
-    for (let col = 0; col < wc.width / bw + 1; col++) {
-      const ox = row % 2 === 0 ? 0 : bw / 2;
-      // 白レンガ（少し色むら）
-      const v = 238 + Math.floor(Math.random() * 14);
-      ctx.fillStyle = `rgb(${v},${v},${v-2})`;
-      ctx.fillRect(col * bw - ox + 2, row * bh + 2, bw - 4, bh - 4);
+    function loadSavedCollection() {
+        let saved = localStorage.getItem('dacchi_yaku_collection');
+        if (saved) { try { return JSON.parse(saved); } catch(e) { return {}; } }
+        return {};
     }
-  }
-  return new THREE.CanvasTexture(wc);
-}
 
-// 共有壁テクスチャ（1回だけ生成して全壁で使い回す）
-const sharedBrickTex = makeBrickWall();
-sharedBrickTex.wrapS = THREE.RepeatWrapping;
-sharedBrickTex.wrapT = THREE.RepeatWrapping;
-
-// 奥壁
-const backWall = new THREE.Mesh(
-  new THREE.BoxGeometry(16, 8, 0.3),
-  new THREE.MeshLambertMaterial({ map: sharedBrickTex })
-);
-backWall.position.set(0, 4, -7);
-backWall.receiveShadow = true;
-scene.add(backWall);
-
-// 左壁（1枚の壁。窓は手前に絵として重ねるだけ）
-const WALL_X = -8;
-const WIN_Y = 3.5;   // 窓中心の高さ
-const WIN_Z = 1.0;   // 窓中心のZ位置
-const WIN_H = 4.0;   // 窓の高さ
-const WIN_W = 5.0;   // 窓の幅（Z方向）
-
-const leftWall = new THREE.Mesh(
-  new THREE.BoxGeometry(0.3, 8, 14),
-  new THREE.MeshLambertMaterial({ map: sharedBrickTex })
-);
-leftWall.position.set(WALL_X, 4, 0);
-leftWall.receiveShadow = true;
-scene.add(leftWall);
-
-// ========== 左壁の窓（壁に絵を重ねる方式） ==========
-const FT = 0.25;
-const winTop   = WIN_Y + WIN_H / 2;
-const winBot   = WIN_Y - WIN_H / 2;
-const winFront = WIN_Z + WIN_W / 2;
-const winBack  = WIN_Z - WIN_W / 2;
-
-// 外観イラスト（1枚の絵として描く：空・雲・地面・木）
-const winSceneCanvas = document.createElement('canvas');
-winSceneCanvas.width = 512; winSceneCanvas.height = 420;
-const wsc = winSceneCanvas.getContext('2d');
-const skyGrad = wsc.createLinearGradient(0,0,0,420);
-skyGrad.addColorStop(0, '#4aa8e8');
-skyGrad.addColorStop(1, '#a8d8f8');
-wsc.fillStyle = skyGrad; wsc.fillRect(0,0,512,420);
-wsc.fillStyle = '#fff';
-[[40,50,90,40],[280,30,130,35],[400,70,90,28]].forEach(([x,y,w,h])=>{
-  wsc.beginPath(); wsc.ellipse(x+w/2,y+h/2,w/2,h/2,0,0,Math.PI*2); wsc.fill();
-});
-const groundGrad = wsc.createLinearGradient(0,280,0,420);
-groundGrad.addColorStop(0,'#4ab84a'); groundGrad.addColorStop(1,'#2a8a2a');
-wsc.fillStyle = groundGrad; wsc.fillRect(0,280,512,140);
-[[110,170],[260,150],[400,180]].forEach(([x,y])=>{
-  wsc.fillStyle='#5a3010'; wsc.fillRect(x-8,y,16,130);
-  wsc.fillStyle='#2a8a2a'; wsc.beginPath(); wsc.arc(x,y,42,0,Math.PI*2); wsc.fill();
-  wsc.fillStyle='#3aaa3a'; wsc.beginPath(); wsc.arc(x-12,y-15,26,0,Math.PI*2); wsc.fill();
-});
-const winSceneTex = new THREE.CanvasTexture(winSceneCanvas);
-
-// 外観パネル（壁の手前にぴったり重ねる・窓と同サイズ）
-const winBg = new THREE.Mesh(
-  new THREE.PlaneGeometry(WIN_W, WIN_H),
-  new THREE.MeshBasicMaterial({ map: winSceneTex })
-);
-winBg.rotation.y = Math.PI / 2;
-winBg.position.set(WALL_X + 0.18, WIN_Y, WIN_Z);
-scene.add(winBg);
-
-// 半透明ガラス（外観パネルのさらに手前）
-const winGlass = new THREE.Mesh(
-  new THREE.PlaneGeometry(WIN_W, WIN_H),
-  new THREE.MeshLambertMaterial({ color: 0xdff5ff, transparent: true, opacity: 0.18, side: THREE.DoubleSide })
-);
-winGlass.rotation.y = Math.PI / 2;
-winGlass.position.set(WALL_X + 0.22, WIN_Y, WIN_Z);
-scene.add(winGlass);
-
-// 窓枠（上下左右＋中桟）— 全て同じ白で統一
-const wfTop = makeBox(0.3, FT, WIN_W + FT*2, 0xf2f2f2);
-wfTop.position.set(WALL_X + 0.2, winTop + FT/2, WIN_Z); scene.add(wfTop);
-const wfBot2 = makeBox(0.3, FT, WIN_W + FT*2, 0xf2f2f2);
-wfBot2.position.set(WALL_X + 0.2, winBot - FT/2, WIN_Z); scene.add(wfBot2);
-const wfL = makeBox(0.3, WIN_H + FT*2, FT, 0xf2f2f2);
-wfL.position.set(WALL_X + 0.2, WIN_Y, winBack - FT/2); scene.add(wfL);
-const wfR = makeBox(0.3, WIN_H + FT*2, FT, 0xf2f2f2);
-wfR.position.set(WALL_X + 0.2, WIN_Y, winFront + FT/2); scene.add(wfR);
-const wfMV = makeBox(0.3, WIN_H, FT*0.6, 0xf2f2f2);
-wfMV.position.set(WALL_X + 0.2, WIN_Y, WIN_Z); scene.add(wfMV);
-const wfMH = makeBox(0.3, FT*0.6, WIN_W, 0xf2f2f2);
-wfMH.position.set(WALL_X + 0.2, WIN_Y, WIN_Z); scene.add(wfMH);
-
-// ========== コルクボード（写真アルバム） ==========
-const artCanvas = document.createElement('canvas');
-artCanvas.width = 256; artCanvas.height = 256;
-const artCtx = artCanvas.getContext('2d');
-
-// コルク地（茶色のまだら質感）
-const corkGrad = artCtx.createLinearGradient(0, 0, 256, 256);
-corkGrad.addColorStop(0, '#c89968');
-corkGrad.addColorStop(1, '#b07f4f');
-artCtx.fillStyle = corkGrad;
-artCtx.fillRect(0, 0, 256, 256);
-// コルクの粒状ノイズ
-for (let i = 0; i < 700; i++) {
-  const x = Math.random() * 256, y = Math.random() * 256;
-  const v = Math.random();
-  artCtx.fillStyle = v > 0.5 ? 'rgba(90,60,30,0.18)' : 'rgba(220,180,130,0.18)';
-  artCtx.beginPath();
-  artCtx.arc(x, y, 1 + Math.random() * 1.5, 0, Math.PI * 2);
-  artCtx.fill();
-}
-
-// 写真を描くヘルパー（白枠＋簡易な写真柄＋ピン＋少しの回転）
-function drawPhoto(cx, cy, w, h, rot, photoType) {
-  artCtx.save();
-  artCtx.translate(cx, cy);
-  artCtx.rotate(rot);
-  // 影
-  artCtx.fillStyle = 'rgba(0,0,0,0.25)';
-  artCtx.fillRect(-w/2 + 2, -h/2 + 3, w, h);
-  // 白枠（フォトフレーム風）
-  artCtx.fillStyle = '#fdfdfa';
-  artCtx.fillRect(-w/2, -h/2, w, h);
-  // 写真本体
-  const pad = 4;
-  const pw = w - pad * 2, ph = h - pad * 2 - 8;
-  if (photoType === 'sky') {
-    const g = artCtx.createLinearGradient(0, -ph/2, 0, ph/2);
-    g.addColorStop(0, '#7ec8f0'); g.addColorStop(1, '#cfe8c0');
-    artCtx.fillStyle = g;
-    artCtx.fillRect(-pw/2, -ph/2 - 4, pw, ph);
-  } else if (photoType === 'people') {
-    artCtx.fillStyle = '#f0d9b5';
-    artCtx.fillRect(-pw/2, -ph/2 - 4, pw, ph);
-    artCtx.fillStyle = '#5a4a3a';
-    artCtx.beginPath(); artCtx.arc(-8, -2, 8, 0, Math.PI*2); artCtx.fill();
-    artCtx.beginPath(); artCtx.arc(8, -2, 8, 0, Math.PI*2); artCtx.fill();
-  } else if (photoType === 'food') {
-    artCtx.fillStyle = '#fff3da';
-    artCtx.fillRect(-pw/2, -ph/2 - 4, pw, ph);
-    artCtx.fillStyle = '#c8702a';
-    artCtx.beginPath(); artCtx.arc(0, 0, Math.min(pw,ph)/3, 0, Math.PI*2); artCtx.fill();
-  } else {
-    artCtx.fillStyle = '#d8e8d0';
-    artCtx.fillRect(-pw/2, -ph/2 - 4, pw, ph);
-    artCtx.fillStyle = '#4a7a3a';
-    artCtx.fillRect(-pw/2, ph/2 - 18, pw, 14);
-  }
-  // ピン（赤い丸）
-  artCtx.fillStyle = '#c82020';
-  artCtx.beginPath();
-  artCtx.arc(0, -h/2 + 4, 3.5, 0, Math.PI * 2);
-  artCtx.fill();
-  artCtx.restore();
-}
-
-// 複数の写真をランダムっぽく貼る（同サイズ枠内に収まるよう配置）
-drawPhoto(60, 60, 70, 60, -0.08, 'sky');
-drawPhoto(150, 50, 64, 58, 0.06, 'people');
-drawPhoto(205, 110, 60, 64, -0.05, 'food');
-drawPhoto(70, 150, 66, 60, 0.07, 'people');
-drawPhoto(160, 175, 72, 62, -0.04, 'sky');
-drawPhoto(55, 220, 60, 50, 0.05, 'food');
-drawPhoto(180, 230, 64, 50, -0.06, 'people');
-
-const artTex = new THREE.CanvasTexture(artCanvas);
-const artMesh = new THREE.Mesh(
-  new THREE.BoxGeometry(3.5, 4, 0.15),
-  new THREE.MeshLambertMaterial({ map: artTex })
-);
-artMesh.position.set(-5.5, 4.5, -6.8);
-artMesh.userData.clickable = 'art';
-scene.add(artMesh);
-
-// コルクボードのフレーム（木製の縁）
-const frameM = makeBox(3.8, 4.3, 0.1, 0x6b4423);
-frameM.position.set(-5.5, 4.5, -6.92);
-scene.add(frameM);
-
-// ========== ソファ（黒・左中央・大型） ==========
-// 座面
-const sofaSeat = makeBox(5.0, 0.6, 2.4, 0x2a2a2a);
-addBlock(sofaSeat, -4.5, 1.0, -3.5);
-sofaSeat.userData.clickable = 'sofa';
-// 背もたれ
-const sofaBack = makeBox(5.0, 1.8, 0.5, 0x1a1a1a);
-addBlock(sofaBack, -4.5, 1.0, -4.6);
-sofaBack.userData.clickable = 'sofa';
-// 肘掛け左
-const sofaArmL = makeBox(0.5, 1.0, 2.4, 0x222222);
-addBlock(sofaArmL, -6.9, 1.0, -3.5);
-sofaArmL.userData.clickable = 'sofa';
-// 肘掛け右
-const sofaArmR = makeBox(0.5, 1.0, 2.4, 0x222222);
-addBlock(sofaArmR, -2.1, 1.0, -3.5);
-sofaArmR.userData.clickable = 'sofa';
-// クッション（緑）x2
-const cushion = makeBox(1.8, 0.25, 1.0, 0x2d7a27);
-addBlock(cushion, -5.5, 1.6, -4.2);
-cushion.userData.clickable = 'sofa';
-const cushion2 = makeBox(1.8, 0.25, 1.0, 0x3a6b34);
-addBlock(cushion2, -3.5, 1.6, -4.2);
-cushion2.userData.clickable = 'sofa';
-// ソファ脚
-[-6.5, -2.5].forEach(x => [-2.5, -4.4].forEach(z => {
-  const leg = makeBox(0.25, 1.0, 0.25, 0x111111);
-  addBlock(leg, x, 0, z);
-}));
-
-// ========== デスク（右奥・白） ==========
-// 天板
-const deskTop = makeBox(5, 0.3, 2.5, 0xf0f0f0);
-addBlock(deskTop, 3.5, 2.5, -4.0);
-// 脚
-[[1.2, -3.0], [1.2, -4.8], [5.8, -3.0], [5.8, -4.8]].forEach(([x, z]) => {
-  const leg = makeBox(0.2, 2.5, 0.2, 0xe0e0e0);
-  addBlock(leg, x, 0, z);
-});
-// 棚（デスク下）
-const shelf = makeBox(5, 0.2, 0.8, 0xe8e8e8);
-addBlock(shelf, 3.5, 1.2, -4.5);
-
-// ========== モニター（右奥・大型） ==========
-// モニター枠（黒）
-const monFrame = makeBox(5.2, 3.2, 0.25, 0x111111);
-addBlock(monFrame, 3.5, 2.8, -6.6);
-monFrame.userData.clickable = 'monitor';
-
-// モニター画面（麻雀ゲーム画面：4辺手牌＋捨て牌＋サイコロのみ）
-const monCanvas = document.createElement('canvas');
-monCanvas.width = 512; monCanvas.height = 320;
-const mc = monCanvas.getContext('2d');
-const CX = 256, CY = 160;
-
-// 卓のフェルト
-const feltGrad = mc.createRadialGradient(CX,CY,40,CX,CY,260);
-feltGrad.addColorStop(0, '#2f7d4f');
-feltGrad.addColorStop(1, '#1d5a37');
-mc.fillStyle = feltGrad;
-mc.fillRect(0, 0, 512, 320);
-mc.strokeStyle = '#5a3a1a';
-mc.lineWidth = 12;
-mc.strokeRect(6, 6, 500, 308);
-
-// 牌描画ヘルパー（faceUp: true=表向き, false=裏向き）
-function drawTile(x, y, w, h, rot, faceUp, tileColor) {
-  mc.save();
-  mc.translate(x, y);
-  mc.rotate(rot);
-  mc.fillStyle = 'rgba(0,0,0,0.25)';
-  mc.fillRect(-w/2+1, -h/2+2, w, h);
-  if (faceUp) {
-    mc.fillStyle = '#f5f0e0';
-    mc.fillRect(-w/2, -h/2, w, h);
-    mc.strokeStyle = '#b8ac8c';
-    mc.lineWidth = 1;
-    mc.strokeRect(-w/2, -h/2, w, h);
-    mc.fillStyle = tileColor || '#c82020';
-    mc.beginPath();
-    mc.arc(0, -h*0.1, w*0.18, 0, Math.PI*2);
-    mc.fill();
-  } else {
-    mc.fillStyle = '#1c4a7a';
-    mc.fillRect(-w/2, -h/2, w, h);
-    mc.strokeStyle = '#0d2d4d';
-    mc.lineWidth = 1;
-    mc.strokeRect(-w/2, -h/2, w, h);
-    mc.fillStyle = 'rgba(255,255,255,0.15)';
-    mc.fillRect(-w/2+2, -h/2+2, w-4, h*0.3);
-  }
-  mc.restore();
-}
-
-const handColors = ['#c82020','#2f7d4f','#1c4a7a','#c82020','#2f7d4f','#1c4a7a'];
-
-// ① 4辺の手牌（下のみ表向き、他3辺は裏向き）
-// 下（自分）：表向き・大きめ・横一列13枚
-for (let i = 0; i < 13; i++) {
-  drawTile(58 + i * 27, 300, 23, 32, 0, true, handColors[i % handColors.length]);
-}
-// 上（対面）：裏向き
-for (let i = 0; i < 13; i++) {
-  drawTile(90 + i * 24, 12, 18, 13, 0, false);
-}
-// 左：裏向き・縦
-for (let i = 0; i < 13; i++) {
-  drawTile(12, 48 + i * 16, 13, 18, Math.PI/2, false);
-}
-// 右：裏向き・縦
-for (let i = 0; i < 13; i++) {
-  drawTile(500, 48 + i * 16, 13, 18, Math.PI/2, false);
-}
-
-// ② 各プレイヤーの前に捨て牌（表向き）：1列目6枚・2列目3枚、4人とも同数
-// originX,originY: 1列目(奥側)の左端の牌の中心
-// colDX,colDY: 同じ列で隣の牌へ移動する方向ベクトル（左→右方向）
-// rowDX,rowDY: 1列目→2列目（奥→手前）へ移動する方向ベクトル
-function drawDiscard(originX, originY, colDX, colDY, rowDX, rowDY, rot) {
-  // 1列目（奥）：左から6枚
-  for (let i = 0; i < 6; i++) {
-    const x = originX + colDX * i;
-    const y = originY + colDY * i;
-    drawTile(x, y, 15, 20, rot, true, '#2f7d4f');
-  }
-  // 2列目（手前）：左から3枚
-  for (let i = 0; i < 3; i++) {
-    const x = originX + rowDX + colDX * i;
-    const y = originY + rowDY + colDY * i;
-    drawTile(x, y, 15, 20, rot, true, '#c82020');
-  }
-}
-// 下（自分）：1列目(6枚)が中央寄り、2列目(3枚)が手牌寄り
-drawDiscard(CX - 45, 230, 16, 0, 0, 20, 0);
-// 上（対面）：1列目(6枚)が中央寄り、2列目(3枚)が手牌寄り
-drawDiscard(CX + 45, 90, -16, 0, 0, -20, 0);
-// 左プレイヤー：1列目(6枚)が中央寄り、2列目(3枚)が手牌寄り
-drawDiscard(82, CY - 45, 0, 16, -20, 0, Math.PI/2);
-// 右プレイヤー：1列目(6枚)が中央寄り、2列目(3枚)が手牌寄り
-drawDiscard(430, CY - 45, 0, 16, 20, 0, Math.PI/2);
-
-// ③ 山：描画なし（指示により省略）
-
-// ④ 中央にサイコロ2つ
-function drawDice(x, y, pips) {
-  mc.save();
-  mc.translate(x, y);
-  mc.fillStyle = '#fff';
-  mc.shadowColor = 'rgba(0,0,0,0.4)';
-  mc.shadowBlur = 4;
-  mc.shadowOffsetY = 2;
-  mc.beginPath();
-  mc.roundRect(-11, -11, 22, 22, 4);
-  mc.fill();
-  mc.shadowBlur = 0;
-  mc.strokeStyle = '#ccc';
-  mc.lineWidth = 1;
-  mc.stroke();
-  mc.fillStyle = '#c82020';
-  const pipPos = {
-    1: [[0,0]],
-    2: [[-5,-5],[5,5]],
-    3: [[-5,-5],[0,0],[5,5]],
-    4: [[-5,-5],[5,-5],[-5,5],[5,5]],
-    5: [[-5,-5],[5,-5],[0,0],[-5,5],[5,5]],
-    6: [[-5,-5],[5,-5],[-5,0],[5,0],[-5,5],[5,5]],
-  };
-  (pipPos[pips] || pipPos[1]).forEach(([px,py]) => {
-    mc.beginPath();
-    mc.arc(px, py, 2, 0, Math.PI*2);
-    mc.fill();
-  });
-  mc.restore();
-}
-drawDice(CX - 16, CY, 4);
-drawDice(CX + 16, CY, 1);
-
-// スコア表示UI（右上）
-mc.fillStyle = 'rgba(0,0,0,0.5)';
-mc.fillRect(376, 6, 130, 30);
-mc.fillStyle = '#ffd700';
-mc.font = 'bold 13px sans-serif';
-mc.fillText('🀄 だっち雀', 384, 26);
-
-const monTex = new THREE.CanvasTexture(monCanvas);
-const monScreen = new THREE.Mesh(
-  new THREE.BoxGeometry(4.9, 2.9, 0.05),
-  new THREE.MeshBasicMaterial({ map: monTex })
-);
-monScreen.position.set(3.5, 4.45, -6.47);
-monScreen.userData.clickable = 'monitor';
-scene.add(monScreen);
-
-// モニタースタンド
-const monStand = makeBox(0.25, 0.6, 0.25, 0x333333);
-addBlock(monStand, 3.5, 2.8, -6.5);
-const monBase = makeBox(1.4, 0.12, 0.7, 0x222222);
-addBlock(monBase, 3.5, 2.8, -6.3);
-
-// RGB発光
-const rgbGeo = new THREE.BoxGeometry(5.6, 3.6, 0.05);
-const rgbMat = new THREE.MeshBasicMaterial({ color: 0xb44fff, transparent: true, opacity: 0.35 });
-const rgbGlow = new THREE.Mesh(rgbGeo, rgbMat);
-rgbGlow.position.set(3.5, 4.45, -6.72);
-scene.add(rgbGlow);
-neonPurple.position.set(3.5, 4.5, -5.5);
-neonBlue.position.set(3.5, 5.5, -5.5);
-
-// ========== ファミコン（デスク上） ==========
-const famiBody = makeBox(0.8, 0.2, 0.6, 0xddd8c0);
-addBlock(famiBody, 2.0, 2.8, -5.5);
-const famiRed1 = makeBox(0.25, 0.15, 0.35, 0xcc2020);
-addBlock(famiRed1, 1.75, 3.0, -5.5);
-const famiRed2 = makeBox(0.25, 0.15, 0.35, 0xcc2020);
-addBlock(famiRed2, 2.2, 3.0, -5.5);
-
-// ========== ゲーミングチェア（モニター向き） ==========
-// グループで回転管理
-const chairGroup = new THREE.Group();
-chairGroup.position.set(3.0, 0, -2.5);
-scene.add(chairGroup);
-// 座面
-const chairSeat = makeBox(1.4, 0.3, 1.4, 0x1a1a1a);
-chairSeat.position.set(0, 1.45, 0);
-chairGroup.add(chairSeat);
-// 背もたれ（モニター方向=-Z方向へ傾ける）
-const chairBack = makeBox(1.2, 2.0, 0.28, 0x111111);
-chairBack.position.set(0, 2.6, 0.65);
-chairGroup.add(chairBack);
-const chairHead = makeBox(1.0, 0.5, 0.22, 0x222222);
-chairHead.position.set(0, 3.65, 0.62);
-chairGroup.add(chairHead);
-// 脚
-const baseAngles = [0, 72, 144, 216, 288];
-baseAngles.forEach(ang => {
-  const rad = ang * Math.PI / 180;
-  const leg = makeBox(0.12, 0.12, 0.9, 0x333333);
-  leg.position.set(Math.sin(rad)*0.65, 0.65, Math.cos(rad)*0.65);
-  leg.rotation.y = rad;
-  chairGroup.add(leg);
-});
-
-// ========== 電子ピアノ（左手前・高め） ==========
-const pianoLegH = 2.0;
-// ピアノ脚（先に）
-[[-6.8,3.5],[-6.8,4.5],[-3.2,3.5],[-3.2,4.5]].forEach(([x,z]) => {
-  const l = makeBox(0.28, pianoLegH, 0.28, 0x3a2010);
-  addBlock(l, x, 0, z);
-});
-// 本体
-const pianoBody = makeBox(4.5, 0.65, 1.2, 0x1a0d00);
-addBlock(pianoBody, -5.0, pianoLegH, 4.0);
-pianoBody.userData.clickable = 'piano';
-// 鍵盤
-const keyCanvas = document.createElement('canvas');
-keyCanvas.width = 512; keyCanvas.height = 128;
-const kc = keyCanvas.getContext('2d');
-kc.fillStyle = '#f5f5f0'; kc.fillRect(0, 0, 512, 128);
-for (let i = 0; i < 22; i++) {
-  kc.strokeStyle = '#bbb'; kc.lineWidth = 2;
-  kc.beginPath(); kc.moveTo(i*23.2, 0); kc.lineTo(i*23.2, 128); kc.stroke();
-}
-[1,2,4,5,6,8,9,11,12,13,15,16].forEach(i => {
-  kc.fillStyle = '#111';
-  kc.fillRect(i*23.2-5, 0, 14, 80);
-});
-const keyTex = new THREE.CanvasTexture(keyCanvas);
-const pianoKeys = new THREE.Mesh(
-  new THREE.BoxGeometry(4.3, 0.06, 1.0),
-  new THREE.MeshBasicMaterial({ map: keyTex })
-);
-pianoKeys.position.set(-5.0, pianoLegH + 0.68, 4.0);
-pianoKeys.userData.clickable = 'piano';
-scene.add(pianoKeys);
-
-// ========== センターテーブル（茶色・大型・脚位置修正） ==========
-const tW = 3.5, tD = 2.2, tH = 0.3, tLegH = 1.3;
-const tX = 0.5, tZ = 2.0;
-const tableTop = makeBox(tW, tH, tD, 0x8B5E3C);
-addBlock(tableTop, tX, tLegH, tZ);
-// 脚：天板の四隅に正確に配置
-const tLegR = 0.22;
-[
-  [tX - tW/2 + tLegR, tZ - tD/2 + tLegR],
-  [tX - tW/2 + tLegR, tZ + tD/2 - tLegR],
-  [tX + tW/2 - tLegR, tZ - tD/2 + tLegR],
-  [tX + tW/2 - tLegR, tZ + tD/2 - tLegR],
-].forEach(([x, z]) => {
-  const l = makeBox(tLegR*2, tLegH, tLegR*2, 0x6B4423);
-  addBlock(l, x, 0, z);
-});
-
-// ========== ラグ（白ドット柄） ==========
-const rugCanvas = document.createElement('canvas');
-rugCanvas.width = 256; rugCanvas.height = 128;
-const rc = rugCanvas.getContext('2d');
-rc.fillStyle = '#cccccc'; rc.fillRect(0, 0, 256, 128);
-for (let y = 0; y < 8; y++) {
-  for (let x = 0; x < 16; x++) {
-    const v = 200 + Math.random() * 40;
-    rc.fillStyle = `rgba(${v},${v},${v},0.8)`;
-    rc.fillRect(x*16+2, y*16+2, 12, 12);
-  }
-}
-const rugTex = new THREE.CanvasTexture(rugCanvas);
-const rug = new THREE.Mesh(
-  new THREE.BoxGeometry(4.5, 0.05, 2.5),
-  new THREE.MeshLambertMaterial({ map: rugTex })
-);
-rug.position.set(0.5, 0.03, 1.5);
-rug.receiveShadow = true;
-scene.add(rug);
-
-// ========== クリック判定 ==========
-const raycaster = new THREE.Raycaster();
-const mouse = new THREE.Vector2();
-const clickableObjects = [];
-scene.traverse(obj => { if (obj.userData.clickable) clickableObjects.push(obj); });
-
-// タップラベル（HTMLオーバーレイ）
-const labels = [
-  { obj: monFrame, text: '🎮 タップ', id: 'lbl-mon' },
-  { obj: sofaSeat, text: '🛋 タップ', id: 'lbl-sofa' },
-  { obj: pianoBody, text: '🎹 タップ', id: 'lbl-piano' },
-  { obj: artMesh,  text: '🖼 タップ', id: 'lbl-art' },
-];
-labels.forEach(l => {
-  const div = document.createElement('div');
-  div.className = 'tap-label';
-  div.id = l.id;
-  div.innerText = l.text;
-  document.getElementById('canvas-container').appendChild(div);
-});
-
-function updateLabels() {
-  labels.forEach(l => {
-    const div = document.getElementById(l.id);
-    if (!div) return;
-    const pos = l.obj.position.clone();
-    pos.y += l.obj.geometry.parameters.height / 2 + 0.15;
-    pos.project(camera);
-    const x = (pos.x * 0.5 + 0.5) * container.clientWidth;
-    const y = (-pos.y * 0.5 + 0.5) * container.clientHeight;
-    if (pos.z > 1 || x < 0 || x > container.clientWidth || y < 0 || y > container.clientHeight) {
-      div.style.display = 'none';
-      return;
+    function saveYakuAchievement(yakuKey) {
+        let collection = loadSavedCollection();
+        collection[yakuKey] = true;
+        localStorage.setItem('dacchi_yaku_collection', JSON.stringify(collection));
+        renderCollectionUI();
     }
-    div.style.display = 'block';
-    div.style.left = x + 'px';
-    div.style.top = (y - 14) + 'px';
-  });
-}
 
-function onTap(clientX, clientY) {
-  if (document.getElementById('gameOverlay').classList.contains('show')) return;
-  const rect = canvas.getBoundingClientRect();
-  mouse.x = ((clientX - rect.left) / rect.width) * 2 - 1;
-  mouse.y = -((clientY - rect.top) / rect.height) * 2 + 1;
-  raycaster.setFromCamera(mouse, camera);
-  const hits = raycaster.intersectObjects(scene.children, true);
-  for (const hit of hits) {
-    let obj = hit.object;
-    while (obj && !obj.userData.clickable) obj = obj.parent;
-    if (obj && obj.userData.clickable) {
-      clickFurniture(obj.userData.clickable);
-      return;
+    function renderCollectionUI() {
+        const collection = loadSavedCollection();
+        const grid = document.getElementById('collection-box-grid');
+        grid.innerHTML = "";
+        let unlockedCount = 0;
+        ALL_YAKU_MASTER.forEach(yaku => {
+            const isUnlocked = !!collection[yaku.key];
+            if (isUnlocked) unlockedCount++;
+            const card = document.createElement('div');
+            card.classList.add('yaku-card');
+            card.classList.add(isUnlocked ? 'unlocked' : 'locked');
+            if (yaku.isYakuman) card.classList.add('yakuman-style');
+            card.innerHTML = `
+                <div class="yaku-badge">済</div>
+                <div class="yaku-card-name">${yaku.name}</div>
+                <div class="yaku-card-pts">${yaku.pts}</div>
+            `;
+            grid.appendChild(card);
+        });
+        const total = ALL_YAKU_MASTER.length;
+        const ratio = Math.floor((unlockedCount / total) * 100);
+        document.getElementById('progress-fill').style.width = `${ratio}%`;
+        document.getElementById('txt-progress-ratio').innerText = `${ratio}% (${unlockedCount} / ${total}種)`;
     }
-  }
-}
 
-// ===== カメラ操作（ドラッグ回転・ピンチズーム・タップ判定の統合） =====
-let dragState = null;     // { startX, startY, moved, lastX, lastY, pointers }
-let pinchStartDist = null;
-let pinchStartRadius = null;
-const DRAG_THRESHOLD = 8; // pxを超えたら「ドラッグ」とみなしタップ判定をキャンセル
+    let debugClickCount = 0;
+    document.getElementById('lbl-collection-title').onclick = () => {
+        debugClickCount++;
+        if (debugClickCount >= 3) {
+            debugClickCount = 0;
+            let collection = loadSavedCollection();
+            if (Object.keys(collection).length === ALL_YAKU_MASTER.length) {
+                localStorage.removeItem('dacchi_yaku_collection');
+                alert("【デバッグ】コレクション実績を初期化しました。");
+            } else {
+                let fullHouse = {};
+                ALL_YAKU_MASTER.forEach(y => fullHouse[y.key] = true);
+                localStorage.setItem('dacchi_yaku_collection', JSON.stringify(fullHouse));
+                alert("【デバッグ】全ての役実績を強制解放しました！");
+            }
+            renderCollectionUI();
+        }
+    };
 
-function getTouchDist(touches) {
-  const dx = touches[0].clientX - touches[1].clientX;
-  const dy = touches[0].clientY - touches[1].clientY;
-  return Math.sqrt(dx*dx + dy*dy);
-}
-
-// --- マウス操作 ---
-canvas.addEventListener('mousedown', e => {
-  dragState = { startX: e.clientX, startY: e.clientY, lastX: e.clientX, lastY: e.clientY, moved: false };
-});
-window.addEventListener('mousemove', e => {
-  if (!dragState) return;
-  const dx = e.clientX - dragState.lastX;
-  const dy = e.clientY - dragState.lastY;
-  if (Math.abs(e.clientX - dragState.startX) > DRAG_THRESHOLD || Math.abs(e.clientY - dragState.startY) > DRAG_THRESHOLD) {
-    dragState.moved = true;
-  }
-  if (dragState.moved) {
-    camState.azimuth -= dx * 0.006;
-    camState.polar = Math.max(0.25, Math.min(1.5, camState.polar - dy * 0.006));
-    updateCameraFromState();
-  }
-  dragState.lastX = e.clientX;
-  dragState.lastY = e.clientY;
-});
-window.addEventListener('mouseup', e => {
-  if (dragState && !dragState.moved) onTap(e.clientX, e.clientY);
-  dragState = null;
-});
-canvas.addEventListener('wheel', e => {
-  e.preventDefault();
-  camState.radius = Math.max(8, Math.min(34, camState.radius + e.deltaY * 0.02));
-  updateCameraFromState();
-}, { passive: false });
-
-// --- タッチ操作（1本指=回転/タップ、2本指=ピンチズーム） ---
-canvas.addEventListener('touchstart', e => {
-  e.preventDefault();
-  if (e.touches.length === 1) {
-    const t = e.touches[0];
-    dragState = { startX: t.clientX, startY: t.clientY, lastX: t.clientX, lastY: t.clientY, moved: false };
-    pinchStartDist = null;
-  } else if (e.touches.length === 2) {
-    dragState = null;
-    pinchStartDist = getTouchDist(e.touches);
-    pinchStartRadius = camState.radius;
-  }
-}, { passive: false });
-
-canvas.addEventListener('touchmove', e => {
-  if (e.touches.length === 1 && dragState) {
-    e.preventDefault();
-    const t = e.touches[0];
-    const dx = t.clientX - dragState.lastX;
-    const dy = t.clientY - dragState.lastY;
-    if (Math.abs(t.clientX - dragState.startX) > DRAG_THRESHOLD || Math.abs(t.clientY - dragState.startY) > DRAG_THRESHOLD) {
-      dragState.moved = true;
+    function selectDifficulty(mode, btnEl) {
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('selected'));
+        btnEl.classList.add('selected');
+        if(mode === 'easy') speedMultiplier = 0.8;
+        if(mode === 'normal') speedMultiplier = 1.3;
+        if(mode === 'hard') speedMultiplier = 1.9;
     }
-    if (dragState.moved) {
-      camState.azimuth -= dx * 0.006;
-      camState.polar = Math.max(0.25, Math.min(1.5, camState.polar - dy * 0.006));
-      updateCameraFromState();
+
+    function changeDora() {
+        currentDora = TILE_ORDER[Math.floor(Math.random() * TILE_ORDER.length)];
+        const doraBox = document.getElementById('dora-box');
+        doraBox.innerText = currentDora;
+        doraBox.style.color = TILE_TYPES.ji.includes(currentDora) ? 'var(--main-red)' : 'var(--dark-charcoal)';
     }
-    dragState.lastX = t.clientX;
-    dragState.lastY = t.clientY;
-  } else if (e.touches.length === 2 && pinchStartDist !== null) {
-    e.preventDefault();
-    const dist = getTouchDist(e.touches);
-    const scale = pinchStartDist / dist;
-    camState.radius = Math.max(8, Math.min(34, pinchStartRadius * scale));
-    updateCameraFromState();
-  }
-}, { passive: false });
 
-canvas.addEventListener('touchend', e => {
-  e.preventDefault();
-  if (dragState && !dragState.moved && e.changedTouches.length > 0) {
-    onTap(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
-  }
-  if (e.touches.length === 0) {
-    dragState = null;
-    pinchStartDist = null;
-  }
-}, { passive: false });
+    function updateLifeUI() {
+        const lifeBox = document.getElementById('life-box');
+        if (lives > 0) {
+            lifeBox.innerText = '🀆'.repeat(lives);
+            lifeBox.style.color = 'var(--main-red)';
+        } else {
+            lifeBox.innerText = 'なし';
+            lifeBox.style.color = '#999';
+        }
+    }
 
-// ========== アクション ==========
-function clickFurniture(name) {
-  if (name === 'monitor') {
-    document.getElementById('gameOverlay').classList.add('show');
-    return;
-  }
-  if (name === 'art') {
-    window.location.href = 'album.html';
-    return;
-  }
-  const msg = {
-    piano: '🎹 将来ここに音楽ページが繋がります',
-    sofa:  '🛋 将来ここにくつろぎコンテンツが繋がります',
-  };
-  alert(msg[name] || '準備中です');
-}
+    function generateNewBlock(r, c) {
+        return {
+            x: (c * (blockWidth + blockPadding)) + offsetLeft,
+            y: (r * (blockHeight + blockPadding)) + offsetTop,
+            w: blockWidth, h: blockHeight,
+            type: TILE_ORDER[Math.floor(Math.random() * TILE_ORDER.length)],
+            alive: true
+        };
+    }
 
-function closeMenu(e) {
-  if (!e || e.target === document.getElementById('gameOverlay')) {
-    document.getElementById('gameOverlay').classList.remove('show');
-  }
-}
+    function initBlocks() {
+        blocks = [];
+        for(let r=0; r<rows; r++) {
+            for(let c=0; c<cols; c++) blocks.push(generateNewBlock(r, c));
+        }
+    }
 
-// ========== アニメーション ==========
-let t = 0;
-function animate() {
-  requestAnimationFrame(animate);
-  t += 0.02;
-  // RGB発光アニメ
-  rgbGlow.material.color.setHSL((t * 0.1) % 1, 1, 0.5);
-  neonPurple.color.setHSL((t * 0.1) % 1, 1, 0.5);
-  neonPurple.intensity = 1.5 + Math.sin(t) * 0.5;
-  updateLabels();
-  renderer.render(scene, camera);
-}
-animate();
+    function checkAndRefillBlocks() {
+        let aliveCount = blocks.filter(b => b.alive).length;
+        if (aliveCount <= 3) {
+            blocks.forEach((b, idx) => {
+                if (!b.alive) {
+                    const r = Math.floor(idx / cols); const c = idx % cols;
+                    blocks[idx] = generateNewBlock(r, c);
+                }
+            });
+        }
+    }
 
-// リサイズ対応
-window.addEventListener('resize', () => {
-  const w = container.clientWidth, h = container.clientHeight;
-  camera.aspect = w / h;
-  camera.updateProjectionMatrix();
-  renderer.setSize(w, h);
-});
+    function startGame() {
+        score = 0; gatheredHand = []; activeTsumoTile = null;
+        isChoiceMode = false; isDiscardPhase = false; unhittableFrames = 0;
+        itemInventory = [null, null, null, null];
+        activeEffects = { speedDown: 0, paddleBig: 0, pierce: 0 };
+        isForcedYakuman = false;
+        
+        lives = 3;
+        updateLifeUI();
+
+        document.getElementById('txt-score').innerText = score;
+        
+        hideActionPanel();
+        changeDora();
+        renderRack();
+        updateItemUI();
+        document.getElementById('overlayScreen').style.display = 'none';
+        
+        resetBallAndPaddle();
+        initBlocks();
+        initSearchGrids();
+        isPlaying = true;
+        lastTime = performance.now();
+        if(animationId) cancelAnimationFrame(animationId);
+        loop();
+    }
+
+    function resetBallAndPaddle() {
+        paddle.x = cw / 2 - paddle.width / 2;
+        ball.x = cw / 2; 
+        ball.y = ch - 80;
+        ball.vx = (Math.random() > 0.5 ? 3 : -3) * speedMultiplier * 1.2;
+        ball.vy = -5 * speedMultiplier * 1.2;
+        unhittableFrames = 30;
+    }
+
+    function loop() {
+        if (!isPlaying || isChoiceMode || isDiscardPhase) return;
+        const now = performance.now();
+        const dt = (now - lastTime) / 1000;
+        lastTime = now;
+        updateTimers(dt);
+        ctx.clearRect(0, 0, cw, ch);
+        if (unhittableFrames > 0) unhittableFrames--; 
+        moveBall();
+        checkCollisions();
+        drawBlocks();
+        drawPaddle();
+        drawBall();
+        animationId = requestAnimationFrame(loop);
+    }
+
+    function updateTimers(dt) {
+        let effectTexts = [];
+        if (activeEffects.speedDown > 0) { activeEffects.speedDown -= dt; effectTexts.push(`🐢 弾速低下 (${Math.ceil(activeEffects.speedDown)}s)`); }
+        if (activeEffects.paddleBig > 0) { activeEffects.paddleBig -= dt; paddle.width = paddle.defaultWidth * 2; effectTexts.push(`↔️ パドル2倍 (${Math.ceil(activeEffects.paddleBig)}s)`); } else { paddle.width = paddle.defaultWidth; }
+        if (activeEffects.blockPierce > 0) { activeEffects.blockPierce -= dt; effectTexts.push(`🔥 貫通弾 (${Math.ceil(activeEffects.blockPierce)}s)`); }
+        if (effectTexts.length > 0) { statusEffectBar.style.display = 'block'; statusEffectBar.innerText = "効果中: " + effectTexts.join(" | "); } else { statusEffectBar.style.display = 'none'; }
+    }
+
+    function drawBall() {
+        ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI*2);
+        ctx.fillStyle = activeEffects.blockPierce > 0 ? "#ff3d00" : "#ffffff"; 
+        ctx.fill(); ctx.closePath();
+    }
+
+    function drawPaddle() {
+        ctx.fillStyle = "var(--accent-gold)"; ctx.fillRect(paddle.x, paddle.y, paddle.width, paddle.height);
+        ctx.strokeStyle = "#ffffff"; ctx.strokeRect(paddle.x, paddle.y, paddle.width, paddle.height);
+    }
+
+    function drawBlocks() {
+        blocks.forEach(b => {
+            if(!b.alive) return;
+            ctx.fillStyle = "#ffffff"; ctx.fillRect(b.x, b.y, b.w, b.h);
+            ctx.strokeStyle = "#b5af9f"; ctx.strokeRect(b.x, b.y, b.w, b.h);
+            ctx.fillStyle = (b.type === currentDora) ? "var(--accent-gold)" : "#0d3b1e";
+            ctx.fillRect(b.x, b.y + b.h - 4, b.w, 4);
+            ctx.fillStyle = TILE_TYPES.ji.includes(b.type) ? "var(--main-red)" : "#1a1a1a";
+            ctx.font = "20px 'Noto Sans JP'"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+            ctx.fillText(b.type, b.x + b.w/2, b.y + b.h/2);
+        });
+    }
+
+    function moveBall() {
+        let currentSpeedFactor = activeEffects.speedDown > 0 ? 0.5 : 1.0;
+        ball.x += ball.vx * currentSpeedFactor; ball.y += ball.vy * currentSpeedFactor;
+        if(ball.x - ball.radius < 0 || ball.x + ball.radius > cw) { ball.vx = -ball.vx; ball.x = ball.x - ball.radius < 0 ? ball.radius : cw - ball.radius; }
+        if(ball.y - ball.radius < 0) { ball.vy = -ball.vy; ball.y = ball.radius; }
+        if(ball.y + ball.radius >= paddle.y && ball.y - ball.radius <= paddle.y + paddle.height) {
+            if(ball.x >= paddle.x && ball.x <= paddle.x + paddle.width) {
+                let hitPos = (ball.x - (paddle.x + paddle.width/2)) / (paddle.width/2);
+                ball.vx = hitPos * 5 * speedMultiplier; ball.vy = -Math.abs(ball.vy); ball.y = paddle.y - ball.radius;
+            }
+        }
+        
+        if(ball.y > ch) {
+            lives--;
+            updateLifeUI();
+            if (lives > 0) {
+                resetBallAndPaddle();
+            } else {
+                endGame(false);
+            }
+        }
+    }
+
+    function checkCollisions() {
+        if (isChoiceMode || isDiscardPhase || unhittableFrames > 0) return;
+        for (let idx = 0; idx < blocks.length; idx++) {
+            const b = blocks[idx]; if (!b.alive) continue;
+            if (ball.x + ball.radius > b.x && ball.x - ball.radius < b.x + b.w && ball.y + ball.radius > b.y && ball.y - ball.radius < b.y + b.h) {
+                b.alive = false;
+                if (!(activeEffects.blockPierce > 0)) {
+                    let overlapLeft = (ball.x + ball.radius) - b.x; let overlapRight = (b.x + b.w) - (ball.x - ball.radius);
+                    let overlapTop = (ball.y + ball.radius) - b.y; let overlapBottom = (b.y + b.h) - (ball.y - ball.radius);
+                    let minOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
+                    if (minOverlap === overlapLeft) { ball.vx = -Math.abs(ball.vx); ball.x = b.x - ball.radius; } 
+                    else if (minOverlap === overlapRight) { ball.vx = Math.abs(ball.vx); ball.x = b.x + b.w + ball.radius; } 
+                    else if (minOverlap === overlapTop) { ball.vy = -Math.abs(ball.vy); ball.y = b.y - ball.radius; } 
+                    else if (minOverlap === overlapBottom) { ball.vy = Math.abs(ball.vy); ball.y = b.y + b.h + ball.radius; }
+                }
+                if (b.type === currentDora) rollItemLottery();
+                triggerTileChoice(b.type); checkAndRefillBlocks();
+                if (!(activeEffects.blockPierce > 0)) break; 
+            }
+        }
+    }
+
+    function rollItemLottery() {
+        let rand = Math.floor(Math.random() * 100) + 1; let sum = 0; let selectedItem = null;
+        for (let it of ITEM_LIST) { sum += it.chance; if (rand <= sum) { selectedItem = it; break; } }
+        if (selectedItem) { let emptyIdx = itemInventory.indexOf(null); if (emptyIdx !== -1) { itemInventory[emptyIdx] = selectedItem; updateItemUI(); } }
+    }
+
+    function updateItemUI() {
+        for (let i = 0; i < 4; i++) {
+            const slot = document.getElementById(`item-${i}`);
+            if (itemInventory[i]) { slot.classList.add('filled'); slot.innerText = itemInventory[i].name; } 
+            else { slot.classList.remove('filled'); slot.innerText = "（空）"; }
+        }
+    }
+
+    function useItem(slotIdx) {
+        let item = itemInventory[slotIdx]; if (!item) return;
+        if (item.id === 5 && (!isPlaying || isChoiceMode || isDiscardPhase)) return;
+        itemInventory[slotIdx] = null; updateItemUI();
+        if (item.id === 1) { initBlocks(); } 
+        else if (item.id === 2) { activeEffects.speedDown = 10; } 
+        else if (item.id === 3) { activeEffects.paddleBig = 10; } 
+        else if (item.id === 4) { activeEffects.blockPierce = 10; } 
+        else if (item.id === 5) { searchTileOverlay.style.display = 'flex'; }
+    }
+
+    function initSearchGrids() {
+        const createGridItems = (targetGridId, tileArray) => {
+            const container = document.getElementById(targetGridId); container.innerHTML = "";
+            tileArray.forEach(tile => {
+                const b = document.createElement('div'); b.classList.add('search-btn-tile'); b.innerText = tile;
+                if(TILE_TYPES.ji.includes(tile)) b.style.color = 'var(--main-red)';
+                b.onclick = () => { searchTileOverlay.style.display = 'none'; triggerTileChoice(tile); };
+                container.appendChild(b);
+            });
+        };
+        createGridItems('grid-man', TILE_TYPES.man); createGridItems('grid-pin', TILE_TYPES.pin);
+        createGridItems('grid-sou', TILE_TYPES.sou); createGridItems('grid-ji', TILE_TYPES.ji);
+    }
+
+    function triggerYakumanCheat() {
+        let itemIdx = itemInventory.findIndex(it => it && it.id === 6); if (itemIdx === -1) return;
+        itemInventory[itemIdx] = null; updateItemUI(); isForcedYakuman = true; chooseWin();
+    }
+
+    function triggerTileChoice(tileChar) {
+        isChoiceMode = true; activeTsumoTile = tileChar;
+        panelIdle.style.display = 'none'; panelSelect.style.display = 'flex';
+        tsumoTarget.innerText = tileChar;
+        tsumoTarget.style.color = TILE_TYPES.ji.includes(tileChar) ? 'var(--main-red)' : 'var(--dark-charcoal)';
+        if (gatheredHand.length === 13) {
+            btnIncorporate.innerText = "入れ替え"; btnWinDeclaration.style.display = 'inline-block';
+            btnYakumanTrigger.style.display = itemInventory.some(it => it && it.id === 6) ? 'inline-block' : 'none';
+        } else {
+            btnIncorporate.innerText = "手牌に加える"; btnWinDeclaration.style.display = 'none'; btnYakumanTrigger.style.display = 'none';
+        }
+    }
+
+    function resumeGameWithWeight() { isChoiceMode = false; isDiscardPhase = false; unhittableFrames = 12; hideActionPanel(); lastTime = performance.now(); loop(); }
+    function hideActionPanel() { panelSelect.style.display = 'none'; panelIdle.style.display = 'block'; panelIdle.innerText = "牌ブロックを崩すと、ここにツモ牌が表示されます"; btnWinDeclaration.style.display = 'none'; btnYakumanTrigger.style.display = 'none'; activeTsumoTile = null; }
+
+    function chooseIncorporate() {
+        if (!isChoiceMode) return;
+        if (gatheredHand.length < 13) { gatheredHand.push(activeTsumoTile); sortHand(); renderRack(); resumeGameWithWeight(); } 
+        else {
+            isChoiceMode = false; isDiscardPhase = true; panelSelect.style.display = 'none'; panelIdle.style.display = 'block';
+            panelIdle.innerHTML = "<span style='color:var(--accent-gold); font-weight:bold; font-size:0.75rem;'>【入れ替え】下の13枚から捨てる牌を1枚選んでください</span>";
+            renderRack();
+        }
+    }
+    function chooseDiscardTsumo() { if (!isChoiceMode) return; resumeGameWithWeight(); }
+    function chooseWin() { if (!isChoiceMode || gatheredHand.length !== 13) return; isChoiceMode = false; const finalHand = [...gatheredHand, activeTsumoTile]; hideActionPanel(); processYakuDecision(finalHand); }
+    function discardFromHand(index) { if (!isDiscardPhase) return; gatheredHand.splice(index, 1); gatheredHand.push(activeTsumoTile); sortHand(); renderRack(); resumeGameWithWeight(); }
+    function sortHand() { gatheredHand.sort((a, b) => TILE_ORDER.indexOf(a) - TILE_ORDER.indexOf(b)); }
+
+    function renderRack() {
+        rack.innerHTML = "";
+        gatheredHand.forEach((tile, index) => {
+            const tEl = document.createElement('div'); tEl.classList.add('tehai-tile'); tEl.innerText = tile;
+            if(TILE_TYPES.ji.includes(tile)) tEl.style.color = 'var(--main-red)';
+            if (isDiscardPhase) { tEl.classList.add('selectable'); tEl.onclick = () => discardFromHand(index); }
+            rack.appendChild(tEl);
+        });
+    }
+
+    function checkKokushiMusou(hand) {
+        if (hand.length !== 14) return false;
+        if (!hand.every(t => KOKUSHI_TILES.includes(t))) return false;
+        return new Set(hand).size === 13;
+    }
+
+    function checkChitoitsu(hand) {
+        const counts = {}; hand.forEach(t => counts[t] = (counts[t] || 0) + 1);
+        const pairs = Object.values(counts).filter(v => v === 2).length;
+        return pairs === 7;
+    }
+
+    function findAllDecompositions(hand) {
+        const tileCounts = Array(TILE_ORDER.length).fill(0);
+        hand.forEach(t => tileCounts[TILE_ORDER.indexOf(t)]++);
+        const results = [];
+        for (let i = 0; i < tileCounts.length; i++) {
+            if (tileCounts[i] >= 2) {
+                const tempCounts = [...tileCounts]; tempCounts[i] -= 2;
+                const currentMentsu = [];
+                backtrackMentsu(tempCounts, 0, currentMentsu, TILE_ORDER[i], results);
+            }
+        }
+        return results;
+    }
+
+    function backtrackMentsu(counts, index, currentMentsu, jantou, results) {
+        while (index < counts.length && counts[index] === 0) index++;
+        if (index === counts.length) {
+            if (currentMentsu.length === 4) results.push({ jantou: jantou, mentsu: [...currentMentsu] });
+            return;
+        }
+        if (counts[index] >= 3) {
+            counts[index] -= 3; currentMentsu.push({ type: 'kotsu', tile: TILE_ORDER[index] });
+            backtrackMentsu(counts, index, currentMentsu, jantou, results);
+            currentMentsu.pop(); counts[index] += 3;
+        }
+        if (index < 27) {
+            const currentTile = TILE_ORDER[index]; let canSeq = false;
+            if (TILE_TYPES.man.includes(currentTile) && TILE_TYPES.man.includes(TILE_ORDER[index+2])) canSeq = true;
+            if (TILE_TYPES.pin.includes(currentTile) && TILE_TYPES.pin.includes(TILE_ORDER[index+2])) canSeq = true;
+            if (TILE_TYPES.sou.includes(currentTile) && TILE_TYPES.sou.includes(TILE_ORDER[index+2])) canSeq = true;
+            if (canSeq && counts[index+1] > 0 && counts[index+2] > 0) {
+                counts[index]--; counts[index+1]--; counts[index+2]--;
+                currentMentsu.push({ type: 'shuntsu', tile: currentTile });
+                backtrackMentsu(counts, index, currentMentsu, jantou, results);
+                currentMentsu.pop(); counts[index]++; counts[index+1]++; counts[index+2]++;
+            }
+        }
+    }
+
+    function processYakuDecision(finalHand) {
+        isPlaying = false;
+        let detectedYakuList = [];
+        let totalGain = 0;
+
+        if (isForcedYakuman) {
+            const titles = ["国士無双", "大三元", "四暗刻", "字一色"];
+            let chosen = titles[Math.floor(Math.random() * titles.length)];
+            detectedYakuList.push({ name: "✨奇跡の役満: " + chosen, key: chosen, pts: 48000 });
+            totalGain = 48000;
+            isForcedYakuman = false;
+        } else if (checkKokushiMusou(finalHand)) {
+            detectedYakuList.push({ name: "国士無双", key: "国士無双", pts: 48000 });
+            totalGain = 48000;
+        } else {
+            const decompositions = findAllDecompositions(finalHand);
+            let isChitoi = checkChitoitsu(finalHand);
+            
+            if (decompositions.length === 0 && !isChitoi) {
+                detectedYakuList.push({ name: "不聴 (ノーテン)", key: null, pts: 0 });
+                totalGain = 0;
+            } else {
+                let bestScore = -1; let bestYakuSet = [];
+
+                if (isChitoi) {
+                    let chitoiYaku = [{ name: "七対子", key: "七対子", pts: 3000 }];
+                    let ptsSum = 3000;
+                    const isAllJi = finalHand.every(t => TILE_TYPES.ji.includes(t));
+                    const isMan = finalHand.every(t => TILE_TYPES.man.includes(t));
+                    const isPin = finalHand.every(t => TILE_TYPES.pin.includes(t));
+                    const isSou = finalHand.every(t => TILE_TYPES.sou.includes(t));
+                    const hasJi = finalHand.some(t => TILE_TYPES.ji.includes(t));
+                    const noYaichu = finalHand.every(t => !['🀇','🀏','🀙','🀡','🀐','🀘',...TILE_TYPES.ji].includes(t));
+
+                    if (isAllJi) { chitoiYaku.push({ name: "字一色", key: "字一色", pts: 48000 }); ptsSum += 48000; }
+                    else if (isMan || isPin || isSou) { chitoiYaku.push({ name: "清一色", key: "清一色", pts: 12000 }); ptsSum += 12000; }
+                    else if ((isMan||isPin||isSou||hasJi) && ((finalHand.some(t=>TILE_TYPES.man.includes(t))?1:0)+(finalHand.some(t=>TILE_TYPES.pin.includes(t))?1:0)+(finalHand.some(t=>TILE_TYPES.sou.includes(t))?1:0)===1) && hasJi) { chitoiYaku.push({ name: "混一色", key: "混一色", pts: 6000 }); ptsSum += 6000; }
+                    if (noYaichu) { chitoiYaku.push({ name: "断幺九", key: "断幺九", pts: 2000 }); ptsSum += 2000; }
+
+                    bestScore = ptsSum; bestYakuSet = chitoiYaku;
+                }
+
+                decompositions.forEach(dec => {
+                    let currentYaku = []; let pts = 0;
+                    const kotsuList = dec.mentsu.filter(m => m.type === 'kotsu').map(m => m.tile);
+                    const shuntsuList = dec.mentsu.filter(m => m.type === 'shuntsu').map(m => m.tile);
+                    
+                    const isAllJi = finalHand.every(t => TILE_TYPES.ji.includes(t));
+                    const isMan = finalHand.every(t => TILE_TYPES.man.includes(t));
+                    const isPin = finalHand.every(t => TILE_TYPES.pin.includes(t));
+                    const isSou = finalHand.every(t => TILE_TYPES.sou.includes(t));
+                    const hasJi = finalHand.some(t => TILE_TYPES.ji.includes(t));
+                    const noYaichu = finalHand.every(t => !['🀇','🀏','🀙','🀡','🀐','🀘',...TILE_TYPES.ji].includes(t));
+
+                    let hasYakuman = false;
+                    if (kotsuList.length === 4) { currentYaku.push({ name: "四暗刻", key: "四暗刻", pts: 48000 }); pts += 48000; hasYakuman = true; }
+                    if (['🀆','🀅','🀄'].every(t => kotsuList.includes(t))) { currentYaku.push({ name: "大三元", key: "大三元", pts: 48000 }); pts += 48000; hasYakuman = true; }
+                    if (isAllJi) { currentYaku.push({ name: "字一色", key: "字一色", pts: 48000 }); pts += 48000; hasYakuman = true; }
+                    if (finalHand.every(t => ['🀑','🀒','🀓','🀕','🀗','🀅'].includes(t))) { currentYaku.push({ name: "緑一色", key: "緑一色", pts: 48000 }); pts += 48000; hasYakuman = true; }
+                    if (finalHand.every(t => ['🀇','🀏','🀙','🀡','🀐','🀘'].includes(t))) { currentYaku.push({ name: "清老頭", key: "清老頭", pts: 48000 }); pts += 48000; hasYakuman = true; }
+
+                    if (!hasYakuman) {
+                        if (noYaichu) { currentYaku.push({ name: "断幺九", key: "断幺九", pts: 2000 }); pts += 2000; }
+                        if (isMan || isPin || isSou) { currentYaku.push({ name: "清一色", key: "清一色", pts: 12000 }); pts += 12000; }
+                        else if (hasJi && ((finalHand.some(t=>TILE_TYPES.man.includes(t))?1:0)+(finalHand.some(t=>TILE_TYPES.pin.includes(t))?1:0)+(finalHand.some(t=>TILE_TYPES.sou.includes(t))?1:0)===1)) { currentYaku.push({ name: "混一色", key: "混一色", pts: 6000 }); pts += 6000; }
+                        if (shuntsuList.length === 4 && !['🀆','🀅','🀄'].includes(dec.jantou)) { currentYaku.push({ name: "平和", key: "平和", pts: 2000 }); pts += 2000; }
+                        if (kotsuList.includes('🀆')) { currentYaku.push({ name: "役牌:白", key: "役牌:白", pts: 2000 }); pts += 2000; }
+                        if (kotsuList.includes('🀅')) { currentYaku.push({ name: "役牌:發", key: "役牌:發", pts: 2000 }); pts += 2000; }
+                        if (kotsuList.includes('🀄')) { currentYaku.push({ name: "役牌:中", key: "役牌:中", pts: 2000 }); pts += 2000; }
+
+                        let iipeikoCount = 0; const sCounts = {}; shuntsuList.forEach(t => sCounts[t] = (sCounts[t] || 0) + 1);
+                        Object.values(sCounts).forEach(v => { if (v >= 2) iipeikoCount++; });
+                        if (iipeikoCount === 1) { currentYaku.push({ name: "一盃口", key: "一盃口", pts: 2000 }); pts += 2000; }
+
+                        let hasSanshokuShuntsu = false; let hasSanshokuKotsu = false;
+                        for(let num=1; num<=9; num++) {
+                            let mTile = TILE_TYPES.man[num-1]; let pTile = TILE_TYPES.pin[num-1]; let sTile = TILE_TYPES.sou[num-1];
+                            if (shuntsuList.includes(mTile) && shuntsuList.includes(pTile) && shuntsuList.includes(sTile)) hasSanshokuShuntsu = true;
+                            if (kotsuList.includes(mTile) && kotsuList.includes(pTile) && kotsuList.includes(sTile)) hasSanshokuKotsu = true;
+                        }
+                        if (hasSanshokuShuntsu) { currentYaku.push({ name: "三色同順", key: "三色同順", pts: 3000 }); pts += 3000; }
+                        if (hasSanshokuKotsu) { currentYaku.push({ name: "三色同刻", key: "三色同刻", pts: 3000 }); pts += 3000; }
+
+                        ['🀇','🀙','🀐'].forEach(startTile => {
+                            let idx = TILE_ORDER.indexOf(startTile);
+                            if (shuntsuList.includes(startTile) && shuntsuList.includes(TILE_ORDER[idx+3]) && shuntsuList.includes(TILE_ORDER[idx+6])) {
+                                currentYaku.push({ name: "一気通貫", key: "一気通貫", pts: 3000 }); pts += 3000;
+                            }
+                        });
+
+                        const yaochuList = ['🀇','🀏','🀙','🀡','🀐','🀘',...TILE_TYPES.ji];
+                        let isJunchan = true; let isChanta = true;
+                        if (!yaochuList.includes(dec.jantou)) { isChanta = false; isJunchan = false; }
+                        if (TILE_TYPES.ji.includes(dec.jantou)) isJunchan = false;
+                        dec.mentsu.forEach(m => {
+                            if (m.type === 'kotsu') {
+                                if (!yaochuList.includes(m.tile)) { isChanta = false; isJunchan = false; }
+                                if (TILE_TYPES.ji.includes(m.tile)) isJunchan = false;
+                            } else {
+                                let idx = TILE_ORDER.indexOf(m.tile); if (!(idx%9 === 0 || idx%9 === 6)) { isChanta = false; isJunchan = false; }
+                            }
+                        });
+                        if (isJunchan) { currentYaku.push({ name: "純全帯幺九", key: "純全帯幺九", pts: 6000 }); pts += 6000; }
+                        else if (isChanta) { currentYaku.push({ name: "混全帯幺九", key: "混全帯幺九", pts: 3000 }); pts += 3000; }
+                        if (kotsuList.length === 3) { currentYaku.push({ name: "三暗刻", key: "三暗刻", pts: 3000 }); pts += 3000; }
+                    }
+
+                    if (currentYaku.length === 0) { currentYaku.push({ name: "役無し和了", key: "役無し和了", pts: 1000 }); pts = 1000; }
+                    if (pts > bestScore) { bestScore = pts; bestYakuSet = currentYaku; }
+                });
+                detectedYakuList = bestYakuSet;
+                totalGain = bestScore === -1 ? 0 : bestScore;
+            }
+        }
+
+        let doraCount = finalHand.filter(t => t === currentDora).length;
+        if (doraCount > 0 && totalGain > 0) {
+            detectedYakuList.push({ name: `ドラ ${doraCount}`, key: null, pts: doraCount * 1000 });
+            totalGain += doraCount * 1000;
+        }
+
+        detectedYakuList.forEach(yaku => { if (yaku.key) saveYakuAchievement(yaku.key); });
+        score += totalGain;
+        document.getElementById('txt-score').innerText = score;
+        
+        let nameString = detectedYakuList.map(y => `${y.name} (${y.pts > 0 ? '+' + y.pts.toLocaleString() : '0'})`).join("\n");
+        document.getElementById('popup-title').innerText = nameString;
+        document.getElementById('popup-pts').innerText = totalGain > 0 ? `合計 +${totalGain.toLocaleString()} 点！` : "0 点 (手牌リセット)";
+        
+        popup.classList.add('active');
+        changeDora();
+
+        setTimeout(() => {
+            popup.classList.remove('active'); gatheredHand = []; renderRack();
+            if (score >= targetScore) { endGame(true); } else { isPlaying = true; initBlocks(); resumeGameWithWeight(); }
+        }, 3000);
+    }
+
+    function endGame(isClear) {
+        isPlaying = false; if(animationId) cancelAnimationFrame(animationId);
+        const overlay = document.getElementById('overlayScreen');
+        const title = document.getElementById('overlay-title');
+        overlay.style.display = 'flex';
+        if (isClear) {
+            title.innerText = "🎉 GAME CLEAR !!"; title.style.color = "var(--accent-gold)";
+            document.getElementById('overlay-desc').innerHTML = `クリア目標の ${targetScore.toLocaleString()} 点を突破しました！<br>最終スコア: <strong>${score.toLocaleString()} 点</strong>`;
+        } else {
+            title.innerText = "❌ GAME OVER"; title.style.color = "var(--main-red)";
+            document.getElementById('overlay-desc').innerHTML = `すべての持ち機を失ってしまいました…<br>最終スコア: <strong>${score.toLocaleString()} 点</strong>`;
+        }
+    }
+
+    function updatePaddlePosition(clientX) {
+        const rect = canvas.getBoundingClientRect();
+        let relativeX = (clientX - rect.left) / rect.width;
+        let targetLogicalX = relativeX * cw;
+        paddle.x = targetLogicalX - paddle.width / 2;
+        if(paddle.x < 0) paddle.x = 0;
+        if(paddle.x + paddle.width > cw) paddle.x = cw - paddle.width;
+    }
+
+    stageWrapper.addEventListener('mousedown', (e) => { if (isPlaying && !isChoiceMode && !isDiscardPhase) { isDragging = true; updatePaddlePosition(e.clientX); } });
+    window.addEventListener('mousemove', (e) => { if (isDragging && isPlaying && !isChoiceMode && !isDiscardPhase) updatePaddlePosition(e.clientX); });
+    window.addEventListener('mouseup', () => isDragging = false);
+    stageWrapper.addEventListener('touchstart', (e) => { if (isPlaying && !isChoiceMode && !isDiscardPhase) { isDragging = true; updatePaddlePosition(e.touches[0].clientX); } }, { passive: true });
+    window.addEventListener('touchmove', (e) => { if (isDragging && isPlaying && !isChoiceMode && !isDiscardPhase) updatePaddlePosition(e.touches[0].clientX); }, { passive: true });
+    window.addEventListener('touchend', () => isDragging = false);
+
+    window.onload = () => { renderCollectionUI(); };
 </script>
+
 </body>
 </html>
